@@ -390,14 +390,14 @@ function registerTimelapseHandlers(ipcMain) {
         return fallbackIdeas;
     });
 
-    ipcMain.handle('timelapse-generate-prompts', async (event, { selectionIndex, selectedEnv }) => {
+    ipcMain.handle('timelapse-generate-prompts', async (event, { selectionIndex, selectedEnv, provider }) => {
         console.log(`[Timelapse] Requesting State 3 for Env #${selectionIndex}`);
         conversationHistory.push({
             role: 'user',
             content: `STATE 3: I select option ${selectionIndex}. Selected idea: ${JSON.stringify(selectedEnv)}. Return only JSON in the STATE 3 format.`
         });
 
-        const rawJsonString = await ai.chat(conversationHistory, true);
+        const rawJsonString = await ai.chat(conversationHistory, true, provider);
         conversationHistory.push({ role: 'assistant', content: rawJsonString });
 
         try {
@@ -409,7 +409,7 @@ function registerTimelapseHandlers(ipcMain) {
         }
     });
 
-    ipcMain.handle('timelapse-generate-custom-prompts', async (event, { customIdea, images, video, mode } = {}) => {
+    ipcMain.handle('timelapse-generate-custom-prompts', async (event, { customIdea, images, video, mode, provider } = {}) => {
         currentMode = normalizeTimelapseMode(mode);
         console.log(`[Timelapse] Requesting State 3 with CUSTOM IDEA. Mode: ${currentMode}. Images: ${images?.length || 0}, Video: ${!!video}`);
         
@@ -528,7 +528,7 @@ Output the 6-stage pipeline in JSON format as per the system instructions.`;
             { role: 'user', content: content }
         ];
 
-        const rawJsonString = await ai.chat(customConversation, true);
+        const rawJsonString = await ai.chat(customConversation, true, provider);
         
         try {
             const cleanJson = rawJsonString.match(/\{[\s\S]*\}/)?.[0] || rawJsonString;

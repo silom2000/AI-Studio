@@ -100,7 +100,7 @@ for %%d in (Image Videos Audio Music FinalVideo SkeletonShorts) do (
     )
 )
 if !FOLDERS_CREATED! equ 1 (
-    echo        [>>] Рабочие папки созданы
+    echo        [+] Рабочие папки созданы
 ) else (
     echo        [OK] Рабочие папки
 )

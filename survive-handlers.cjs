@@ -32,6 +32,51 @@ const LANG_NAMES = {
     French: 'French',
 };
 
+/**
+ * Robust JSON extraction and repair for LLM responses
+ */
+function cleanAndParseJSON(raw) {
+    if (!raw || typeof raw !== 'string') throw new Error('Empty AI response');
+    let str = raw.trim();
+
+    // 1. Remove Markdown code blocks
+    str = str.replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
+
+    // 2. Try direct JSON.parse
+    try {
+        return JSON.parse(str);
+    } catch (e) {}
+
+    // 3. Find outermost JSON object or array
+    const firstBrace = str.indexOf('{');
+    const firstBracket = str.indexOf('[');
+    let startIdx = -1;
+    let endIdx = -1;
+
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+        startIdx = firstBrace;
+        endIdx = str.lastIndexOf('}');
+    } else if (firstBracket !== -1) {
+        startIdx = firstBracket;
+        endIdx = str.lastIndexOf(']');
+    }
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        let candidate = str.substring(startIdx, endIdx + 1).trim();
+        try {
+            return JSON.parse(candidate);
+        } catch (e) {}
+
+        // Clean trailing commas before closing braces/brackets
+        candidate = candidate.replace(/,\s*([\}\]])/g, '$1');
+        try {
+            return JSON.parse(candidate);
+        } catch (e) {}
+    }
+
+    throw new Error('Could not parse structural JSON from AI response');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // VoiceAPI Integration (same as Cartoon)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -285,13 +330,18 @@ ${exclusionClause}`;
         ], true, aiModel);
 
         try {
-            const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-            const parsed = JSON.parse(jsonText);
-            const ideas = parsed.ideas || [];
+            const parsed = cleanAndParseJSON(raw);
+            let ideas = [];
+            if (Array.isArray(parsed)) ideas = parsed;
+            else if (parsed && parsed.ideas && Array.isArray(parsed.ideas)) ideas = parsed.ideas;
+            else if (parsed && typeof parsed === 'object') {
+                const found = Object.values(parsed).find(Array.isArray);
+                if (found) ideas = found;
+            }
 
             // Save to history
             for (const idea of ideas) {
-                if (idea.scenario) {
+                if (idea && idea.scenario) {
                     historyManager.addTopic(historyKey, idea.scenario);
                 }
             }
@@ -300,7 +350,7 @@ ${exclusionClause}`;
             return ideas;
         } catch (e) {
             console.error('[Survive] Failed to parse ideas:', raw, e.message);
-            throw new Error("Failed to generate survival ideas from AI.");
+            throw new Error("Failed to generate survival ideas from AI: " + e.message);
         }
     });
 
@@ -464,8 +514,7 @@ videoPrompt2: "CAMERA MOVEMENT: Stop-motion camera style, tracking shot. ACTION 
         ], true, aiModel);
 
         try {
-            const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-            const scriptData = JSON.parse(jsonText);
+            const scriptData = cleanAndParseJSON(raw);
 
             if (projectFolder) {
                 const scriptPath = path.join(SURVIVE_DIRS.base, projectFolder, 'script.json');
@@ -478,7 +527,7 @@ videoPrompt2: "CAMERA MOVEMENT: Stop-motion camera style, tracking shot. ACTION 
             return scriptData;
         } catch (e) {
             console.error('[Survive] Failed to parse script:', raw, e.message);
-            throw new Error("Failed to generate survival script from AI.");
+            throw new Error("Failed to generate survival script from AI: " + e.message);
         }
     });
 

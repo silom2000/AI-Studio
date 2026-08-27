@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const LLM_PROVIDERS = [
-    { value: 'pollinations', label: 'Pollinations (Free)' },
-    { value: 'custom', label: 'Custom Proxy (Local)' }
+    { value: 'custom', label: 'Custom Proxy (Local)' },
+    { value: 'omniroute', label: 'OmniRoute (Claude)' },
+    { value: 'pollinations', label: 'Pollinations (Free)' }
 ];
 
 const MARKETS = [
@@ -14,7 +15,7 @@ const MARKETS = [
 
 const PrimateCastTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'characters' | 'episode'>('characters');
-  const [llmProvider, setLlmProvider] = useState<string>('pollinations');
+  const [llmProvider, setLlmProvider] = useState<string>('custom');
   const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
   const [videoModel, setVideoModel] = useState<'omni_flash' | 'veo_31_lite' | 'grok'>('omni_flash');
   

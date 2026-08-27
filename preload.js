@@ -13,8 +13,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // New Cinematic Timelapse Handlers
   timelapseGetEnvironments: (mode) => ipcRenderer.invoke('timelapse-get-environments', { mode }),
-  timelapseGeneratePrompts: (selectionIndex, selectedEnv) => ipcRenderer.invoke('timelapse-generate-prompts', { selectionIndex, selectedEnv }),
-  timelapseGenerateCustomPrompts: (customIdea, images, video, mode) => ipcRenderer.invoke('timelapse-generate-custom-prompts', { customIdea, images, video, mode }),
+  timelapseGeneratePrompts: (selectionIndex, selectedEnv, provider) => ipcRenderer.invoke('timelapse-generate-prompts', { selectionIndex, selectedEnv, provider }),
+  timelapseGenerateCustomPrompts: (customIdea, images, video, mode, provider) => ipcRenderer.invoke('timelapse-generate-custom-prompts', { customIdea, images, video, mode, provider }),
   timelapseGenerateReversePrompts: (baseImage) => ipcRenderer.invoke('timelapse-generate-reverse-prompts', { baseImage }),
   timelapseGenerateImage: (imgIndex, prompt, model, subFolder, referenceImage) => ipcRenderer.invoke('timelapse-generate-image', { imgIndex, prompt, model, subFolder, referenceImage }),
   timelapseGenerateVideo: (videoIndex, prompt, subFolder, referenceImages, videoModel) => ipcRenderer.invoke('timelapse-generate-video', { videoIndex, prompt, subFolder, referenceImages, videoModel }),
@@ -36,25 +36,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getCacheStats: () => ipcRenderer.invoke('get-cache-stats'),
   clearPromptCache: () => ipcRenderer.invoke('clear-prompt-cache'),
 
-  // Skeleton Shorts
-  skeletonGenerateIdeas: (language) => ipcRenderer.invoke('skeleton-generate-ideas', { language }),
-  skeletonGenerateScript: (ideaTitle, language, videoModel) => ipcRenderer.invoke('skeleton-generate-script', { ideaTitle, language, videoModel }),
+  // Image & Video generation (used by StudioTab)
   skeletonGenerateImage: (data) => ipcRenderer.invoke('skeleton-generate-image', data),
-  skeletonGenerateAudio: (data) => ipcRenderer.invoke('skeleton-generate-audio', data),
   skeletonGenerateVideo: (data) => ipcRenderer.invoke('skeleton-generate-video', data),
-  skeletonAssembleVideo: (data) => ipcRenderer.invoke('skeleton-assemble-video', data),
-  onSkeletonVideoProgress: (callback) => ipcRenderer.on('skeleton-video-progress', (event, data) => callback(data)),
-  onSkeletonAssemblyProgress: (callback) => ipcRenderer.on('skeleton-assembly-progress', (event, data) => callback(data)),
 
   // Studio Tabs
   studioGenerateIdeas: (mode, language, provider) => ipcRenderer.invoke('studio-generate-ideas', { mode, language, provider }),
-  studioGenerateScript: (mode, topic, language, provider) => ipcRenderer.invoke('studio-generate-script', { mode, topic, language, provider }),
+  studioGenerateScript: (paramsOrMode, topic, language, provider, projectFolder, referenceUrl, durationMode) => {
+    if (typeof paramsOrMode === 'object' && paramsOrMode !== null) {
+      return ipcRenderer.invoke('studio-generate-script', paramsOrMode);
+    }
+    return ipcRenderer.invoke('studio-generate-script', { mode: paramsOrMode, topic, language, provider, projectFolder, referenceUrl, durationMode });
+  },
+  studioParseReferenceVideo: (referenceUrl) => ipcRenderer.invoke('studio-parse-reference-video', { referenceUrl }),
+  studioParseScreenshot: (screenshotBase64) => ipcRenderer.invoke('studio-parse-screenshot', { screenshotBase64 }),
+  onStudioProgress: (callback) => ipcRenderer.on('studio-progress', (event, data) => callback(data)),
+  removeStudioProgressListener: () => ipcRenderer.removeAllListeners('studio-progress'),
+  studioSaveScript: (data) => ipcRenderer.invoke('studio-save-script', data),
   studioAssembleVideo: (data) => ipcRenderer.invoke('studio-assemble-video', data),
   saveTextFiles: (files) => ipcRenderer.invoke('save-text-files', files),
 
   // AI Stories
   storyCreateFolder: () => ipcRenderer.invoke('story-create-folder'),
-  storyGenerateIdeas: (topic, language) => ipcRenderer.invoke('story-generate-ideas', { topic, language }),
+  storyGenerateIdeas: (topic, language, provider) => ipcRenderer.invoke('story-generate-ideas', { topic, language, provider }),
   storyGenerateScript: (data) => ipcRenderer.invoke('story-generate-script', data),
   storyGenerateImage: (data) => ipcRenderer.invoke('story-generate-image', data),
   storyGenerateAudio: (data) => ipcRenderer.invoke('story-generate-audio', data),
@@ -83,14 +87,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   localizeStep2Diarize: (params) => ipcRenderer.invoke('localize-step2-diarize', params),
   localizeStep3Characters: (params) => ipcRenderer.invoke('localize-step3-characters', params),
   localizeStep4Voices: (params) => ipcRenderer.invoke('localize-step4-voices', params),
-  localizeTranslateSegments: (projectFolder, segments, targetLanguage) => ipcRenderer.invoke('localize-translate-segments', { projectFolder, segments, targetLanguage }),
-  localizeGenerateMetadata: (projectFolder, transcript, targetLanguage, originalTitle) => ipcRenderer.invoke('localize-generate-metadata', { projectFolder, transcript, targetLanguage, originalTitle }),
+  localizeTranslateSegments: (projectFolder, segments, targetLanguage, provider) => ipcRenderer.invoke('localize-translate-segments', { projectFolder, segments, targetLanguage, provider }),
+  localizeGenerateMetadata: (projectFolder, transcript, targetLanguage, originalTitle, provider) => ipcRenderer.invoke('localize-generate-metadata', { projectFolder, transcript, targetLanguage, originalTitle, provider }),
   localizeGenerateSegmentVideo: (data) => ipcRenderer.invoke('localize-generate-segment-video', data),
   localizeBatchGenerateSegments: (data) => ipcRenderer.invoke('localize-batch-generate-segments', data),
   localizeRegenerateCharacterImage: (projectFolder, characterIndex, customPrompt) => ipcRenderer.invoke('localize-regenerate-character-image', { projectFolder, characterIndex, customPrompt }),
   localizeRetranslate: (projectFolder, transcript, targetLanguage) => ipcRenderer.invoke('localize-retranslate', { projectFolder, transcript, targetLanguage }),
   localizeExtractFrames: (videoBase64, timestamps, projectFolder) => ipcRenderer.invoke('localize-extract-frames', { videoBase64, timestamps, projectFolder }),
   localizeGenerateVideoPrompts: (params) => ipcRenderer.invoke('localize-generate-video-prompts', params),
+  localizeRemergeProject: (projectFolder) => ipcRenderer.invoke('localize-remerge-project', { projectFolder }),
 
   // G-Labs Integration
   glabsHealthCheck: () => ipcRenderer.invoke('glabs-health-check'),
@@ -118,6 +123,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   frenchtalkGenerateLocationRef: (data) => ipcRenderer.invoke('frenchtalk-generate-location-ref', data),
   frenchtalkGetLocationRefs: () => ipcRenderer.invoke('frenchtalk-get-location-refs'),
   frenchtalkAutoVlogTopic: (data) => ipcRenderer.invoke('frenchtalk-auto-vlog-topic', data),
+  frenchtalkTranslateScript: (data) => ipcRenderer.invoke('frenchtalk-translate-script', data),
+  frenchtalkGetStreamPacks: () => ipcRenderer.invoke('frenchtalk-get-streampacks'),
+  frenchtalkSaveStreamPackDaysInfo: (data) => ipcRenderer.invoke('frenchtalk-save-streampack-days-info', data),
+  frenchtalkGenerateStreamPackScript: (data) => ipcRenderer.invoke('frenchtalk-generate-streampack-script', data),
+  frenchtalkGenerateStreamPackImage: (data) => ipcRenderer.invoke('frenchtalk-generate-streampack-image', data),
+  frenchtalkGenerateStreamPackClip: (data) => ipcRenderer.invoke('frenchtalk-generate-streampack-clip', data),
   onFrenchTalkProgress: (callback) => ipcRenderer.on('frenchtalk-progress', (event, data) => callback(data)),
   removeFrenchTalkProgressListener: () => ipcRenderer.removeAllListeners('frenchtalk-progress'),
 

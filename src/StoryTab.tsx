@@ -58,6 +58,12 @@ const TTS_SERVICES: { value: TtsService; label: string; desc: string }[] = [
   { value: 'elevenlabs', label: 'ElevenLabs', desc: 'Direct ElevenLabs API' },
 ];
 
+const LLM_PROVIDERS = [
+  { value: 'custom', label: 'Custom Proxy (Local)' },
+  { value: 'omniroute', label: 'OmniRoute (Claude)' },
+  { value: 'pollinations', label: 'Pollinations (Free)' },
+];
+
 const LIFE_STAGE_ICONS: Record<number, string> = {
   1: '👶',
   2: '🧒',
@@ -86,6 +92,7 @@ export function StoryTab() {
   const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
   const [videoModel, setVideoModel] = useState<VideoModel>('veo_31_lite');
   const [ttsService, setTtsService] = useState<TtsService>('voiceapi');
+  const [llmProvider, setLlmProvider] = useState('custom');
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [isLoadingIdeas, setIsLoadingIdeas] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
@@ -117,7 +124,7 @@ export function StoryTab() {
   const handleGenerateIdeas = async () => {
     setIsLoadingIdeas(true);
     try {
-      const result = await window.electronAPI.storyGenerateIdeas(topic, language);
+      const result = await window.electronAPI.storyGenerateIdeas(topic, language, llmProvider);
       setIdeas(result);
       setScript(null);
       setSelectedIdea(null);
@@ -140,7 +147,8 @@ export function StoryTab() {
       const result = await window.electronAPI.storyGenerateScript({ 
         idea: idea,
         language, 
-        projectFolder: folder 
+        projectFolder: folder,
+        provider: llmProvider
       });
       setScript(result);
       setSceneStates({});
@@ -342,6 +350,27 @@ export function StoryTab() {
                     <div style={{ fontSize: '10px', color: '#888' }}>{s.desc}</div>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label className="story-label" style={{ marginBottom: '6px' }}>
+              LLM Provider:
+            </label>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {LLM_PROVIDERS.map(p => (
+                <button
+                  key={p.value}
+                  onClick={() => setLlmProvider(p.value)}
+                  style={{
+                    padding: '5px 12px',
+                    backgroundColor: llmProvider === p.value ? '#1a3a2a' : '#222',
+                    color: '#fff',
+                    border: llmProvider === p.value ? '1px solid #4ade80' : '1px solid #444',
+                    borderRadius: '6px', cursor: 'pointer', fontSize: '12px'
+                  }}
+                >{p.label}</button>
               ))}
             </div>
           </div>

@@ -20,6 +20,51 @@ const { spawn } = require('child_process');
 const axios = require('axios');
 const crypto = require('crypto');
 
+/**
+ * Robust JSON extraction and repair for LLM responses
+ */
+function cleanAndParseJSON(raw) {
+    if (!raw || typeof raw !== 'string') throw new Error('Empty AI response');
+    let str = raw.trim();
+
+    // 1. Remove Markdown code blocks
+    str = str.replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
+
+    // 2. Try direct JSON.parse
+    try {
+        return JSON.parse(str);
+    } catch (e) {}
+
+    // 3. Find outermost JSON object or array
+    const firstBrace = str.indexOf('{');
+    const firstBracket = str.indexOf('[');
+    let startIdx = -1;
+    let endIdx = -1;
+
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+        startIdx = firstBrace;
+        endIdx = str.lastIndexOf('}');
+    } else if (firstBracket !== -1) {
+        startIdx = firstBracket;
+        endIdx = str.lastIndexOf(']');
+    }
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        let candidate = str.substring(startIdx, endIdx + 1).trim();
+        try {
+            return JSON.parse(candidate);
+        } catch (e) {}
+
+        // Clean trailing commas before closing braces/brackets
+        candidate = candidate.replace(/,\s*([\}\]])/g, '$1');
+        try {
+            return JSON.parse(candidate);
+        } catch (e) {}
+    }
+
+    throw new Error('Could not parse structural JSON from AI response');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // VoiseAPI (https://voiceapi.csv666.ru) — CORRECT ASYNC TASK FLOW
 // POST /tasks → {task_id} → poll GET /tasks/{id} → download binary MP3
@@ -202,7 +247,7 @@ function registerStoryHandlers(ipcMain) {
     });
 
     // 1. Generate Life Journey Story Ideas
-    ipcMain.handle('story-generate-ideas', async (event, { topic, language }) => {
+    ipcMain.handle('story-generate-ideas', async (event, { topic, language, provider }) => {
 
         // Country/culture context based on selected language
         const CULTURE_MAP = {
@@ -363,18 +408,23 @@ ${cultureCtx.epochs}
         const raw = await ai.chat([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
-        ], true);
+        ], true, provider);
 
         try {
-            const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-            return JSON.parse(jsonText).ideas;
+            const parsed = cleanAndParseJSON(raw);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed.ideas && Array.isArray(parsed.ideas)) return parsed.ideas;
+            const foundArr = Object.values(parsed).find(Array.isArray);
+            if (foundArr) return foundArr;
+            return [];
         } catch(e) {
-            throw new Error("Failed to generate story ideas from AI.");
+            console.error('[Stories] Failed to parse ideas:', e.message, raw);
+            throw new Error("Failed to generate story ideas from AI: " + e.message);
         }
     });
 
     // 2. Generate Life Journey Script & Prompts (8 scenes with character consistency)
-    ipcMain.handle('story-generate-script', async (event, { idea, language, projectFolder }) => {
+    ipcMain.handle('story-generate-script', async (event, { idea, language, projectFolder, provider }) => {
         const langName = language || 'English';
         const systemPrompt = `Ты мастер эмоционального сторителлинга для вирусных TikTok видео в жанре исторического погружения от второго лица.
 
@@ -710,11 +760,10 @@ ${ideaContext}
         const raw = await ai.chat([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
-        ], true);
+        ], true, provider);
 
         try {
-            const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-            const scriptData = JSON.parse(jsonText);
+            const scriptData = cleanAndParseJSON(raw);
 
             // Save script to project folder if provided
             if (projectFolder) {
@@ -725,7 +774,8 @@ ${ideaContext}
 
             return scriptData;
         } catch(e) {
-            throw new Error("Failed to generate story script from AI.");
+            console.error('[Stories] Failed to parse script JSON:', e.message, raw);
+            throw new Error("Failed to generate story script from AI: " + e.message);
         }
     });
 

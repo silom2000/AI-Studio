@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { request } = require('undici');
 const axios = require('axios'); // For VoiceAPI
 
@@ -14,10 +15,39 @@ class AntigravityClient {
     // =========================================================================
     // 1. CHAT / TEXT GENERATION
     // =========================================================================
+    _extractChatContent(data) {
+        const content = data?.choices?.[0]?.message?.content;
+
+        if (typeof content === 'string') {
+            return content.trim();
+        }
+
+        // Some OpenAI-compatible providers return an array of text blocks.
+        if (Array.isArray(content)) {
+            return content
+                .map(part => typeof part === 'string' ? part : part?.text)
+                .filter(part => typeof part === 'string' && part.trim())
+                .join('\n')
+                .trim();
+        }
+
+        return '';
+    }
+
     async chat(messages, jsonMode = false, forcedProvider = null) {
         const providers = [];
 
-        // 1. Qwen
+        // 1. Groq (Llama 3.3 70B - Fast and High Quality)
+        if (process.env.GROQ_API_KEY) {
+            providers.push({
+                id: 'groq',
+                url: 'https://api.groq.com/openai/v1/chat/completions',
+                key: process.env.GROQ_API_KEY,
+                model: 'llama-3.3-70b-versatile'
+            });
+        }
+
+        // 2. Qwen
         if (process.env.QWEN_API_KEY) {
             providers.push({
                 id: 'qwen',
@@ -27,7 +57,7 @@ class AntigravityClient {
             });
         }
 
-        // 2. Kimi
+        // 3. Kimi
         if (process.env.KIMI_API_KEY) {
             providers.push({
                 id: 'kimi',
@@ -37,7 +67,7 @@ class AntigravityClient {
             });
         }
 
-        // 3. Mimo
+        // 4. Mimo
         if (process.env.MIMO_API_KEY) {
             providers.push({
                 id: 'mimo',
@@ -48,9 +78,9 @@ class AntigravityClient {
             });
         }
 
-        // 4. Custom Local Proxy
+        // 5. Custom Local Proxy
         if (process.env.CUSTOM_AI_URL) {
-            const WORKING_MODELS = ['gemini-3.1-pro-high'];
+            const WORKING_MODELS = ['claude-sonnet-4-6'];
             for (const m of WORKING_MODELS) {
                 providers.push({
                     id: 'custom',
@@ -61,7 +91,17 @@ class AntigravityClient {
             }
         }
 
-        // 5. Pollinations Fallback
+        // 6. OMNIROUTE (Claude via local router)
+        if (process.env.OMNIROUTE_API_URL) {
+            providers.push({
+                id: 'omniroute',
+                url: process.env.OMNIROUTE_API_URL,
+                key: process.env.OMNIROUTE_API_KEY,
+                model: process.env.OMNIROUTE_MODEL || 'antigravity/claude-sonnet-4-6'
+            });
+        }
+
+        // 7. Pollinations Fallback
         providers.push({
             id: 'pollinations',
             url: process.env.POLLINATIONS_API_URL || 'https://gen.pollinations.ai/v1/chat/completions',
@@ -69,7 +109,24 @@ class AntigravityClient {
             model: 'openai-large'
         });
 
-        const defaultProvider = forcedProvider || process.env.DEFAULT_AI_PROVIDER || 'pollinations';
+        // Ensure "json" is present in messages if jsonMode is requested (prevent Azure/Pollinations/Groq 400 error)
+        let effectiveMessages = messages;
+        if (jsonMode && Array.isArray(messages)) {
+            const hasJsonWord = messages.some(m => {
+                if (!m || !m.content) return false;
+                if (typeof m.content === 'string') return /json/i.test(m.content);
+                if (Array.isArray(m.content)) return m.content.some(c => c && typeof c.text === 'string' && /json/i.test(c.text));
+                return false;
+            });
+            if (!hasJsonWord) {
+                effectiveMessages = [
+                    { role: 'system', content: 'Respond with a valid JSON object only.' },
+                    ...messages
+                ];
+            }
+        }
+
+        const defaultProvider = forcedProvider || process.env.DEFAULT_AI_PROVIDER || 'custom';
         providers.sort((a, b) => {
             if (a.id === defaultProvider && b.id !== defaultProvider) return -1;
             if (b.id === defaultProvider && a.id !== defaultProvider) return 1;
@@ -85,8 +142,13 @@ class AntigravityClient {
             for (let attempt = 1; attempt <= 2; attempt++) {
                 try {
                     console.log(`[AiClient:Chat] Trying provider=${p.id} model=${p.model} at ${p.url} (attempt ${attempt})`);
-                    const reqBody = { model: p.model, messages };
-                    if (jsonMode) reqBody.response_format = { type: 'json_object' };
+                    const reqBody = { 
+                        model: p.model, 
+                        messages: effectiveMessages,
+                        max_tokens: 4096 // Needed for large image inputs
+                    };
+                    // Attempt 1 sends response_format if jsonMode is true; if provider rejects it, attempt 2 runs without response_format
+                    if (jsonMode && attempt === 1) reqBody.response_format = { type: 'json_object' };
 
                     const headers = { 'Content-Type': 'application/json' };
                     if (p.key) {
@@ -106,7 +168,23 @@ class AntigravityClient {
                     const text = await res.text();
                     if (res.ok) {
                         const data = JSON.parse(text);
-                        return data.choices?.[0]?.message?.content || '';
+                        const content = this._extractChatContent(data);
+
+                        if (content) {
+                            return content;
+                        }
+
+                        const choice = data?.choices?.[0];
+                        const finishReason = choice?.finish_reason || 'unknown';
+                        const refusal = choice?.message?.refusal || 'none';
+                        lastError = new Error(
+                            `${p.id}/${p.model} returned an empty response ` +
+                            `(finish_reason=${finishReason}, refusal=${refusal})`
+                        );
+                        console.warn(`[AiClient:Chat] ${lastError.message}. Retrying/falling back...`);
+                        // A 200 response with empty content is not a successful completion.
+                        // Continue to attempt 2 (without response_format), then next provider.
+                        continue;
                     }
                     
                     const statusCode = res.status;
@@ -134,6 +212,217 @@ class AntigravityClient {
     // =========================================================================
     // 2. AUDIO TRANSCRIPTION / STT
     // =========================================================================
+    _getAudioDuration(audioPath) {
+        try {
+            const out = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioPath}"`, {
+                stdio: ['pipe', 'pipe', 'ignore'],
+                encoding: 'utf8'
+            });
+            const dur = parseFloat(out.trim());
+            if (!isNaN(dur) && dur > 0) return dur;
+        } catch (e) {
+            // ignore
+        }
+        return 0;
+    }
+
+    _normalizeSttResult(data, audioPath) {
+        if (!data) {
+            throw new Error('STT response is empty');
+        }
+
+        // 1. Extract text from various response shapes
+        let fullText = '';
+        if (typeof data === 'string') {
+            fullText = data;
+        } else if (data.text) {
+            fullText = data.text;
+        } else if (data.transcript) {
+            fullText = data.transcript;
+        } else if (data.result) {
+            fullText = typeof data.result === 'string' ? data.result : (data.result.text || '');
+        } else if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+            fullText = data.candidates[0].content.parts[0].text;
+        }
+
+        // 2. Direct words array
+        if (Array.isArray(data.words) && data.words.length > 0) {
+            const words = data.words.map(w => ({
+                start: parseFloat(w.start ?? w.startTime ?? 0) || 0,
+                end: parseFloat(w.end ?? w.endTime ?? 0) || 0,
+                word: String(w.word ?? w.text ?? '').trim()
+            })).filter(w => w.word.length > 0);
+
+            if (words.length > 0) {
+                return {
+                    text: fullText || words.map(w => w.word).join(' '),
+                    words
+                };
+            }
+        }
+
+        // 3. Segments array (e.g. from Whisper / Whisper-like APIs)
+        if (Array.isArray(data.segments) && data.segments.length > 0) {
+            const words = [];
+            const textParts = [];
+
+            for (const seg of data.segments) {
+                const segText = (seg.text || '').trim();
+                if (segText) textParts.push(segText);
+
+                if (Array.isArray(seg.words) && seg.words.length > 0) {
+                    for (const w of seg.words) {
+                        const wordStr = String(w.word ?? w.text ?? '').trim();
+                        if (wordStr) {
+                            words.push({
+                                start: parseFloat(w.start ?? w.startTime ?? seg.start ?? 0) || 0,
+                                end: parseFloat(w.end ?? w.endTime ?? seg.end ?? 0) || 0,
+                                word: wordStr
+                            });
+                        }
+                    }
+                } else if (segText) {
+                    // Interpolate words within segment boundaries
+                    const segStart = parseFloat(seg.start ?? 0) || 0;
+                    const segEnd = parseFloat(seg.end ?? segStart + 1) || (segStart + 1);
+                    const segWords = segText.split(/\s+/).filter(Boolean);
+                    const segDuration = Math.max(0.1, segEnd - segStart);
+                    const wordDuration = segDuration / segWords.length;
+
+                    for (let i = 0; i < segWords.length; i++) {
+                        const wStart = segStart + i * wordDuration;
+                        const wEnd = segStart + (i + 0.95) * wordDuration;
+                        words.push({
+                            start: parseFloat(wStart.toFixed(2)),
+                            end: parseFloat(wEnd.toFixed(2)),
+                            word: segWords[i]
+                        });
+                    }
+                }
+            }
+
+            if (words.length > 0) {
+                return {
+                    text: fullText || textParts.join(' '),
+                    words
+                };
+            }
+        }
+
+        // 4. Fallback: Flat text without timestamps -> Synthesize word timestamps
+        const trimmedText = (fullText || '').trim();
+        if (!trimmedText) {
+            throw new Error('STT response contains no transcribed text');
+        }
+
+        let audioDuration = this._getAudioDuration(audioPath);
+        const rawWords = trimmedText.split(/\s+/).filter(Boolean);
+        if (rawWords.length === 0) {
+            throw new Error('STT response contains no words');
+        }
+
+        if (audioDuration <= 0) {
+            audioDuration = rawWords.length * 0.35; // approx 0.35s per word fallback
+        }
+
+        // Split text by sentence/clause boundaries to simulate natural pauses
+        const sentences = trimmedText.split(/(?<=[.!?\n])\s+/).filter(Boolean);
+        const words = [];
+
+        if (sentences.length > 1) {
+            const totalWords = rawWords.length;
+            const pauseTime = Math.min(0.6, (audioDuration * 0.1) / Math.max(1, sentences.length - 1));
+            const totalPauseTime = pauseTime * (sentences.length - 1);
+            const effectiveSpeechDuration = Math.max(0.5, audioDuration - totalPauseTime);
+
+            let currentTime = 0;
+            for (let sIdx = 0; sIdx < sentences.length; sIdx++) {
+                const sText = sentences[sIdx].trim();
+                const sWords = sText.split(/\s+/).filter(Boolean);
+                if (sWords.length === 0) continue;
+
+                const sDuration = (sWords.length / totalWords) * effectiveSpeechDuration;
+                const wDuration = sDuration / sWords.length;
+
+                for (let i = 0; i < sWords.length; i++) {
+                    const wStart = currentTime + i * wDuration;
+                    const wEnd = currentTime + (i + 0.95) * wDuration;
+                    words.push({
+                        start: parseFloat(wStart.toFixed(2)),
+                        end: parseFloat(wEnd.toFixed(2)),
+                        word: sWords[i]
+                    });
+                }
+
+                currentTime += sDuration;
+                if (sIdx < sentences.length - 1) {
+                    currentTime += pauseTime;
+                }
+            }
+        } else {
+            const wDuration = audioDuration / rawWords.length;
+            for (let i = 0; i < rawWords.length; i++) {
+                const wStart = i * wDuration;
+                const wEnd = (i + 0.95) * wDuration;
+                words.push({
+                    start: parseFloat(wStart.toFixed(2)),
+                    end: parseFloat(wEnd.toFixed(2)),
+                    word: rawWords[i]
+                });
+            }
+        }
+
+        console.log(`[AiClient:STT] Synthesized timestamps for ${words.length} words over ${audioDuration.toFixed(2)}s`);
+        return {
+            text: trimmedText,
+            words
+        };
+    }
+
+    async _transcribeAudioGroq(audioPath) {
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) throw new Error('[AiClient:STT] GROQ_API_KEY not set');
+
+        const audioBuffer = fs.readFileSync(audioPath);
+        const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+        const body = Buffer.concat([
+            Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`),
+            audioBuffer,
+            Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3\r\n`),
+            Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\nverbose_json\r\n`),
+            Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="timestamp_granularities[]"\r\n\r\nword\r\n`),
+            Buffer.from(`--${boundary}--\r\n`)
+        ]);
+
+        console.log('[AiClient:STT] Sending audio to Groq Whisper (whisper-large-v3)...');
+        const { statusCode, body: resBody } = await request('https://api.groq.com/openai/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': `multipart/form-data; boundary=${boundary}`,
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body,
+            headersTimeout: 120000,
+            bodyTimeout: 120000
+        });
+
+        const rawText = await resBody.text();
+        if (statusCode !== 200) {
+            throw new Error(`Groq Whisper failed (${statusCode}): ${rawText.substring(0, 200)}`);
+        }
+
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (parseErr) {
+            throw new Error(`Groq Whisper response is not valid JSON: ${rawText.substring(0, 200)}`);
+        }
+
+        const normalized = this._normalizeSttResult(data, audioPath);
+        console.log(`[AiClient:STT] Groq Whisper complete: ${normalized.words.length} words`);
+        return normalized;
+    }
+
     async _transcribeAudioGemini(audioPath, model) {
         const audioBuffer = fs.readFileSync(audioPath);
         const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
@@ -147,8 +436,10 @@ class AntigravityClient {
         ]);
 
         const apiKey = process.env.CUSTOM_AI_API_KEY || process.env.GEMINI_API_KEY || 'dummy-key';
-        console.log(`[AiClient:STT] Sending audio to Custom STT (model: ${model})...`);
-        const { statusCode, body: resBody } = await request('http://127.0.0.1:8045/v1/audio/transcriptions', {
+        const customBaseUrl = (process.env.CUSTOM_AI_URL || 'http://171.22.174.246:8045/v1').replace(/\/chat\/completions\/?$/, '');
+        const sttUrl = `${customBaseUrl}/audio/transcriptions`;
+        console.log(`[AiClient:STT] Sending audio to Custom STT at ${sttUrl} (model: ${model})...`);
+        const { statusCode, body: resBody } = await request(sttUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -168,22 +459,13 @@ class AntigravityClient {
         try {
             data = JSON.parse(rawText);
         } catch (parseErr) {
-            throw new Error(`Custom Transcription response is not valid JSON: ${rawText.substring(0, 200)}`);
+            // If the server returned plain text directly
+            data = { text: rawText };
         }
 
-        if (!data.words || data.words.length === 0) {
-            throw new Error("Custom Transcription missing 'words' timestamps. Diarization requires word-level timestamps.");
-        }
-
-        console.log(`[AiClient:STT] Custom Transcription complete: ${data.words.length} words`);
-        return {
-            text: data.text || '',
-            words: data.words.map(w => ({
-                start: w.start || 0,
-                end: w.end || 0,
-                word: w.word || ''
-            }))
-        };
+        const normalized = this._normalizeSttResult(data, audioPath);
+        console.log(`[AiClient:STT] Custom Transcription complete: ${normalized.words.length} words`);
+        return normalized;
     }
 
     async _transcribeAudioPollinations(audioPath) {
@@ -219,28 +501,37 @@ class AntigravityClient {
         try {
             data = JSON.parse(rawText);
         } catch (parseErr) {
-            throw new Error(`Pollinations Transcription response is not valid JSON: ${rawText.substring(0, 200)}`);
+            data = { text: rawText };
         }
 
-        console.log(`[AiClient:STT] Pollinations Transcription complete: ${data.words?.length || 0} words`);
-        return {
-            text: data.text || '',
-            words: (data.words || []).map(w => ({
-                start: w.start || 0,
-                end: w.end || 0,
-                word: w.word || ''
-            }))
-        };
+        const normalized = this._normalizeSttResult(data, audioPath);
+        console.log(`[AiClient:STT] Pollinations Transcription complete: ${normalized.words.length} words`);
+        return normalized;
     }
 
     async transcribe(audioPath, retries = 3) {
-        let customLastError = null;
+        // ── Priority 1: Groq Whisper (whisper-large-v3, fastest + most accurate) ──
+        if (process.env.GROQ_API_KEY) {
+            for (let attempt = 1; attempt <= retries; attempt++) {
+                try {
+                    if (attempt > 1) {
+                        console.log(`[AiClient:STT] Groq: Waiting 3s before retry attempt ${attempt}...`);
+                        await new Promise(r => setTimeout(r, 3000));
+                    }
+                    return await this._transcribeAudioGroq(audioPath);
+                } catch (e) {
+                    console.error(`[AiClient:STT] Groq attempt ${attempt} failed: ${e.message}`);
+                    if (attempt === retries) console.warn('[AiClient:STT] Groq exhausted, falling back to Custom STT...');
+                }
+            }
+        }
 
-        // Try custom service 3 times
+        // ── Priority 2: Custom local proxy (Gemini) ──────────────────────────────
+        let customLastError = null;
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 if (attempt > 1) {
-                    console.log(`[AiClient:STT] Custom STT: Waiting 2 seconds before retry attempt ${attempt}...`);
+                    console.log(`[AiClient:STT] Custom STT: Waiting 2s before retry attempt ${attempt}...`);
                     await new Promise(r => setTimeout(r, 2000));
                 }
                 return await this._transcribeAudioGemini(audioPath, 'gemini-2.5-flash');
@@ -252,11 +543,12 @@ class AntigravityClient {
 
         console.warn('[AiClient:STT] Custom STT failed 3 times. Falling back to Pollinations...');
 
+        // ── Priority 3: Pollinations (last resort) ───────────────────────────────
         let pollLastError = null;
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 if (attempt > 1) {
-                    console.log(`[AiClient:STT] Pollinations STT: Waiting 6 seconds before retry attempt ${attempt}...`);
+                    console.log(`[AiClient:STT] Pollinations STT: Waiting 6s before retry attempt ${attempt}...`);
                     await new Promise(r => setTimeout(r, 6000));
                 }
                 return await this._transcribeAudioPollinations(audioPath);
@@ -266,7 +558,7 @@ class AntigravityClient {
             }
         }
 
-        throw new Error(`Both custom STT and Pollinations failed. Last Pollinations error: ${pollLastError?.message}`);
+        throw new Error(`All STT providers failed. Last error: ${pollLastError?.message}`);
     }
 
     // =========================================================================
@@ -416,23 +708,49 @@ class AntigravityClient {
     // =========================================================================
     // 4. GEMINI VIDEO PROCESSING (NATIVE FILE API)
     // =========================================================================
+    _getGeminiKey(isUpload = false) {
+        const rawKey = process.env.GEMINI_API_KEY || '';
+        const keys = rawKey.split(',').map(k => k.trim()).filter(k => k);
+        if (keys.length === 0) throw new Error("GEMINI_API_KEY is missing in .env");
+        
+        if (isUpload || !this._activeGeminiKey) {
+            this._activeGeminiKey = keys[Math.floor(Math.random() * keys.length)];
+            console.log(`[AiClient:Gemini] Selected API key (...${this._activeGeminiKey.slice(-4)}) from ${keys.length} available key(s).`);
+        }
+        return this._activeGeminiKey;
+    }
+    
+    _getGeminiBaseUrl() {
+        let url = (process.env.CUSTOM_GEMINI_URL || 'https://generativelanguage.googleapis.com').trim();
+        if (url.endsWith('/')) url = url.slice(0, -1);
+        if (url.endsWith('/v1beta')) url = url.slice(0, -7);
+        return url;
+    }
+
     async uploadVideoToGemini(filePath) {
-        const apiKey = process.env.GEMINI_API_KEY?.trim();
-        if (!apiKey) throw new Error("GEMINI_API_KEY is missing in .env");
+        const apiKey = this._getGeminiKey(true);
 
         const stats = fs.statSync(filePath);
         const numBytes = stats.size;
-        console.log(`[AiClient:Gemini] Initiating upload for ${filePath} (${(numBytes/1024/1024).toFixed(2)} MB)...`);
+        const baseUrl = this._getGeminiBaseUrl();
+        console.log(`[AiClient:Gemini] Initiating upload for ${filePath} (${(numBytes/1024/1024).toFixed(2)} MB) to ${baseUrl}...`);
 
-        const initRes = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`, {
+        const headers = {
+            'X-Goog-Upload-Protocol': 'resumable',
+            'X-Goog-Upload-Command': 'start',
+            'X-Goog-Upload-Header-Content-Length': numBytes.toString(),
+            'X-Goog-Upload-Header-Content-Type': 'video/mp4',
+            'Content-Type': 'application/json'
+        };
+        
+        if (!baseUrl.includes('googleapis.com')) {
+            headers['Authorization'] = `Bearer ${process.env.CUSTOM_AI_API_KEY || apiKey}`;
+            headers['x-goog-api-key'] = apiKey;
+        }
+
+        const initRes = await fetch(`${baseUrl}/upload/v1beta/files?key=${apiKey}`, {
             method: 'POST',
-            headers: {
-                'X-Goog-Upload-Protocol': 'resumable',
-                'X-Goog-Upload-Command': 'start',
-                'X-Goog-Upload-Header-Content-Length': numBytes.toString(),
-                'X-Goog-Upload-Header-Content-Type': 'video/mp4',
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify({ file: { display_name: path.basename(filePath) } })
         });
         
@@ -459,10 +777,11 @@ class AntigravityClient {
     }
 
     async waitForGeminiProcessing(fileName) {
-        const apiKey = process.env.GEMINI_API_KEY?.trim();
-        console.log(`[AiClient:Gemini] Waiting for Google to process the video...`);
+        const apiKey = this._getGeminiKey();
+        const baseUrl = this._getGeminiBaseUrl();
+        console.log(`[AiClient:Gemini] Waiting for Google/Proxy to process the video...`);
         while (true) {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`);
+            const res = await fetch(`${baseUrl}/v1beta/${fileName}?key=${apiKey}`);
             const data = await res.json();
             if (data.state === 'ACTIVE') return;
             if (data.state === 'FAILED') throw new Error("Video processing failed on Google servers");
@@ -471,7 +790,7 @@ class AntigravityClient {
     }
 
     async generateVideoPromptWithGemini(fileUri, promptText) {
-        const apiKey = process.env.GEMINI_API_KEY?.trim();
+        const apiKey = this._getGeminiKey();
         console.log(`[AiClient:Gemini] Analyzing video segment with gemini-2.0-flash...`);
         
         const payload = {
@@ -486,15 +805,32 @@ class AntigravityClient {
             }
         };
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        let retries = 5;
+        const baseUrl = this._getGeminiBaseUrl();
         
-        const data = await res.json();
-        if (!res.ok) throw new Error("Analyze fail: " + JSON.stringify(data));
-        return data.candidates[0].content.parts[0].text;
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            const res = await fetch(`${baseUrl}/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                return data.candidates[0].content.parts[0].text;
+            }
+            
+            if (res.status === 429) {
+                if (attempt < retries) {
+                    console.warn(`[AiClient:Gemini] Rate limit 429 hit. Waiting 15 seconds before retry ${attempt}/${retries}...`);
+                    await new Promise(r => setTimeout(r, 15000));
+                    continue;
+                }
+            }
+            
+            throw new Error(`Analyze fail (${res.status}): ` + JSON.stringify(data));
+        }
     }
 
     // =========================================================================

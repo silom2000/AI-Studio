@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './App.css';
-import SkeletonTab from './SkeletonTab';
 import StudioTab from './StudioTab';
 import GLabsTab from './GLabsTab';
 import TimelapseTab from './TimelapseTab';
@@ -12,7 +11,7 @@ import PrimateCastTab from './PrimateCastTab';
 import FrenchTalkTab from './FrenchTalkTab';
 import './TimelapseTab.css';
 
-type AppTab = 'timelapse' | 'skeleton' | 'health' | 'objects' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk';
+type AppTab = 'timelapse' | 'health' | 'objects' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk';
 
 function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('timelapse');
@@ -47,11 +46,8 @@ function App() {
         <button style={tabStyle('timelapse')} onClick={() => setActiveTab('timelapse')}>
           🏗️ AI Timelapse
         </button>
-        <button style={tabStyle('skeleton')} onClick={() => setActiveTab('skeleton')}>
-          💀 Skeleton Shorts
-        </button>
         <button style={tabStyle('health')} onClick={() => setActiveTab('health')}>
-          🩺 HealthTalk
+          💡 GenieTalk
         </button>
         <button style={tabStyle('objects')} onClick={() => setActiveTab('objects')}>
           📦 ObjectWars
@@ -94,12 +90,7 @@ function App() {
         <StudioTab mode="objects" />
       </div>
 
-      {/* ── SKELETON TAB ───────────────────────────────── */}
-      <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'skeleton' ? 'flex' : 'none', flexDirection: 'column' }}>
-        <SkeletonTab />
-      </div>
-
-      {/* ── STORY TAB ──────────────────────────────────── */}
+{/* ── STORY TAB ──────────────────────────────────── */}
       <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'story' ? 'flex' : 'none', flexDirection: 'column' }}>
         <StoryTab />
       </div>

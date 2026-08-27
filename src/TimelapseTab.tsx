@@ -24,6 +24,12 @@ export interface CinematicPromptData {
 
 type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'grok';
 
+const LLM_PROVIDERS = [
+    { value: 'custom', label: 'Custom Proxy' },
+    { value: 'omniroute', label: 'OmniRoute' },
+    { value: 'pollinations', label: 'Pollinations' },
+];
+
 const TimelapseTab: React.FC = () => {
     // Pipeline States
     const [pipelineState, setPipelineState] = useState<'IDLE' | 'SELECTION' | 'EXECUTION'>('IDLE');
@@ -49,6 +55,7 @@ const TimelapseTab: React.FC = () => {
 
     const [selectedImageModel, setSelectedImageModel] = useState('nano_banana_2');
     const [selectedVideoModel, setSelectedVideoModel] = useState<VideoModel>('veo_31_lite');
+    const [llmProvider, setLlmProvider] = useState('custom');
     const [timelapseID, setTimelapseID] = useState('');
     const [customIdea, setCustomIdea] = useState('');
     const [mode, setMode] = useState<'construction' | 'surreal' | 'transform'>('construction');
@@ -94,7 +101,8 @@ const TimelapseTab: React.FC = () => {
                 customIdea, 
                 referenceImages.filter(img => !!img),
                 referenceVideo,
-                mode
+                mode,
+                llmProvider
             );
             
             if (data.subFolder) {
@@ -171,7 +179,7 @@ const TimelapseTab: React.FC = () => {
             const tid = `Timelapse_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}_${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
             setTimelapseID(tid);
 
-            const data = await window.electronAPI.timelapseGeneratePrompts(index + 1, environments[index] as any);
+            const data = await window.electronAPI.timelapseGeneratePrompts(index + 1, environments[index] as any, llmProvider);
             setPromptData(data);
             setPipelineState('EXECUTION');
             // reset assets
@@ -405,6 +413,28 @@ const TimelapseTab: React.FC = () => {
                                 }}
                             >
                                 {m.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', background: '#1e293b', padding: '0.25rem', borderRadius: '0.5rem', border: '1px solid #334155' }}>
+                        {LLM_PROVIDERS.map(p => (
+                            <button
+                                key={p.value}
+                                onClick={() => setLlmProvider(p.value)}
+                                title={`LLM: ${p.label}`}
+                                style={{
+                                    padding: '0.5rem 1rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold',
+                                    background: llmProvider === p.value ? '#10b981' : 'transparent',
+                                    color: llmProvider === p.value ? 'white' : '#94a3b8',
+                                    border: 'none',
+                                    borderRadius: '0.375rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {p.label}
                             </button>
                         ))}
                     </div>

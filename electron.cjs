@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, net, Menu, MenuItem } = require('electron');
 const { spawn } = require('child_process');
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path');
@@ -78,6 +78,23 @@ function createWindow() {
     };
 
     loadWithRetry();
+
+    // Context menu for input fields (Copy/Paste/Cut/SelectAll)
+    win.webContents.on('context-menu', (e, params) => {
+        if (params.isEditable) {
+            const menu = new Menu();
+            menu.append(new MenuItem({ label: 'Вставить', role: 'paste' }));
+            menu.append(new MenuItem({ label: 'Копировать', role: 'copy' }));
+            menu.append(new MenuItem({ label: 'Вырезать', role: 'cut' }));
+            menu.append(new MenuItem({ type: 'separator' }));
+            menu.append(new MenuItem({ label: 'Выделить всё', role: 'selectAll' }));
+            menu.popup({ window: win });
+        } else if (params.selectionText && params.selectionText.trim().length > 0) {
+            const menu = new Menu();
+            menu.append(new MenuItem({ label: 'Копировать', role: 'copy' }));
+            menu.popup({ window: win });
+        }
+    });
 
     // Open DevTools for debugging
     // if (isDev) {

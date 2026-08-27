@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const LLM_PROVIDERS = [
-  { value: 'pollinations', label: 'Pollinations (Free)' },
   { value: 'custom', label: 'Custom Proxy (Local)' },
+  { value: 'omniroute', label: 'OmniRoute (Claude)' },
+  { value: 'pollinations', label: 'Pollinations (Free)' },
 ];
 
 const MARKETS = [
@@ -13,9 +14,8 @@ const MARKETS = [
 ];
 
 const VIDEO_MODELS = [
-  { value: 'omni_flash', label: 'Omni Flash' },
-  { value: 'veo_31_lite', label: 'Veo 3.1 Lite' },
-  { value: 'grok', label: 'Grok 720p' },
+  { value: 'omni_flash', label: '✦ Omni Flash' },
+  { value: 'veo_31_fast', label: '▸ Veo 3.1 Fast' },
 ];
 
 const IMAGE_MODELS = [
@@ -58,10 +58,19 @@ const ROLE_LABELS: Record<SegmentRole, string> = {
 };
 
 const FrenchTalkTab: React.FC = () => {
-  const [subTab, setSubTab] = useState<'blogger' | 'episode' | 'vlog'>('blogger');
-  const [llmProvider, setLlmProvider] = useState('pollinations');
+  const [subTab, setSubTab] = useState<'blogger' | 'episode' | 'vlog' | 'stream_pack'>('blogger');
+  const [llmProvider, setLlmProvider] = useState('custom');
   const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
-  const [videoModel, setVideoModel] = useState<'omni_flash' | 'veo_31_lite' | 'grok'>('omni_flash');
+  const [videoModel, setVideoModel] = useState<'omni_flash' | 'veo_31_fast'>('omni_flash');
+
+  // Stream Pack state
+  const [selectedStreamDay, setSelectedStreamDay] = useState<string>('Monday');
+  const [streamPacks, setStreamPacks] = useState<Record<string, any>>({});
+  const [streamDaysInfo, setStreamDaysInfo] = useState<Record<string, any>>({});
+  const [isGeneratingStreamPack, setIsGeneratingStreamPack] = useState(false);
+  const [streamAutoRunning, setStreamAutoRunning] = useState(false);
+  const [generatingImageType, setGeneratingImageType] = useState<string | null>(null);
+  const stopStreamAutoRef = React.useRef(false);
 
   // Blogger state
   const [blogger, setBlogger] = useState<any>(null);
@@ -88,6 +97,7 @@ const FrenchTalkTab: React.FC = () => {
   const [isAutoTopic, setIsAutoTopic] = useState(false);
   const [autoTopicResult, setAutoTopicResult] = useState<{ topic: string; topicEn: string; topicRu?: string; hook: string; hookRu?: string; question?: string } | null>(null);
   const [translationsMap, setTranslationsMap] = useState<Record<string, string>>({});
+  const [isTranslating, setIsTranslating] = useState(false);
   const [topicMode, setTopicMode] = useState<'trending' | 'custom_topic' | 'custom_text' | 'video_analysis'>('trending');
   const [customInput, setCustomInput] = useState('');
   const [videoBase64, setVideoBase64] = useState('');
@@ -144,9 +154,20 @@ const FrenchTalkTab: React.FC = () => {
     } catch (e) {}
   };
 
+  const loadStreamPacks = async () => {
+    try {
+      const res = await window.electronAPI.frenchtalkGetStreamPacks();
+      if (res && res.packs) {
+        setStreamPacks(res.packs);
+        setStreamDaysInfo(res.daysInfo || {});
+      }
+    } catch (e) {}
+  };
+
   useEffect(() => {
     loadBlogger();
     loadLocationRefs();
+    loadStreamPacks();
     window.electronAPI.onFrenchTalkProgress((data: { status: string; progress?: number }) => {
       if (data.status) setStatus(data.status);
     });
@@ -155,15 +176,16 @@ const FrenchTalkTab: React.FC = () => {
 
   // Parse script → segments
   React.useEffect(() => {
-    if (!script || !blogger) { setSegments([]); return; }
-    const bloggerName = blogger.name;
+    if (!script) { setSegments([]); return; }
+    const bloggerName = blogger?.name || 'Camille';
 
     const parsed: SegmentState[] = [];
-    script.split('\n').filter(l => l.trim()).forEach(line => {
-      const match = line.match(/^([^:]+):\s*(.*)$/);
+    script.split('\n').map(l => l.trim()).filter(l => l.length > 0).forEach(cleanLine => {
+      const match = cleanLine.match(/^([^:]+):\s*(.*)$/);
       if (!match) return;
       const speaker = match[1].trim();
       const text = match[2].trim();
+      if (!text) return;
 
       let role: SegmentRole = 'stranger';
       let speakerLabel = speaker;
@@ -364,24 +386,13 @@ const FrenchTalkTab: React.FC = () => {
         });
       }
 
-      setScript(result.script);
+      const cleanScript = (result.script || '').replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
+      setScript(cleanScript);
       setEpisodeTitle('FT_' + result.topicEn.replace(/[^a-z0-9]/gi, '_').substring(0, 30));
       setAutoTopicResult({ topic: result.topic, topicEn: result.topicEn, topicRu: result.topicRu, hook: result.hook, hookRu: result.hookRu, question: result.question });
 
       if (result.scriptRu) {
-        const origLines = result.script.split('\n').filter((l: string) => l.trim());
-        const transLines = result.scriptRu.split('\n').filter((l: string) => l.trim());
-        const newMap: Record<string, string> = {};
-        origLines.forEach((line: string, idx: number) => {
-          const origM = line.match(/^([^:]+):\s*(.*)$/);
-          if (!origM) return;
-          const transLine = transLines[idx];
-          if (transLine) {
-            const transM = transLine.match(/^([^:]+):\s*(.*)$/);
-            newMap[origM[2].trim()] = transM ? transM[2].trim() : transLine.replace(/^[^:]+:\s*/, '').trim();
-          }
-        });
-        setTranslationsMap(newMap);
+        processScriptTranslation(cleanScript, result.scriptRu);
       }
 
       setStatus('');
@@ -390,6 +401,42 @@ const FrenchTalkTab: React.FC = () => {
       setStatus('');
     } finally {
       setIsAutoTopic(false);
+    }
+  };
+
+  const processScriptTranslation = (scriptFr: string, scriptRu: string) => {
+    const cleanScriptRu = scriptRu.replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
+    const origLines = scriptFr.split('\n').map(l => l.trim()).filter(l => l.length > 0 && l.includes(':'));
+    const transLines = cleanScriptRu.split('\n').map(l => l.trim()).filter(l => l.length > 0 && (l.includes(':') || l.length > 3));
+    const newMap: Record<string, string> = {};
+    origLines.forEach((line: string, idx: number) => {
+      const origM = line.match(/^([^:]+):\s*(.*)$/);
+      if (!origM) return;
+      const transLine = transLines[idx];
+      if (transLine) {
+        const transM = transLine.match(/^([^:]+):\s*(.*)$/);
+        const ruText = transM ? transM[2].trim() : transLine.replace(/^[^:]+:\s*/, '').trim();
+        newMap[origM[2].trim()] = ruText;
+      }
+    });
+    setTranslationsMap(prev => ({ ...prev, ...newMap }));
+  };
+
+  const handleTranslateScript = async () => {
+    if (!script) return;
+    setIsTranslating(true);
+    try {
+      const res = await window.electronAPI.frenchtalkTranslateScript({
+        script,
+        bloggerName: blogger?.name || 'Camille'
+      });
+      if (res && res.scriptRu) {
+        processScriptTranslation(script, res.scriptRu);
+      }
+    } catch (err: any) {
+      alert('Ошибка перевода: ' + err.message);
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -440,6 +487,79 @@ const FrenchTalkTab: React.FC = () => {
       await new Promise(r => setTimeout(r, 300));
     }
     setIsAutoRunning(false);
+  };
+
+  const handleGenerateStreamScript = async (day: string) => {
+    setIsGeneratingStreamPack(true);
+    try {
+      const res = await window.electronAPI.frenchtalkGenerateStreamPackScript({ day });
+      setStreamPacks(prev => ({ ...prev, [day]: res }));
+    } catch (e: any) {
+      alert('Ошибка создания пака: ' + e.message);
+    } finally {
+      setIsGeneratingStreamPack(false);
+    }
+  };
+
+  const handleGenerateStreamImage = async (day: string, type: 'room' | 'scene') => {
+    if (generatingImageType) return;
+    try {
+      setGeneratingImageType(type);
+      const res = await window.electronAPI.frenchtalkGenerateStreamPackImage({ day, type });
+      if (res && res.success) {
+        setStreamDaysInfo(prev => ({
+          ...prev,
+          [day]: {
+            ...(prev[day] || {}),
+            ...(res.bgRoomBase64 ? { bgRoomBase64: res.bgRoomBase64 } : {}),
+            ...(res.sceneBase64 ? { sceneBase64: res.sceneBase64 } : {})
+          }
+        }));
+      }
+    } catch (e: any) {
+      alert(`Ошибка при генерации картинки (${type === 'room' ? 'комната' : 'сцена'}): ${e.message || e}`);
+    } finally {
+      setGeneratingImageType(null);
+    }
+  };
+
+  const updateStreamClipStatus = (day: string, clipIndex: number, updates: any) => {
+    setStreamPacks(prev => {
+      const pack = prev[day];
+      if (!pack || !pack.clips) return prev;
+      const updatedClips = pack.clips.map((c: any) => c.index === clipIndex ? { ...c, ...updates } : c);
+      return { ...prev, [day]: { ...pack, clips: updatedClips } };
+    });
+  };
+
+  const handleGenerateStreamClip = async (day: string, clip: any) => {
+    updateStreamClipStatus(day, clip.index, { status: 'generating' });
+    try {
+      const result = await window.electronAPI.frenchtalkGenerateStreamPackClip({
+        day,
+        clipIndex: clip.index,
+        videoModel,
+        aspectRatio
+      });
+      updateStreamClipStatus(day, clip.index, { status: 'done', videoPath: result.videoPath, videoBase64: result.videoBase64 });
+    } catch (e: any) {
+      updateStreamClipStatus(day, clip.index, { status: 'error' });
+      alert('Ошибка генерации клипа №' + (clip.index + 1) + ': ' + e.message);
+    }
+  };
+
+  const handleAutoGenerateStreamPack = async (day: string) => {
+    const pack = streamPacks[day];
+    if (!pack || !pack.clips) return;
+    stopStreamAutoRef.current = false;
+    setStreamAutoRunning(true);
+    for (const clip of pack.clips) {
+      if (stopStreamAutoRef.current) break;
+      if (clip.status === 'done') continue;
+      await handleGenerateStreamClip(day, clip);
+      await new Promise(r => setTimeout(r, 500));
+    }
+    setStreamAutoRunning(false);
   };
 
   const renderBloggerTab = () => (
@@ -759,6 +879,19 @@ const FrenchTalkTab: React.FC = () => {
             />
           )}
         </div>
+        <div>
+          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Video Model</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {VIDEO_MODELS.map(m => (
+              <button key={m.value} onClick={() => setVideoModel(m.value as any)} style={{
+                padding: '7px 14px', backgroundColor: videoModel === m.value ? '#7c4dff' : '#252535',
+                color: videoModel === m.value ? '#fff' : '#aaa', border: videoModel === m.value ? '1px solid #9d6fff' : '1px solid #444',
+                borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: videoModel === m.value ? 'bold' : 'normal',
+                transition: 'all 0.2s ease'
+              }}>{m.label}</button>
+            ))}
+          </div>
+        </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <div style={{ fontSize: '11px', color: '#888' }}>Stranger Description</div>
@@ -815,17 +948,7 @@ const FrenchTalkTab: React.FC = () => {
             ))}
           </div>
         </div>
-        <div>
-          <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>Video Model</div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {VIDEO_MODELS.map(m => (
-              <button key={m.value} onClick={() => setVideoModel(m.value as any)} style={{
-                padding: '5px 10px', backgroundColor: videoModel === m.value ? '#7c4dff' : '#252535',
-                color: '#fff', border: '1px solid #444', borderRadius: '5px', cursor: 'pointer', fontSize: '11px'
-              }}>{m.label}</button>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       {/* Script Editor */}
@@ -878,6 +1001,16 @@ const FrenchTalkTab: React.FC = () => {
               <span style={{ fontSize: '11px', color: '#666', alignSelf: 'center' }}>
                 {segments.filter(s => s.status === 'done').length}/{segments.length} готово
               </span>
+              <button
+                disabled={!script || isTranslating}
+                onClick={handleTranslateScript}
+                style={{
+                  padding: '7px 14px', backgroundColor: '#6a1b9a', color: '#fff',
+                  border: 'none', borderRadius: '6px', cursor: !script || isTranslating ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold'
+                }}
+              >
+                {isTranslating ? '⏳ Перевожу...' : '🌐 Перевести на русский'}
+              </button>
               {!isAutoRunning ? (
                 <button onClick={handleAutoGenerateAll} style={{
                   padding: '7px 14px', backgroundColor: '#007acc', color: '#fff',
@@ -916,7 +1049,7 @@ const FrenchTalkTab: React.FC = () => {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', color: '#e6edf3', marginBottom: '2px' }}>"{seg.text}"</div>
                   {seg.translationRu && (
-                    <div style={{ fontSize: '11px', color: '#888', fontStyle: 'italic' }}>{seg.translationRu}</div>
+                    <div style={{ fontSize: '11px', color: '#ffb3da', fontStyle: 'italic', marginTop: '2px' }}>🇷🇺 {seg.translationRu}</div>
                   )}
                   {seg.status === 'error' && (
                     <div style={{ fontSize: '11px', color: '#ff6666', marginTop: '4px' }}>⚠️ {seg.errorMsg}</div>
@@ -1326,6 +1459,369 @@ const FrenchTalkTab: React.FC = () => {
     </div>
   );
 
+  const renderStreamPackTab = () => {
+    const currentPack = streamPacks[selectedStreamDay] || null;
+    const dayInfo = streamDaysInfo[selectedStreamDay] || {};
+    const daysList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const daysRuMap: Record<string, string> = {
+      Monday: 'Понедельник', Tuesday: 'Вторник', Wednesday: 'Среда',
+      Thursday: 'Четверг', Friday: 'Пятница', Saturday: 'Суббота', Sunday: 'Воскресенье'
+    };
+
+    const doneCount = currentPack?.clips ? currentPack.clips.filter((c: any) => c.status === 'done').length : 0;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: '20px', gap: '16px', backgroundColor: '#0e0b16' }}>
+        {/* Top bar: Day Selection */}
+        <div style={{
+          display: 'flex', gap: '8px', padding: '12px', backgroundColor: '#161324',
+          borderRadius: '12px', border: '1px solid #2e2a4a', alignItems: 'center', flexWrap: 'wrap', flexShrink: 0
+        }}>
+          <span style={{ color: '#e8c4a0', fontWeight: 'bold', fontSize: '14px', marginRight: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🔴 Выберите день вещания:
+          </span>
+          {daysList.map(d => {
+            const pack = streamPacks[d];
+            const cnt = pack?.clips ? pack.clips.filter((c: any) => c.status === 'done').length : 0;
+            const isSel = selectedStreamDay === d;
+            return (
+              <button key={d} onClick={() => setSelectedStreamDay(d)} style={{
+                padding: '8px 16px', borderRadius: '8px', border: isSel ? '1px solid #ff4081' : '1px solid #36335a',
+                backgroundColor: isSel ? '#7c4dff' : '#1d1a32',
+                background: isSel ? 'linear-gradient(135deg, #ff4081 0%, #7c4dff 100%)' : undefined,
+                color: '#fff', fontWeight: isSel ? 'bold' : 'normal', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
+              }}>
+                <span>{daysRuMap[d] || d}</span>
+                {cnt > 0 && (
+                  <span style={{ fontSize: '11px', backgroundColor: '#00c853', color: '#fff', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold' }}>
+                    {cnt}/30
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Day info card & settings */}
+        <div style={{
+          display: 'flex', gap: '16px', backgroundColor: '#171428', padding: '16px', borderRadius: '12px',
+          border: '1px solid #302d50', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center'
+        }}>
+          <div style={{ flex: 1, minWidth: '300px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+              <h3 style={{ margin: 0, color: '#ff4081', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📅 {daysRuMap[selectedStreamDay]} (AI Live Studio)
+              </h3>
+              <span style={{ fontSize: '11px', backgroundColor: '#1a3a2a', color: '#00e676', padding: '4px 10px', borderRadius: '20px', border: '1px solid #00c853', fontWeight: 'bold' }}>
+                ✏️ Стиль и локация открыты для редактирования
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', fontSize: '13px', color: '#ddd' }}>
+              <div style={{ backgroundColor: '#100d1c', padding: '12px', borderRadius: '8px', border: '1px solid #2e2850', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ color: '#e8c4a0', display: 'block', fontSize: '11px', fontWeight: 'bold' }}>👗 ОДЕЖДА ДНЯ (МОЖНО РЕДАКТИРОВАТЬ):</span>
+                <input
+                  type="text"
+                  value={dayInfo.outfitRu || dayInfo.outfit || ''}
+                  onChange={e => {
+                    const val = e.target.value;
+                    const updated = {
+                      ...streamDaysInfo,
+                      [selectedStreamDay]: { ...dayInfo, outfit: val, outfitRu: val }
+                    };
+                    setStreamDaysInfo(updated);
+                    if (window.electronAPI.frenchtalkSaveStreamPackDaysInfo) {
+                      window.electronAPI.frenchtalkSaveStreamPackDaysInfo(updated).catch(console.error);
+                    }
+                  }}
+                  placeholder="Опишите стиль одежды для стрима..."
+                  style={{
+                    width: '100%', padding: '8px 10px', backgroundColor: '#090712', color: '#fff',
+                    border: '1px solid #7c4dff', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', outline: 'none'
+                  }}
+                />
+              </div>
+              <div style={{ backgroundColor: '#100d1c', padding: '12px', borderRadius: '8px', border: '1px solid #2e2850', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ color: '#e8c4a0', display: 'block', fontSize: '11px', fontWeight: 'bold' }}>🛋 ЛОКАЦИЯ И АТМОСФЕРА (МОЖНО РЕДАКТИРОВАТЬ):</span>
+                <input
+                  type="text"
+                  value={dayInfo.locationRu || dayInfo.location || ''}
+                  onChange={e => {
+                    const val = e.target.value;
+                    const updated = {
+                      ...streamDaysInfo,
+                      [selectedStreamDay]: { ...dayInfo, location: val, locationRu: val }
+                    };
+                    setStreamDaysInfo(updated);
+                    if (window.electronAPI.frenchtalkSaveStreamPackDaysInfo) {
+                      window.electronAPI.frenchtalkSaveStreamPackDaysInfo(updated).catch(console.error);
+                    }
+                  }}
+                  placeholder="Опишите интерьер и обстановку комнат..."
+                  style={{
+                    width: '100%', padding: '8px 10px', backgroundColor: '#090712', color: '#fff',
+                    border: '1px solid #7c4dff', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', fontWeight: '500', outline: 'none'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '240px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '4px' }}>🎬 Video Model</div>
+              <select value={videoModel} onChange={e => setVideoModel(e.target.value as any)} style={{
+                width: '100%', padding: '8px 12px', backgroundColor: '#0e0b1a', color: '#ff4081', border: '1px solid #ff4081', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'
+              }}>
+                <option value="omni_flash">⚡ Omni Flash (Быстро)</option>
+                <option value="veo_31_fast">🌟 Veo 3.1 Fast (Качество)</option>
+              </select>
+            </div>
+            {!currentPack && (
+              <button onClick={() => handleGenerateStreamScript(selectedStreamDay)} disabled={isGeneratingStreamPack} style={{
+                padding: '12px 16px', background: 'linear-gradient(135deg, #ff4081 0%, #7c4dff 100%)',
+                color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(255, 64, 129, 0.4)', transition: 'all 0.2s'
+              }}>
+                {isGeneratingStreamPack ? '⏳ Создаю сценарии...' : `✨ Сгенерировать 30 клипов (${daysRuMap[selectedStreamDay]})`}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Reference Images Studio Control */}
+        <div style={{
+          margin: '0 20px', padding: '16px 20px', backgroundColor: '#131122', borderRadius: '12px',
+          border: '1px solid #3d3460', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h4 style={{ margin: 0, color: '#e8c4a0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🖼️ Этап 1: Подготовка и проверка визуальных референсов
+              </h4>
+              <span style={{ color: '#aaa', fontSize: '12px', display: 'block', marginTop: '4px' }}>
+                Перед генерацией видеоклипов создайте и оцените интерьер комнаты и итоговый кадр девушки на диване.
+              </span>
+            </div>
+            {dayInfo.sceneBase64 ? (
+              <span style={{ fontSize: '12px', backgroundColor: '#1a3a2a', color: '#00e676', padding: '4px 12px', borderRadius: '20px', border: '1px solid #00c853', fontWeight: 'bold' }}>
+                ✅ Кадр для видео готов к анимации!
+              </span>
+            ) : (
+              <span style={{ fontSize: '12px', backgroundColor: '#3e2723', color: '#ffb74d', padding: '4px 12px', borderRadius: '20px', border: '1px solid #ff9800', fontWeight: 'bold' }}>
+                ⚠️ Требуется сгенерировать итоговую сцену
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+            {/* 1. Room Background */}
+            <div style={{ backgroundColor: '#0b0914', padding: '12px', borderRadius: '10px', border: '1px solid #282342', display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <div style={{
+                width: '90px', height: '160px', backgroundColor: '#161326', borderRadius: '8px', border: '1px solid #362e5a',
+                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: dayInfo.bgRoomBase64 ? 'pointer' : 'default'
+              }} onClick={() => dayInfo.bgRoomBase64 && setLightboxImage(dayInfo.bgRoomBase64)}>
+                {dayInfo.bgRoomBase64 ? (
+                  <img src={dayInfo.bgRoomBase64} alt="Room Ref" style={{ width: '100%', height: '100%', objectFit: 'cover' }} title="Нажмите для увеличения" />
+                ) : (
+                  <span style={{ fontSize: '11px', color: '#666', textAlign: 'center', padding: '4px' }}>Нет<br/>фото<br/>комнаты</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                <div>
+                  <strong style={{ color: '#fff', fontSize: '13px', display: 'block' }}>1. Чистый интерьер комнаты</strong>
+                  <span style={{ color: '#888', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                    Архитектурная фотография фона без человека.
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleGenerateStreamImage(selectedStreamDay, 'room')}
+                  disabled={!!generatingImageType}
+                  style={{
+                    padding: '8px 12px', backgroundColor: generatingImageType === 'room' ? '#332d56' : '#2d2250', color: '#ff4081',
+                    border: '1px solid #ff4081', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: generatingImageType ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
+                  }}
+                >
+                  {generatingImageType === 'room' ? '⏳ Генерирую...' : (dayInfo.bgRoomBase64 ? '🔄 Пересоздать комнату' : '✨ Сгенерировать комнату')}
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Master Scene */}
+            <div style={{ backgroundColor: '#0b0914', padding: '12px', borderRadius: '10px', border: '1px solid #282342', display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <div style={{
+                width: '90px', height: '160px', backgroundColor: '#161326', borderRadius: '8px', border: '1px solid #362e5a',
+                overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: dayInfo.sceneBase64 ? 'pointer' : 'default'
+              }} onClick={() => dayInfo.sceneBase64 && setLightboxImage(dayInfo.sceneBase64)}>
+                {dayInfo.sceneBase64 ? (
+                  <img src={dayInfo.sceneBase64} alt="Master Scene Ref" style={{ width: '100%', height: '100%', objectFit: 'cover' }} title="Нажмите для увеличения" />
+                ) : (
+                  <span style={{ fontSize: '11px', color: '#666', textAlign: 'center', padding: '4px' }}>Нет<br/>итоговой<br/>сцены</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                <div>
+                  <strong style={{ color: '#fff', fontSize: '13px', display: 'block' }}>2. Итоговый кадр с блогером</strong>
+                  <span style={{ color: '#888', fontSize: '11px', display: 'block', marginTop: '2px' }}>
+                    Профи-камера Hasselblad X2D. Девушка в одежде дня на фоне комнаты.
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleGenerateStreamImage(selectedStreamDay, 'scene')}
+                  disabled={!!generatingImageType || !dayInfo.bgRoomBase64}
+                  style={{
+                    padding: '8px 12px',
+                    background: !dayInfo.bgRoomBase64 ? '#1d1a2f' : (generatingImageType === 'scene' ? '#452055' : 'linear-gradient(135deg, #ff4081 0%, #7c4dff 100%)'),
+                    color: !dayInfo.bgRoomBase64 ? '#666' : '#fff',
+                    border: !dayInfo.bgRoomBase64 ? '1px solid #333' : 'none',
+                    borderRadius: '6px', fontWeight: 'bold', fontSize: '12px',
+                    cursor: (!dayInfo.bgRoomBase64 || generatingImageType) ? 'not-allowed' : 'pointer',
+                    boxShadow: dayInfo.bgRoomBase64 ? '0 2px 10px rgba(255, 64, 129, 0.3)' : 'none', transition: 'all 0.2s'
+                  }}
+                >
+                  {generatingImageType === 'scene' ? '⏳ Генерирую...' : (!dayInfo.bgRoomBase64 ? '🔒 Сначала создайте комнату' : (dayInfo.sceneBase64 ? '🔄 Пересоздать кадр' : '🌟 Сгенерировать итоговую сцену'))}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Clip List or Empty State */}
+        {!currentPack ? (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: '#110e1f', borderRadius: '12px', border: '1px dashed #36335a', color: '#888', padding: '40px', textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎭</div>
+            <h3 style={{ color: '#eee', margin: '0 0 8px 0' }}>Пакет для дня «{daysRuMap[selectedStreamDay]}» еще не создан</h3>
+            <p style={{ maxWidth: '560px', fontSize: '13px', lineHeight: '1.6', color: '#aaa', margin: '0 0 24px 0' }}>
+              При генерации система создаст ровно 30 видеоклипов без смены одежды:<br />
+              <b>12 клипов</b> <code>idle_loop</code> (без слов и открывания рта, интерактив),<br />
+              <b>15 клипов</b> <code>talking_reply</code> (короткий французский интерактив с переводом на русский),<br />
+              <b>3 клипа</b> <code>gift_reaction</code> (восторг и благодарность за донат).
+            </p>
+            <button onClick={() => handleGenerateStreamScript(selectedStreamDay)} disabled={isGeneratingStreamPack} style={{
+              padding: '14px 28px', background: 'linear-gradient(135deg, #ff4081 0%, #7c4dff 100%)',
+              color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(124, 77, 255, 0.5)'
+            }}>
+              {isGeneratingStreamPack ? '⏳ Создаю план пакета...' : `🚀 Сгенерировать стрим-пак на ${daysRuMap[selectedStreamDay]}`}
+            </button>
+          </div>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            {/* Controls banner */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px',
+              backgroundColor: '#1c1832', borderRadius: '8px 8px 0 0', border: '1px solid #36335a', flexShrink: 0
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontWeight: 'bold', color: '#e8c4a0', fontSize: '14px' }}>
+                  📦 Сгенерированные клипы ({doneCount}/30)
+                </span>
+                <span style={{ fontSize: '12px', color: '#aaa' }}>
+                  Папка: <code>StreamPack_{selectedStreamDay}</code>
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {streamAutoRunning ? (
+                  <button onClick={() => { stopStreamAutoRef.current = true; setStreamAutoRunning(false); }} style={{
+                    padding: '6px 14px', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'
+                  }}>
+                    ⏹ Остановить авто-генерацию
+                  </button>
+                ) : (
+                  <button onClick={() => handleAutoGenerateStreamPack(selectedStreamDay)} disabled={doneCount === 30} style={{
+                    padding: '6px 14px', background: 'linear-gradient(90deg, #00c853 0%, #b2ff59 100%)',
+                    color: '#000', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer',
+                    opacity: doneCount === 30 ? 0.5 : 1
+                  }}>
+                    ⚡ Авто-генерация всех клипов
+                  </button>
+                )}
+                <button onClick={() => handleGenerateStreamScript(selectedStreamDay)} disabled={isGeneratingStreamPack || streamAutoRunning} style={{
+                  padding: '6px 12px', backgroundColor: '#2d294a', color: '#aaa', border: '1px solid #444', borderRadius: '6px', fontSize: '12px', cursor: 'pointer'
+                }}>
+                  🔄 Пересоздать тексты
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable grid/table of clips */}
+            <div style={{ flex: 1, overflowY: 'auto', backgroundColor: '#131022', border: '1px solid #252240', borderRadius: '0 0 8px 8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {currentPack.clips.map((clip: any) => {
+                const isIdle = clip.role === 'idle_loop';
+                const isTalk = clip.role === 'talking_reply';
+                const isReaction = clip.role === 'gift_reaction';
+                const roleBadge = isIdle ? { text: '🟢 IDLE (Молчит)', color: '#00e676', bg: '#003b1e' } :
+                                  isTalk ? { text: '💬 TALKING REPLY', color: '#40c4ff', bg: '#00263e' } :
+                                           { text: '🎁 GIFT REACTION', color: '#ff4081', bg: '#3b001a' };
+
+                let fileTag = 'idle_';
+                if (isTalk) fileTag = 'talking_';
+                if (isReaction) fileTag = 'reaction_';
+
+                return (
+                  <div key={clip.index} style={{
+                    display: 'flex', alignItems: 'center', gap: '14px', padding: '12px',
+                    backgroundColor: clip.status === 'done' ? '#16231a' : '#1a172c',
+                    borderRadius: '8px', border: `1px solid ${clip.status === 'done' ? '#2e6b48' : '#2f2b4e'}`,
+                    transition: 'all 0.2s'
+                  }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#252240', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '13px', color: '#ccc', flexShrink: 0 }}>
+                      {String(clip.index + 1).padStart(2, '0')}
+                    </div>
+
+                    <div style={{ minWidth: '170px', flexShrink: 0 }}>
+                      <span style={{ display: 'inline-block', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', color: roleBadge.color, backgroundColor: roleBadge.bg, border: `1px solid ${roleBadge.color}44`, marginBottom: '4px' }}>
+                        {roleBadge.text}
+                      </span>
+                      <div style={{ fontSize: '11px', color: '#888', fontFamily: 'monospace' }}>
+                        Файл: <code>{fileTag}{String(clip.index + 1).padStart(2, '0')}...mp4</code>
+                      </div>
+                    </div>
+
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ fontSize: '13px', color: isIdle ? '#bbb' : '#fff', fontWeight: isIdle ? 'normal' : '500' }}>
+                        {clip.text}
+                      </div>
+                      {clip.translationRu && (
+                        <div style={{ fontSize: '12px', color: '#ff80ab', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>🇷🇺</span> {clip.translationRu}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                      {clip.videoBase64 && (
+                        <button onClick={() => setPreviewVideo(clip.videoBase64)} style={{
+                          padding: '6px 12px', backgroundColor: '#3b2d60', color: '#e8c4a0', border: '1px solid #7c4dff', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+                        }}>
+                          ▶️ Смотреть (8с)
+                        </button>
+                      )}
+
+                      <button onClick={() => handleGenerateStreamClip(selectedStreamDay, clip)} disabled={clip.status === 'generating' || streamAutoRunning} style={{
+                        padding: '8px 14px', fontSize: '12px', fontWeight: 'bold',
+                        backgroundColor: clip.status === 'done' ? '#1a3b2a' : clip.status === 'generating' ? '#252240' : undefined,
+                        background: clip.status === 'done' ? '#1a3b2a' : clip.status === 'generating' ? '#252240' : 'linear-gradient(135deg, #7c4dff 0%, #ff4081 100%)',
+                        color: clip.status === 'generating' ? '#aaa' : clip.status === 'done' ? '#00e676' : '#fff',
+                        border: `1px solid ${clip.status === 'done' ? '#00c853' : '#666'}`,
+                        borderRadius: '6px', cursor: clip.status === 'generating' ? 'default' : 'pointer', transition: 'all 0.2s'
+                      }}>
+                        {clip.status === 'generating' ? '⏳ Генерация...' : clip.status === 'done' ? '🔄 Пересоздать' : '🎬 Создать MP4'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderHeader = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
@@ -1338,7 +1834,7 @@ const FrenchTalkTab: React.FC = () => {
           <span style={{ fontSize: '22px' }}>🇫🇷</span>
           <div>
             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#e8c4a0' }}>FrenchTalk</div>
-            <div style={{ fontSize: '11px', color: '#888' }}>Paris Street Interview & Lifestyle Vlog Generator for TikTok</div>
+            <div style={{ fontSize: '11px', color: '#888' }}>Paris Street Interview & Lifestyle Vlog Generator for TikTok & AI Live</div>
           </div>
         </div>
         {blogger && (
@@ -1358,7 +1854,8 @@ const FrenchTalkTab: React.FC = () => {
         {[
           { id: 'blogger', label: '🎀 Blogger Setup' },
           { id: 'episode', label: '🎬 Episode Generator' },
-          { id: 'vlog', label: '💅 Life & Girl Secrets' }
+          { id: 'vlog', label: '💅 Life & Girl Secrets' },
+          { id: 'stream_pack', label: '🔴 7-Day Stream Packs' }
         ].map(t => (
           <button key={t.id} onClick={() => setSubTab(t.id as any)} style={{
             padding: '7px 18px', fontSize: '13px', fontWeight: 'bold',
@@ -1372,7 +1869,7 @@ const FrenchTalkTab: React.FC = () => {
 
       {/* Content */}
       <div style={{ flex: 1, overflow: 'hidden', overflowY: 'auto' }}>
-        {subTab === 'blogger' ? renderBloggerTab() : subTab === 'episode' ? renderEpisodeTab() : renderVlogTab()}
+        {subTab === 'blogger' ? renderBloggerTab() : subTab === 'episode' ? renderEpisodeTab() : subTab === 'vlog' ? renderVlogTab() : renderStreamPackTab()}
       </div>
 
       {/* Video Preview Modal */}

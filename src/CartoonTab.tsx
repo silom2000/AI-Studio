@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import './CartoonTab.css';
 
+const LLM_PROVIDERS = [
+  { value: 'custom', label: 'Custom Proxy (Local)' },
+  { value: 'omniroute', label: 'OmniRoute (Claude)' },
+  { value: 'pollinations', label: 'Pollinations (Free)' },
+];
+
 // ── Scene stage icons/labels ────────────────────────────────────────────────
 const STAGE_ICONS: Record<number, string> = {
   1: '🎣', 2: '🌅', 3: '🔧', 4: '😓',
@@ -70,6 +76,7 @@ export default function CartoonTab() {
   const [language, setLanguage]               = useState('Russian');
   const [imageModel, setImageModel]           = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
   const [videoModel, setVideoModel]           = useState<VideoModel>('veo_31_lite');
+  const [llmProvider, setLlmProvider]         = useState('custom');
   const [ideas, setIdeas]                     = useState<Idea[]>([]);
   const [selectedIdea, setSelectedIdea]       = useState<Idea | null>(null);
   const [script, setScript]                   = useState<CartoonScript | null>(null);
@@ -84,7 +91,7 @@ export default function CartoonTab() {
   const handleGenerateIdeas = async () => {
     setIsLoadingIdeas(true);
     try {
-      const result = await (window as any).electronAPI.cartoonGenerateIdeas({ topic, language });
+      const result = await (window as any).electronAPI.cartoonGenerateIdeas({ topic, language, provider: llmProvider });
       setIdeas(result);
       setScript(null);
       setSelectedIdea(null);
@@ -103,7 +110,7 @@ export default function CartoonTab() {
     try {
       const folder = await (window as any).electronAPI.cartoonCreateFolder();
       setProjectFolder(folder);
-      const result = await (window as any).electronAPI.cartoonGenerateScript({ idea, language, projectFolder: folder });
+      const result = await (window as any).electronAPI.cartoonGenerateScript({ idea, language, projectFolder: folder, provider: llmProvider });
       setScript(result);
       setSceneStates({});
       setCharacterRefUrl(undefined);
@@ -235,6 +242,24 @@ export default function CartoonTab() {
             <option value="German">Deutsch</option>
             <option value="Spanish">Español</option>
           </select>
+
+          {/* LLM Provider */}
+          <label className="cartoon-label" style={{ marginTop: '14px' }}>LLM Provider</label>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {LLM_PROVIDERS.map(p => (
+              <button
+                key={p.value}
+                onClick={() => setLlmProvider(p.value)}
+                style={{
+                  padding: '5px 12px',
+                  backgroundColor: llmProvider === p.value ? '#f0c040' : '#1a1a1a',
+                  color: llmProvider === p.value ? '#000' : '#fff',
+                  border: llmProvider === p.value ? '1px solid #f0c040' : '1px solid #333',
+                  borderRadius: '6px', cursor: 'pointer', fontSize: '12px'
+                }}
+              >{p.label}</button>
+            ))}
+          </div>
 
           {/* Image model */}
           <label className="cartoon-label" style={{ marginTop: '14px' }}>Image Model</label>

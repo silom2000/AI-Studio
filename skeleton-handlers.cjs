@@ -11,6 +11,7 @@ const historyManager = require('./history-manager.cjs');
 const { pipeline: _pipeline } = require('stream');
 
 const ai = require('./ai-client.cjs');
+const { searchWeb } = require('./search-helper.cjs');
 
 const LANG_NAMES = {
     // short codes
@@ -46,55 +47,50 @@ const OBJECT_CATEGORIES = [
 // —— Pixar Cinematic Image Prompt Variants ———————————————————————
 const PIXAR_IMAGE_VARIANTS = [
     {
-        id: 'A', name: 'Heroic Drama',
-        template: (character) => `heroic Pixar 3D style anthropomorphic object ${character}, the physical object has expressive cartoon eyes and mouth on its surface, extreme low angle shot, placed in its natural detailed environment, hard spotlight from above, sharp object shadows, cinematic 2.39:1 crop, action-movie mood`
+        id: 'A', name: "Cozy Inventor's Workshop",
+        template: (character) => `${character}, medium shot, standing proudly in a cozy warmly-lit inventor's workshop filled with wooden workbenches, blueprints on walls, glowing Edison bulbs, whimsical science gadgets, warm atmospheric lighting, shallow depth of field, cinematic 9:16 portrait composition`
     },
     {
-        id: 'B', name: 'Discovery Moment',
-        template: (character) => `shocked Pixar 3D style anthropomorphic object ${character}, the physical object has huge expressive eyes and mouth on its surface, motion lines around the object, placed in its natural detailed environment, dramatic backlighting, rim light halo, fisheye lens distortion`
+        id: 'B', name: 'Smart Lifehack Kitchen',
+        template: (character) => `${character}, eye-level portrait shot, inside a modern bright aesthetic kitchen with neat wooden shelves, organized pantry jars, soft golden morning sunlight filtering through the window, cheerful ambient lighting, cinematic 9:16 vertical framing`
     },
     {
-        id: 'C', name: 'Noir Moody',
-        template: (character) => `moody Pixar 3D style anthropomorphic object ${character}, the physical object has cartoon eyes and mouth on its surface, placed in its natural detailed environment, single neon light source, rain reflections, low angle shot, confident expression, dramatic shadows, 2.39:1 widescreen`
+        id: 'C', name: 'Creative Tech Lab & Desk',
+        template: (character) => `${character}, sitting or standing at a creative colorful study desk with colorful notebooks, craft tools, warm desk lamp glow, soft bokeh background, curious and proud expression, high-end 3D animated look`
     },
     {
-        id: 'D', name: 'Fun Chaos',
-        template: (character) => `funny Pixar 3D style anthropomorphic object ${character}, the physical object has a mischievous grin and cartoon eyes on its surface, placed in its natural detailed environment, extreme fisheye lens, dutch tilt, bright saturated colors, speed lines, high-energy mood`
+        id: 'D', name: 'Direct Discovery Studio',
+        template: (character) => `${character}, stylish modern discovery room with subtle chalkboard diagrams and blueprints in background, warm soft spotlight, sharp focus, energetic confident posture`
     }
 ];
 
 // —— Pixar Base Image Prompt (appended to every variant) ————————
-const PIXAR_IMAGE_BASE = `Pixar 3D CGI animation, ultra-cinematic lighting, clear detailed background, physically-based rendering, bold shadows, teal-orange color grading`;
+const PIXAR_IMAGE_BASE = `ultra-cinematic lighting, clear detailed background, rich warm tones, soft shadows, sharp focus`;
 
-const TALKING_OBJECT_IMAGE_LOCK = `The character is only the physical object named in CHARACTER, with cartoon eyes and a mouth on its surface. The background environment contains only contextual props relevant to this object.`;
+const TALKING_OBJECT_IMAGE_LOCK = ``;
 
-// в”Ђв”Ђ VEO Video Motion Variants в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// —— VEO Video Motion Variants ——————————————————————————————————————
 const PIXAR_VIDEO_VARIANTS = [
     {
-        id: 'A', name: 'Hyper-Dynamic Multi-Cut',
-        template: `CAMERA MOVEMENT: HYPER-DYNAMIC CONTINUOUS SEQUENCE over 8 seconds. 0-2s: FAST CRASH ZOOM into extreme close-up of the object's mouth speaking. 2-5s: RAPID WHIP PAN into a fast 180-degree ORBIT around the object, tracking its motion with slight Dutch tilt. 5-8s: SNAP ZOOM OUT to a low-angle hero shot. Hyper-kinetic continuous camera movement without hard cuts. Subject's expressive face and mouth MUST remain visible for accurate lip-sync.`
+        id: 'A', name: 'The Proud Young Genius',
+        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks enthusiastically with energetic, cute hand gestures, adjusting her round glasses on her cute nose with a mischievous proud smile, explaining the brilliant lifehack directly into the camera. Face remains visible and steady for lip-sync.`
     },
     {
-        id: 'B', name: 'Cinematic Montage',
-        template: `CAMERA MOVEMENT: CINEMATIC CONTINUOUS FLOW over 8 seconds. 0-3s: MACRO CLOSE-UP panning slowly across the object's face. 3-6s: SMOOTH FAST DOLLY PUSH-OUT to reveal the surrounding environment. 6-8s: CONTINUOUS SWOOPING DRONE-STYLE SHIFT to a dynamic angle while keeping the object's face in view. Subject bounces slightly (breathing life). Continuous flow without hard cuts to maintain perfect lip-sync.`
+        id: 'B', name: 'The Eureka Moment',
+        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her big eyes sparkle with excitement, she playfully taps her temple or points up with a finger as if having a genius idea, looking directly into the camera with an adorable knowing gaze as she shares the secret trick. Face remains perfectly centered for lip-sync.`
     },
     {
-        id: 'C', name: 'Action & Rack Focus',
-        template: `CAMERA MOVEMENT: HIGH-ENERGY RACK FOCUS AND DOLLY over 8 seconds. 0-2s: Subject is blurred in foreground, rapid RACK FOCUS to reveal the face sharply. 2-5s: FAST DOLLY ZOOM (Vertigo effect) expanding the background while subject stays fixed. 5-8s: RAPID SPIRALING ZOOM moving closer to the object's expressive eyes and mouth. Intense continuous visual storytelling without hard cuts. Face stays visible for lip-sync.`
+        id: 'C', name: 'The Hands-on Demonstration',
+        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: She holds a handy gadget or household item with cute precision, enthusiastically demonstrating how easy the trick is, then looks straight at the viewer with an encouraging smile. Face stays steady for clear lip-sync.`
     },
     {
-        id: 'D', name: 'TikTok Viral Cuts',
-        template: `CAMERA MOVEMENT: FAST-PACED VIRAL MOVEMENT over 8 seconds. 0-2s: EXTREME CLOSE-UP front-facing on the speaking mouth, maximum impact. 2-4s: SNAP ZOOM OUT to a mid-shot with slight handheld camera breathing. 4-6s: RAPID CRANE UP to a high-angle looking down at the face. 6-8s: CRASH ZOOM back into the object's face. Constant continuous camera movement, high-tension pacing without hard cuts. Face remains visible for lip-sync.`
+        id: 'D', name: 'The Direct Secret Revelation',
+        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if whispering an incredible life secret, gesturing with playful confidence and maintaining delightful eye contact with the viewer throughout. Face remains visible for perfect lip-sync.`
     }
 ];
 
-// в”Ђв”Ђ Video Base Motion & Safety (appended to every variant) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
-const PIXAR_VIDEO_STYLE = `STYLE: Pixar 3D animation style, anthropomorphic character, award-winning CGI, vibrant colors, physically-based rendering.
- CHARACTER FACE: TWO round cartoon eyes positioned symmetrically on the upper front panel, ONE wide horizontal smile mouth (coin-slot shape), friendly Pixar-style expression. Eyes: large, white with colored irises, no monocle, no single eye. Mood: confident and energetic, NOT scary, NOT monstrous.`;
-const PIXAR_VIDEO_MOTION = `ENERGY: high-tension buildup — feels like something is about to explode, cinematic music-video pacing.
-ENDING (last 1s): slow push-in continues + slight rack focus shift.`;
-const PIXAR_VIDEO_NEGATIVE = `VISUAL RULE: No written text, subtitles, captions, speech bubbles, or text overlays visible at any point.`;
-const PIXAR_VIDEO_SAFETY = `NOT: static locked camera, no movement, boring zoom only, lifeless scene, everything still.`;
+// —— Video Base Motion & Safety (appended to every variant) ——————
+const PIXAR_VIDEO_STYLE = `Mood: vibrant, delightfully clever, energetic, and cute.`;
 
 /** Pick a variant by rotating through the array based on scene index */
 function pickVariant(variants, sceneIndex) {
@@ -238,14 +234,22 @@ const synthesizeUnifiedSpeech = async (input, language = 'en', voice = 'aeb88254
 
 const CHARACTER_ANCHOR = `A full-body Pixar-style animated humanoid figure rendered in a crystal-clear glass material, fully transparent outer shell revealing an ivory-white internal structural framework inside. The character's face area: two large round glowing yellow eyes with dark pupils, a friendly neutral expression, smooth rounded cranium with no surface detail. The body framework inside the glass silhouette is composed of smooth, polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all anatomically proportioned but stylized for animation. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. Style: Pixar 3D CGI, physically-based rendering, 8K, cinematic quality. NOT horror, NOT scary, NOT damaged, NOT dark. ABSOLUTE RULES: NO MUSIC. STERNLY FOLLOW text for lip-sync. NO independent translations.`;
 
-// ── Real-time trend search via Perplexity (web search) ──────────────────────
+// ── Real-time trend search via Tavily / Firecrawl / Web ──────────────────────
 const searchTrends = async (langName, mode, season, month, year) => {
-    const trendQuery = mode === 'health'
-        ? `What are the top 5 trending health and wellness topics on TikTok and Instagram Reels RIGHT NOW in ${month} ${year} for ${langName}-speaking audiences? Focus on: viral health hacks, body/nutrition tips, seasonal health issues. Return ONLY a short bullet list of trending topics, no explanations.`
-        : `What are the top 5 trending lifehack and DIY topics on TikTok and Instagram Reels RIGHT NOW in ${month} ${year} for ${langName}-speaking audiences? Focus on: home hacks, productivity tricks, money-saving tips, seasonal problems (${season}). Return ONLY a short bullet list of trending topics, no explanations.`;
+    const searchQuery = mode === 'health'
+        ? `viral tiktok health hacks wellness tips ${month} ${year} ${langName} trending`
+        : `viral tiktok household lifehacks home diy tips ${season} ${month} ${year} ${langName} trending`;
 
     try {
-        console.log(`[Trend Search] Searching trends for ${langName} (${month} ${year})...`);
+        console.log(`[Trend Search] Searching web (Tavily/Firecrawl) for trends in ${langName} (${month} ${year})...`);
+        const webResults = await searchWeb(searchQuery);
+        if (webResults && webResults.length > 50) {
+            return webResults;
+        }
+        console.warn(`[Trend Search] Web results short or empty, calling AI chat...`);
+        const trendQuery = mode === 'health'
+            ? `What are the top 5 trending health and wellness topics on TikTok RIGHT NOW in ${month} ${year} for ${langName}-speaking audiences? Return ONLY a short bullet list of trending topics, no explanations.`
+            : `What are the top 5 trending lifehack and DIY topics on TikTok RIGHT NOW in ${month} ${year} for ${langName}-speaking audiences? Return ONLY a short bullet list of trending topics, no explanations.`;
         return await ai.chat([{ role: 'user', content: trendQuery }]);
     } catch (e) {
         console.warn(`[Trend Search] Failed: ${e.message}, falling back to seasonal context`);
@@ -314,6 +318,285 @@ async function muxAudioIntoVideo(videoPath, audioPath, outputPath) {
     });
 }
 
+/**
+ * Robust JSON extraction and repair for LLM responses
+ */
+function cleanAndParseJSON(raw) {
+    if (!raw || typeof raw !== 'string') throw new Error('Empty AI response');
+    let str = raw.trim();
+
+    // 1. Remove Markdown code blocks
+    str = str.replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
+
+    // 2. Try direct JSON.parse
+    try {
+        return JSON.parse(str);
+    } catch (e) {}
+
+    // 3. Find outermost JSON object or array
+    const firstBrace = str.indexOf('{');
+    const firstBracket = str.indexOf('[');
+    let startIdx = -1;
+    let endIdx = -1;
+
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+        startIdx = firstBrace;
+        endIdx = str.lastIndexOf('}');
+    } else if (firstBracket !== -1) {
+        startIdx = firstBracket;
+        endIdx = str.lastIndexOf(']');
+    }
+
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        let candidate = str.substring(startIdx, endIdx + 1).trim();
+        try {
+            return JSON.parse(candidate);
+        } catch (e) {}
+
+        // Clean trailing commas before closing braces/brackets
+        candidate = candidate.replace(/,\s*([\}\]])/g, '$1');
+        try {
+            return JSON.parse(candidate);
+        } catch (e) {}
+    }
+
+    throw new Error('Could not parse structural JSON from AI response');
+}
+
+/**
+ * Universal normalizer for Studio scenes across all LLM models and output variations
+ */
+function normalizeStudioScenes(parsed, topic, mode, langName) {
+    let scenesArray = null;
+    let intro = (parsed && (parsed.intro || parsed.title || parsed.topic)) || topic;
+
+    if (Array.isArray(parsed)) {
+        scenesArray = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+        if (Array.isArray(parsed.scenes)) scenesArray = parsed.scenes;
+        else if (Array.isArray(parsed.segments)) scenesArray = parsed.segments;
+        else if (Array.isArray(parsed.script?.scenes)) scenesArray = parsed.script.scenes;
+        else if (Array.isArray(parsed.script)) scenesArray = parsed.script;
+        else if (Array.isArray(parsed.data?.scenes)) scenesArray = parsed.data.scenes;
+        else {
+            const foundArr = Object.values(parsed).find(Array.isArray);
+            if (foundArr) scenesArray = foundArr;
+        }
+    }
+
+    if (!scenesArray || !Array.isArray(scenesArray) || scenesArray.length === 0) {
+        throw new Error("AI output format error: could not find scenes array in response.");
+    }
+
+    const processedScenes = scenesArray.map((scene, idx) => {
+        let line = '';
+        if (typeof scene === 'string') {
+            line = scene;
+        } else if (scene.line) {
+            line = typeof scene.line === 'string' ? scene.line : JSON.stringify(scene.line);
+        } else if (scene.text) {
+            line = scene.text;
+        } else if (scene.dialogue) {
+            if (Array.isArray(scene.dialogue)) {
+                line = scene.dialogue.map(d => (typeof d === 'string' ? d : (d.line || d.text || ''))).join(' ');
+            } else if (typeof scene.dialogue === 'string') {
+                line = scene.dialogue;
+            }
+        } else if (scene.original) {
+            line = scene.original;
+        } else if (scene.script) {
+            line = scene.script;
+        }
+
+        // Clean duplicate dialogue
+        if (line) {
+            const parts = line.split(/\s+/);
+            const halfLen = Math.floor(parts.length / 2);
+            const firstHalf = parts.slice(0, halfLen).join(' ');
+            const secondHalf = parts.slice(halfLen).join(' ');
+            if (firstHalf && secondHalf && (firstHalf === secondHalf || secondHalf.includes(firstHalf))) {
+                line = firstHalf;
+            }
+        }
+
+        // Programmatic safety limit: Word count validation for 8-second video (optimal: 18-22 words, soft cap 24 words)
+        if (line) {
+            const cleanTextNoTags = line.replace(/\[[^\]]+\]/g, '').trim();
+            const words = cleanTextNoTags.split(/\s+/).filter(Boolean);
+            const MAX_ALLOWED_WORDS = 24;
+            if (words.length > MAX_ALLOWED_WORDS) {
+                console.warn(`[Studio Scene ${idx + 1}] Line exceeded 8s limit (${words.length} words > ${MAX_ALLOWED_WORDS}). Trimming to fit 8s.`);
+                // Extract emotion tag if present
+                const emotionMatch = line.match(/^(\[[^\]]+\]\s*)/) || line.match(/(\s*\[[^\]]+\])$/);
+                const emotionTag = emotionMatch ? emotionMatch[0].trim() : '';
+
+                // Smart truncation at sentence/clause boundary or word limit
+                const trimmedWords = words.slice(0, MAX_ALLOWED_WORDS);
+                let trimmedLine = trimmedWords.join(' ');
+                // Ensure proper punctuation at the end
+                if (!/[.!?—]$/.test(trimmedLine)) {
+                    trimmedLine += ' !';
+                }
+                line = emotionTag ? (line.startsWith('[') ? `${emotionTag} ${trimmedLine}` : `${trimmedLine} ${emotionTag}`) : trimmedLine;
+            }
+        }
+
+        let character = (scene && (scene.character || scene.speaker || scene.character_name)) || (mode === 'objects' ? `Talking Object ${idx + 1}` : 'Presenter');
+        let imageVariant = (scene && scene.imageVariant) || pickVariant(PIXAR_IMAGE_VARIANTS, idx).id;
+        let videoVariant = (scene && scene.videoVariant) || pickVariant(PIXAR_VIDEO_VARIANTS, idx).id;
+        
+        let rawImagePrompt = (scene && (scene.imagePrompt || scene.image_prompt || scene.description || scene.setting || scene.visual)) || `${character} in its natural environment`;
+        let rawVideoPrompt = (scene && (scene.videoPrompt || scene.video_prompt || scene.motion || scene.animation)) || '';
+
+        // Inject line into videoPrompt if template has placeholder
+        if (rawVideoPrompt.includes('[line]') && line) {
+            rawVideoPrompt = rawVideoPrompt.replace(/\[line\]/g, line);
+        }
+        if (rawVideoPrompt.includes('[INSERT ACTUAL DIALOGUE LINE HERE') && line) {
+            rawVideoPrompt = rawVideoPrompt.replace(/\[INSERT ACTUAL DIALOGUE LINE HERE[^\]]*\]/g, line);
+        }
+
+        const imgVar = PIXAR_IMAGE_VARIANTS.find(v => v.id === imageVariant) || PIXAR_IMAGE_VARIANTS[0];
+        const vidVar = PIXAR_VIDEO_VARIANTS.find(v => v.id === videoVariant) || PIXAR_VIDEO_VARIANTS[0];
+
+        const objectLock = mode === 'objects'
+            ? ` CHARACTER: ${character}. ${TALKING_OBJECT_IMAGE_LOCK}`
+            : '';
+
+        const voiceDesc = mode === 'health'
+            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent female child voice — a bright, sweet, melodic 5-6 year old GIRL with a high-pitched, crystal-clear soprano timbre. ` +
+              `NOT a generic child voice, NOT a boy, NOT a toddler, NOT a teenager. ` +
+              `VOCAL QUALITIES: Warm and honey-sweet tone with natural girlish breathiness, playful upward inflections at key moments, confident and articulate pronunciation (she is a little genius prodigy), ` +
+              `enthusiastic pacing with dramatic pauses before revealing the lifehack secret, genuine childlike wonder and excitement in her delivery. ` +
+              `EMOTIONAL RANGE: Cute mischievous energy when teasing the viewer, proud confident tone when explaining the hack, delighted sparkly giggle-adjacent warmth when the trick works. ` +
+              `REFERENCE: Think young Boo from Monsters Inc meets a TED-talk kid presenter — adorable but surprisingly smart and articulate.`
+            : `A professional character voice with clear articulation and expressive delivery`;
+
+        const finalImagePrompt = `${imgVar.template(rawImagePrompt)}.${objectLock} STYLE: ${PIXAR_IMAGE_BASE}`;
+        const finalVideoPrompt = `${PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${vidVar.template} ${rawVideoPrompt} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${line}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
+
+        return {
+            id: idx + 1,
+            character,
+            line,
+            imageVariant,
+            videoVariant,
+            imagePrompt: finalImagePrompt,
+            video_prompt: finalVideoPrompt,
+            videoPrompt: finalVideoPrompt
+        };
+    });
+
+    return {
+        intro,
+        socialPost: parsed?.socialPost,
+        scenes: processedScenes
+    };
+}
+
+/**
+ * Fallback parser in case AI returns non-JSON or heavily broken text
+ */
+function fallbackExtractScenes(raw, topic, mode, langName) {
+    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const extractedLines = [];
+    for (const l of lines) {
+        const cleaned = l.replace(/^[-*•\d\.\)\s]+/, '').replace(/^Scene\s*\d+[:\-]?\s*/i, '').trim();
+        if (cleaned.length > 8 && !cleaned.startsWith('{') && !cleaned.startsWith('}') && !cleaned.startsWith('```') && !cleaned.toLowerCase().startsWith('output json')) {
+            extractedLines.push(cleaned);
+        }
+    }
+
+    if (extractedLines.length === 0) {
+        throw new Error("AI failed to generate structural script.");
+    }
+
+    const scenes = extractedLines.slice(0, 6).map((line, idx) => ({
+        id: idx + 1,
+        character: mode === 'objects' ? `Talking Object ${idx + 1}` : 'Presenter',
+        line: line
+    }));
+
+    return normalizeStudioScenes({ intro: topic, scenes }, topic, mode, langName);
+}
+
+/**
+ * Saves script.json, prompts.json and prompts.txt into the project folder.
+ */
+function saveStudioProjectPrompts(projectFolder, scriptData, mode, topic, language) {
+    if (!projectFolder || !scriptData) return;
+    try {
+        const skeletonDir = path.join(__dirname, 'SkeletonShorts');
+        const projectDir = path.join(skeletonDir, projectFolder);
+        if (!fs.existsSync(projectDir)) {
+            fs.mkdirSync(projectDir, { recursive: true });
+        }
+
+        // 1. Machine-readable script.json
+        const scriptJsonPath = path.join(projectDir, 'script.json');
+        fs.writeFileSync(scriptJsonPath, JSON.stringify(scriptData, null, 2), 'utf8');
+
+        // 2. Structured prompts.json
+        const promptsJsonPath = path.join(projectDir, 'prompts.json');
+        const promptsMeta = {
+            topic: topic || scriptData.intro || '',
+            mode: mode || 'health',
+            language: language || '',
+            createdAt: new Date().toISOString(),
+            socialPost: scriptData.socialPost || null,
+            scenes: (scriptData.scenes || []).map((s, idx) => ({
+                id: s.id || idx + 1,
+                character: s.character || '',
+                line: s.line || '',
+                imageVariant: s.imageVariant || '',
+                videoVariant: s.videoVariant || '',
+                imagePrompt: s.imagePrompt || '',
+                videoPrompt: s.videoPrompt || s.video_prompt || ''
+            }))
+        };
+        fs.writeFileSync(promptsJsonPath, JSON.stringify(promptsMeta, null, 2), 'utf8');
+
+        // 3. Human-readable prompts.txt
+        const promptsTxtPath = path.join(projectDir, 'prompts.txt');
+        const modeTitle = mode === 'health' ? 'AI PSYCHOTALK' : 'AI OBJECTWARS';
+        let txtContent = `========================================================================\n`;
+        txtContent += `${modeTitle} — GENERATION PROMPTS\n`;
+        txtContent += `========================================================================\n`;
+        txtContent += `Topic: ${topic || scriptData.intro || 'Untitled'}\n`;
+        txtContent += `Mode: ${mode || 'health'}\n`;
+        if (language) txtContent += `Language: ${language}\n`;
+        txtContent += `Folder: ${projectFolder}\n`;
+        txtContent += `Generated: ${new Date().toLocaleString()}\n`;
+        if (scriptData.socialPost) {
+            txtContent += `------------------------------------------------------------------------\n`;
+            txtContent += `📱 SOCIAL POST\n`;
+            if (scriptData.socialPost.title) txtContent += `Title: ${scriptData.socialPost.title}\n`;
+            if (scriptData.socialPost.description) txtContent += `Description: ${scriptData.socialPost.description}\n`;
+            if (scriptData.socialPost.hashtags) txtContent += `Hashtags: ${scriptData.socialPost.hashtags}\n`;
+        }
+        txtContent += `========================================================================\n\n`;
+
+        (scriptData.scenes || []).forEach((scene, idx) => {
+            const num = scene.id || idx + 1;
+            const char = scene.character || 'Character';
+            const vidPrompt = scene.videoPrompt || scene.video_prompt || '';
+            txtContent += `🎬 SCENE #${num} (${char})\n`;
+            txtContent += `------------------------------------------------------------------------\n`;
+            if (scene.line) {
+                txtContent += `🗣 Dialogue: "${scene.line}"\n\n`;
+            }
+            txtContent += `🖼️ IMAGE PROMPT:\n${scene.imagePrompt || ''}\n\n`;
+            txtContent += `🎬 VIDEO PROMPT:\n${vidPrompt}\n`;
+            txtContent += `------------------------------------------------------------------------\n\n`;
+        });
+
+        fs.writeFileSync(promptsTxtPath, txtContent, 'utf8');
+        console.log(`[Studio Prompts] ✅ Successfully saved script.json, prompts.json and prompts.txt to: ${projectDir}`);
+    } catch (e) {
+        console.error(`[Studio Prompts] ❌ Error saving prompts to ${projectFolder}:`, e.message);
+    }
+}
+
 function registerSkeletonHandlers(ipcMain) {
     ipcMain.handle('skeleton-generate-ideas', async (event, { language }) => {
         const langName = LANG_NAMES[language] || 'English';
@@ -346,7 +629,7 @@ REFERENCE STYLE (STRICT): Calm, Clinical, Slightly ominous, Second-person ("you"
 STRUCTURE (STRICT): Exactly 6 segments (Intro + 4 Checkpoints + Final Failure).
 
 CRITICAL WORD COUNT RULE:
-Each segment MUST be exactly ONE flowing sentence of 22-26 words. This is vital to fit the 6-7 second video duration. NO exceptions.
+Each segment MUST be exactly ONE flowing sentence of 17-20 words (MAXIMUM 21 words). This is vital to fit the 8-second video duration. NO exceptions.
 
 CONTENT PER CHECKPOINT:
 - Briefly mention the physical feeling, mental state, or a quick comparison.
@@ -357,16 +640,20 @@ Output ONLY a JSON object with a "segments" array containing exactly 6 objects:
 { "segments": [ { "original": "exact script segment in ${langName}", "translation": "exact Russian translation of this segment" } ] }`;
 
         const scriptRaw = await ai.chat([{ role: 'user', content: scriptPrompt }], true);
-        const scriptJson = JSON.parse(extractJSON(scriptRaw));
+        const scriptJson = cleanAndParseJSON(scriptRaw);
         
         let segmentsArray = [];
         if (Array.isArray(scriptJson)) segmentsArray = scriptJson;
         else if (scriptJson.segments) segmentsArray = scriptJson.segments;
         else if (scriptJson.script) segmentsArray = scriptJson.script;
         else if (scriptJson.ideas) segmentsArray = scriptJson.ideas;
+        else {
+            const found = Object.values(scriptJson).find(Array.isArray);
+            if (found) segmentsArray = found;
+        }
 
-        const scriptForUI = segmentsArray.map(s => `${s.original}\n[рџ‡·рџ‡є ${s.translation}]`).join('\n\n');
-        const scriptForPrompts = segmentsArray.map(s => s.original).join('\n\n');
+        const scriptForUI = segmentsArray.map(s => typeof s === 'string' ? s : `${s.original || s.text || ''}\n[🇷🇺 ${s.translation || ''}]`).join('\n\n');
+        const scriptForPrompts = segmentsArray.map(s => typeof s === 'string' ? s : (s.original || s.text || '')).join('\n\n');
 
         const promptsPrompt = `Convert this script into scene-by-scene IMAGE PROMPTS and IMAGE-TO-VIDEO PROMPTS with strict visual consistency.
 Script: ${scriptForPrompts}
@@ -388,18 +675,27 @@ For EACH scene (exactly 6), generate following JSON:
 }`;
 
         const promptsRaw = await ai.chat([{ role: 'user', content: promptsPrompt }], true);
+        const promptsJson = cleanAndParseJSON(promptsRaw);
+        let rawScenes = [];
+        if (Array.isArray(promptsJson)) rawScenes = promptsJson;
+        else if (promptsJson.scenes) rawScenes = promptsJson.scenes;
+        else if (promptsJson.script) rawScenes = promptsJson.script;
+        else {
+            const found = Object.values(promptsJson).find(Array.isArray);
+            if (found) rawScenes = found;
+        }
 
-        const cleanJSON = extractJSON(promptsRaw);
-        let scenes = JSON.parse(cleanJSON).scenes.map(s => ({
+        let scenes = rawScenes.map((s, idx) => ({
             ...s,
+            id: idx + 1,
             // TASK 2: IMAGE PROMPTS (Full character description repeated verbatim per prompt.md)
-            image_prompt: `A full-body Pixar-style animated humanoid figure with a crystal-clear glass outer shell revealing a smooth ivory-white internal structural framework. Face: two large glowing yellow eyes with dark pupils, friendly neutral expression, rounded smooth head. Body framework: polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all proportioned and stylized. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. Pixar 3D CGI, physically-based rendering, 8K cinematic quality. NOT horror, NOT scary. Environment: ${s.environment}. Pose: ${s.pose_action}. ${s.visual_detail} Vibrant saturated colors, high contrast, BOLD LARGE OBJECTS in the background to ground the scene, masterpiece quality.`,
+            image_prompt: `A full-body Pixar-style animated humanoid figure with a crystal-clear glass outer shell revealing a smooth ivory-white internal structural framework. Face: two large glowing yellow eyes with dark pupils, friendly neutral expression, rounded smooth head. Body framework: polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all proportioned and stylized. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. Pixar 3D CGI, physically-based rendering, 8K cinematic quality. NOT horror, NOT scary. Environment: ${s.environment || 'studio'}. Pose: ${s.pose_action || 'standing'}. ${s.visual_detail || ''} Vibrant saturated colors, high contrast, BOLD LARGE OBJECTS in the background to ground the scene, masterpiece quality.`,
 
             // TASK 3: IMAGE-TO-VIDEO PROMPTS
-            video_prompt: `Cinematic motion: ${s.motion_detail}. Action: character ${s.pose_action}. Cinematic camera move (smooth dolly or slow-motion zoom), vibrant saturated colors, high resolution, masterpiece quality, fluid movement.`,
+            video_prompt: `Cinematic motion: ${s.motion_detail || 'subtle motion'}. Action: character ${s.pose_action || 'acting'}. Cinematic camera move (smooth dolly or slow-motion zoom), vibrant saturated colors, high resolution, masterpiece quality, fluid movement.`,
 
             // LTX-2 SPECIFIC RULES (Prompt.md requirements: Anchor at start, Audio label, Negative prompt)
-            ltx_video_prompt: `STRICTLY NO TEXT, NO SUBTITLES, NO CAPTIONS. ${CHARACTER_ANCHOR} CHARACTER FACE: TWO round cartoon eyes positioned symmetrically on the upper front panel, ONE wide horizontal smile mouth (coin-slot shape), friendly Pixar-style expression. Eyes: large, white with colored irises, no monocle, no single eye. Mood: confident and energetic, NOT scary, NOT monstrous. ACTION: ${s.pose_action}. ENVIRONMENT: ${s.environment}. CINEMATIC CAMERA: Smooth tracking or slow-motion zoom. VIBRANT COLORS, HIGH SATURATION. AUDIO NARRATION ONLY (DO NOT SHOW AS TEXT): "${s.script_line}". NEGATIVE PROMPT: human skin, realistic face, muscles, organs, veins, blurry, low quality, watermark, text, subtitles, captions, asymmetric face, single eye, cyclopean, distorted features, uncanny valley expression.`
+            ltx_video_prompt: `STRICTLY NO TEXT, NO SUBTITLES, NO CAPTIONS. ${CHARACTER_ANCHOR} Mood: confident and energetic, NOT scary, NOT monstrous. ACTION: ${s.pose_action || 'acting'}. ENVIRONMENT: ${s.environment || 'studio'}. CINEMATIC CAMERA: Smooth tracking or slow-motion zoom. VIBRANT COLORS, HIGH SATURATION. AUDIO NARRATION ONLY (DO NOT SHOW AS TEXT): "${s.script_line || ''}". NEGATIVE PROMPT: blurry, low quality, watermark, text, subtitles, captions, asymmetric face, distorted features, uncanny valley expression.`
         }));
 
         // Audio is now synthesized separately via 'skeleton-generate-audio'
@@ -419,6 +715,21 @@ For EACH scene (exactly 6), generate following JSON:
         // We use G-Labs for image generation
         const cleanModel = imageModel ? imageModel.replace('freepik-', '') : 'nano_banana_2';
         
+        let referenceImages = [];
+        let refImgPath = path.join(__dirname, 'genie_reference.png');
+        let mimeType = 'image/png';
+        if (!fs.existsSync(refImgPath)) {
+            refImgPath = path.join(__dirname, 'genie_reference.jpg');
+            mimeType = 'image/jpeg';
+        }
+        
+        if (fs.existsSync(refImgPath)) {
+            const imageBase64 = fs.readFileSync(refImgPath, { encoding: 'base64' });
+            // API expects data string inside an object
+            referenceImages.push({ data: `data:${mimeType};base64,${imageBase64}` });
+            console.log(`[Skeleton Image] Injected global reference image for Génie`);
+        }
+        
         event.sender.send('skeleton-image-progress', { sceneIndex, status: 'generating' });
         
         const savedPaths = await ai.generateImage({
@@ -428,11 +739,16 @@ For EACH scene (exactly 6), generate following JSON:
             sectionDir: skeletonDir,
             subFolder: projectFolder,
             sceneIndex: sceneIndex,
+            referenceImages: referenceImages,
             onProgress: (p) => {
                 event.sender.send('skeleton-image-progress', { sceneIndex, status: p.status, attempt: p.attempt });
             }
         });
         
+        if (!savedPaths || savedPaths.length === 0 || !fs.existsSync(savedPaths[0])) {
+            console.warn(`[Skeleton Image] Image generation skipped/failed for scene ${sceneIndex + 1}`);
+            return null;
+        }
         const imgBuffer = fs.readFileSync(savedPaths[0]);
         const imgExt = path.extname(savedPaths[0]).toLowerCase();
         const imgMime = imgExt === '.png' ? 'image/png' : imgExt === '.webp' ? 'image/webp' : 'image/jpeg';
@@ -470,8 +786,11 @@ For EACH scene (exactly 6), generate following JSON:
             // If the prompt already has structured metadata (from Studio mode), use it as is.
             // Otherwise (Skeleton mode), append the default intense voice.
             let promptToUse = videoPrompt;
+            if (!promptToUse.toLowerCase().includes('cartoon')) {
+                promptToUse = `3D cartoon animation style. ` + promptToUse;
+            }
             if (!videoPrompt.includes('CHARACTER:') && !videoPrompt.includes('NEGATIVE PROMPT:')) {
-                promptToUse = `${videoPrompt} AUDIO TRACK: A highly emotional, panicked, and intense adult male voice ALMOST SCREAMING in ${langStr}. STRICTLY NO BACKGROUND NOISE, NO MUSIC, NO SOUND EFFECTS, JUST PURE RAW SHOUTING VOICE. Spoken text: "${scriptLine}"`;
+                promptToUse = `${promptToUse} AUDIO TRACK: A highly emotional, panicked, and intense adult male voice ALMOST SCREAMING in ${langStr}. STRICTLY NO BACKGROUND NOISE, NO MUSIC, NO SOUND EFFECTS, JUST PURE RAW SHOUTING VOICE. Spoken text: "${scriptLine}"`;
             } else if (!videoPrompt.includes('AUDIO TRACK:')) {
                 // Ensure audio track is present for lip-sync if not already there
                 promptToUse += ` AUDIO TRACK: Professional character voice speaking exactly: "${scriptLine}". LIP-SYNC: Accurate mouth movement.`;
@@ -609,8 +928,8 @@ For EACH scene (exactly 6), generate following JSON:
             // 🔍 Real-time web search for current trends via Perplexity
             const liveTrends = await searchTrends(langName, mode, currentSeason, currentMonth, currentYear);
             
-            const niche = mode === 'health' 
-                ? 'health, wellness, food benefits, anatomy, daily habits, life hacks' 
+            const niche = mode === 'health'
+                ? 'smart lifehacks, clever household tricks, home organization secrets, kitchen hacks, daily routine efficiency, genius problem solving, life shortcuts, viral everyday tips'
                 : 'household items, daily problems, lifehacks, room organization, productivity';
 
             const topicsPrompt = `You are an expert TikTok SEO analyst for ${langName}-speaking audience.
@@ -619,10 +938,11 @@ ${liveTrends || 'No live data, use your best knowledge of current viral trends.'
 
 Identify the top 5 to 10 absolute MOST SEARCHED queries that users are actively typing into the TikTok search bar right now regarding: ${niche}. 
 These should be queries with high search volume (Search Intent), such as popular questions, viral topics, or highly searched phrases.
-They MUST be in ${langName} language.
+The "original" query MUST be in ${langName} language.
+The "translation" MUST be an accurate Russian translation (перевод на русский язык) of the query so a Russian creator understands what it means.
 
-Output ONLY a raw JSON array of strings (no markdown, no other text).
-Example: ["query 1", "query 2", "query 3"]`;
+Output ONLY a raw JSON array of objects with "original" and "translation" keys (no markdown, no other text).
+Example: [{"original": "climatiseur maison sans électricité", "translation": "домашний кондиционер без электричества"}, {"original": "astuce canicule pour dormir", "translation": "лайфхак как спать в жару"}]`;
 
             const rawJson = await ai.chat([
                 { role: 'user', content: topicsPrompt }
@@ -635,10 +955,15 @@ Example: ["query 1", "query 2", "query 3"]`;
             if (!Array.isArray(keywords)) throw new Error('Result is not an array');
             
             // Map to the { original, translation } format expected by StudioTab
-            const ideas = keywords.slice(0, 10).map(kw => ({
-                original: kw,
-                translation: ''
-            }));
+            const ideas = keywords.slice(0, 10).map(item => {
+                if (typeof item === 'string') {
+                    return { original: item, translation: '' };
+                }
+                return {
+                    original: item.original || item.query || '',
+                    translation: item.translation || item.russian_translation || item.ru || ''
+                };
+            });
 
             return ideas;
         } catch (e) {
@@ -647,131 +972,548 @@ Example: ["query 1", "query 2", "query 3"]`;
         }
     });
 
-    ipcMain.handle('studio-generate-script', async (event, { mode, topic, language, provider }) => {
+    // ── Helper: Extract text and story from Screenshot using Vision OCR ────────
+    async function extractScreenshotInfo(screenshotBase64, event) {
+        if (!screenshotBase64 || typeof screenshotBase64 !== 'string') return null;
+
+        console.log(`[Studio Screenshot] Analyzing screenshot via Vision OCR...`);
+        if (event && event.sender) {
+            event.sender.send('studio-progress', { status: '🔍 Сканирую текст и правила со скриншота через Vision AI...', progress: 30 });
+        }
+
+        const ocrPrompt = `You are a world-class OCR and content analyst.
+Analyze this image carefully. Extract ALL text, rules, lifehacks, clever tricks, household secrets, quotes, or tips verbatim.
+If the image contains numbered lists or bullet points (e.g. "1. Секрет идеальной чистки...", "2. Как сложить вещи..."), extract EVERY SINGLE point in full detail without skipping or truncating anything.
+Also provide a short 1-sentence summary of the main core message/theme.
+
+OUTPUT FORMAT:
+Main Theme: [Core topic]
+Extracted Points:
+1. [Full text of point 1]
+2. [Full text of point 2]
+...`;
+
+        try {
+            const cleanBase64 = screenshotBase64.startsWith('data:') ? screenshotBase64 : `data:image/jpeg;base64,${screenshotBase64}`;
+            const visionResponse = await ai.chat([
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: ocrPrompt },
+                        { type: 'image_url', image_url: { url: cleanBase64 } }
+                    ]
+                }
+            ]);
+
+            console.log(`[Studio Screenshot] OCR result extracted (${visionResponse.length} chars): "${visionResponse.slice(0, 150)}..."`);
+            return {
+                text: visionResponse
+            };
+        } catch (err) {
+            console.error(`[Studio Screenshot] Vision OCR failed:`, err.message);
+            throw new Error(`Ошибка распознавания скриншота: ${err.message}`);
+        }
+    }
+
+    // ── Helper: Extract Speech and Visual Context from Local Video Upload ────────
+    async function extractLocalVideoInfo(videoBase64, event) {
+        if (!videoBase64 || typeof videoBase64 !== 'string') return null;
+
+        console.log(`[Studio Local Video] Processing uploaded local video file...`);
+        if (event && event.sender) {
+            event.sender.send('studio-progress', { status: '📥 Извлекаю аудиодорожку и ключевые кадры из загруженного видео...', progress: 20 });
+        }
+
+        const tempDir = path.join(__dirname, 'SkeletonShorts', 'TempReference');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+        const tempFilePrefix = `local_vid_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+        const tempVideoPath = path.join(tempDir, `${tempFilePrefix}.mp4`);
+        const targetMp3 = path.join(tempDir, `${tempFilePrefix}.mp3`);
+        const framesDir = path.join(tempDir, `${tempFilePrefix}_frames`);
+        if (!fs.existsSync(framesDir)) fs.mkdirSync(framesDir, { recursive: true });
+
+        try {
+            // 1. Write video buffer from base64
+            const cleanBase64 = videoBase64.replace(/^data:video\/[a-zA-Z0-9.-]+;base64,/, '');
+            const videoBuffer = Buffer.from(cleanBase64, 'base64');
+            fs.writeFileSync(tempVideoPath, videoBuffer);
+
+            // 2. Extract audio to MP3 using ffmpeg
+            await new Promise((resolve, reject) => {
+                const proc = spawn('ffmpeg', [
+                    '-i', tempVideoPath,
+                    '-vn',
+                    '-acodec', 'libmp3lame',
+                    '-b:a', '128k',
+                    '-y', targetMp3
+                ], { windowsHide: true });
+                let stderr = '';
+                proc.stderr.on('data', d => { stderr += d.toString(); });
+                proc.on('close', code => {
+                    if (code === 0 && fs.existsSync(targetMp3)) resolve(true);
+                    else reject(new Error(`ffmpeg audio extraction failed (code ${code}): ${stderr.slice(-300)}`));
+                });
+                proc.on('error', err => reject(new Error(`Failed to start ffmpeg: ${err.message}`)));
+            });
+
+            // 3. Transcribe audio speech via STT
+            if (event && event.sender) {
+                event.sender.send('studio-progress', { status: '🗣️ Распознаю речь и правила из видео через STT...', progress: 45 });
+            }
+            let transcriptText = '';
+            try {
+                const sttResult = await ai.transcribe(targetMp3);
+                transcriptText = (sttResult && sttResult.text ? sttResult.text : '').trim();
+            } catch (sttErr) {
+                console.warn(`[Studio Local Video] STT transcription failed or no speech: ${sttErr.message}`);
+            }
+
+            // 4. Extract 4-6 evenly spaced keyframes from video for Vision analysis
+            if (event && event.sender) {
+                event.sender.send('studio-progress', { status: '🔍 Анализирую визуальные демонстрации и объекты в видео через Vision AI...', progress: 60 });
+            }
+
+            // Get video duration via ffprobe
+            let duration = 10;
+            try {
+                const durationStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${tempVideoPath}"`).toString().trim();
+                duration = Math.max(1, parseFloat(durationStr) || 10);
+            } catch (_) {}
+
+            // Sample 4 representative timestamps across video
+            const sampleCount = 4;
+            const timestamps = [];
+            for (let i = 0; i < sampleCount; i++) {
+                const t = Math.min(duration - 0.2, Math.max(0.2, (duration / (sampleCount + 1)) * (i + 1)));
+                timestamps.push(t.toFixed(2));
+            }
+
+            const frameBase64List = [];
+            for (let i = 0; i < timestamps.length; i++) {
+                const t = timestamps[i];
+                const framePath = path.join(framesDir, `frame_${i + 1}.jpg`);
+                try {
+                    execSync(`ffmpeg -ss ${t} -i "${tempVideoPath}" -vframes 1 -q:v 3 -y "${framePath}"`, { windowsHide: true });
+                    if (fs.existsSync(framePath)) {
+                        const frameBuf = fs.readFileSync(framePath);
+                        frameBase64List.push(`data:image/jpeg;base64,${frameBuf.toString('base64')}`);
+                    }
+                } catch (frameErr) {
+                    console.warn(`[Studio Local Video] Frame extraction failed at ${t}s: ${frameErr.message}`);
+                }
+            }
+
+            // 5. Vision AI analysis of extracted frames
+            let visualDescription = '';
+            if (frameBase64List.length > 0) {
+                try {
+                    const contentParts = [
+                        {
+                            type: 'text',
+                            text: `You are an expert video and lifehack analyst.
+Analyze these consecutive frames from a reference video.
+Identify and describe in detail:
+1. What objects, tools, or household items are shown.
+2. What specific lifehack, secret technique, cleaning/organizing trick, or practical action is being demonstrated.
+3. Any on-screen text, labels, measurements, or captions.
+4. The step-by-step procedure shown in the visuals.
+
+Provide a clear, dense summary of the exact lifehack/trick demonstrated in the video.`
+                        }
+                    ];
+                    for (const fBase64 of frameBase64List) {
+                        contentParts.push({
+                            type: 'image_url',
+                            image_url: { url: fBase64 }
+                        });
+                    }
+
+                    visualDescription = await ai.chat([
+                        {
+                            role: 'user',
+                            content: contentParts
+                        }
+                    ]);
+                    console.log(`[Studio Local Video] Vision frame analysis completed (${visualDescription.length} chars).`);
+                } catch (visionErr) {
+                    console.warn(`[Studio Local Video] Vision analysis failed: ${visionErr.message}`);
+                }
+            }
+
+            // 6. Cleanup temporary video and audio files
+            try {
+                if (fs.existsSync(tempVideoPath)) fs.unlinkSync(tempVideoPath);
+                if (fs.existsSync(targetMp3)) fs.unlinkSync(targetMp3);
+                if (fs.existsSync(framesDir)) {
+                    const fFiles = fs.readdirSync(framesDir);
+                    for (const f of fFiles) fs.unlinkSync(path.join(framesDir, f));
+                    fs.rmdirSync(framesDir);
+                }
+            } catch (_) {}
+
+            return {
+                transcript: transcriptText,
+                visualDescription: visualDescription,
+                combinedSummary: `Video Spoken Content: "${transcriptText || 'None'}"\n\nVisual Actions & Demonstration: "${visualDescription || 'None'}"`
+            };
+        } catch (err) {
+            console.error(`[Studio Local Video] Error processing video:`, err.message);
+            // Cleanup on error
+            try {
+                if (fs.existsSync(tempVideoPath)) fs.unlinkSync(tempVideoPath);
+                if (fs.existsSync(targetMp3)) fs.unlinkSync(targetMp3);
+                if (fs.existsSync(framesDir)) {
+                    const fFiles = fs.readdirSync(framesDir);
+                    for (const f of fFiles) fs.unlinkSync(path.join(framesDir, f));
+                    fs.rmdirSync(framesDir);
+                }
+            } catch (_) {}
+            throw new Error(`Ошибка обработки локального видео: ${err.message}`);
+        }
+    }
+
+    // ── Helper: Download and Transcribe Reference Video URL ──────────────────
+    async function extractReferenceVideoInfo(referenceUrl, event) {
+        if (!referenceUrl || typeof referenceUrl !== 'string' || !referenceUrl.trim().startsWith('http')) {
+            return null;
+        }
+
+        const cleanUrl = referenceUrl.trim();
+        console.log(`[Studio Reference] Extracting audio/story from URL: ${cleanUrl}`);
+        if (event && event.sender) {
+            event.sender.send('studio-progress', { status: '📥 Скачиваю аудио из референсного видео...', progress: 15 });
+        }
+
+        const tempDir = path.join(__dirname, 'SkeletonShorts', 'TempReference');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+        const tempFilePrefix = `ref_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+        const outputTemplate = path.join(tempDir, `${tempFilePrefix}.%(ext)s`);
+        const targetMp3 = path.join(tempDir, `${tempFilePrefix}.mp3`);
+
+        try {
+            // Use yt-dlp to extract best audio as mp3
+            const ytdlpArgs = [
+                '-x',
+                '--audio-format', 'mp3',
+                '--audio-quality', '4',
+                '--no-playlist',
+                '--max-filesize', '100M',
+                '--socket-timeout', '30',
+                '-o', outputTemplate,
+                cleanUrl
+            ];
+
+            await new Promise((resolve, reject) => {
+                const proc = spawn('yt-dlp', ytdlpArgs, { windowsHide: true });
+                let stderr = '';
+                proc.stderr.on('data', (d) => { stderr += d.toString(); });
+                proc.on('close', (code) => {
+                    if (code === 0) resolve(true);
+                    else reject(new Error(`yt-dlp failed (code ${code}): ${stderr.slice(-300)}`));
+                });
+                proc.on('error', (err) => reject(new Error(`Failed to start yt-dlp: ${err.message}`)));
+            });
+
+            // Find generated mp3 or audio file
+            let extractedAudioPath = targetMp3;
+            if (!fs.existsSync(extractedAudioPath)) {
+                const found = fs.readdirSync(tempDir).find(f => f.startsWith(tempFilePrefix) && (f.endsWith('.mp3') || f.endsWith('.m4a') || f.endsWith('.wav') || f.endsWith('.webm')));
+                if (found) {
+                    extractedAudioPath = path.join(tempDir, found);
+                }
+            }
+
+            if (!fs.existsSync(extractedAudioPath)) {
+                throw new Error('Не удалось извлечь аудиодорожку из референсного видео.');
+            }
+
+            if (event && event.sender) {
+                event.sender.send('studio-progress', { status: '🗣️ Распознаю речь и ключевые хуки...', progress: 45 });
+            }
+
+            const sttResult = await ai.transcribe(extractedAudioPath);
+            const transcriptText = (sttResult && sttResult.text ? sttResult.text : '').trim();
+
+            // Cleanup temp audio file
+            try {
+                if (fs.existsSync(extractedAudioPath)) fs.unlinkSync(extractedAudioPath);
+            } catch (e) {}
+
+            if (!transcriptText) {
+                throw new Error('Не удалось распознать текст из референсного видео.');
+            }
+
+            console.log(`[Studio Reference] Transcript extracted (${transcriptText.length} chars): "${transcriptText.slice(0, 120)}..."`);
+            return {
+                url: cleanUrl,
+                transcript: transcriptText
+            };
+        } catch (err) {
+            console.error(`[Studio Reference] Extraction error:`, err.message);
+            throw new Error(`Ошибка разбора референсного видео: ${err.message}`);
+        }
+    }
+
+    ipcMain.handle('studio-parse-reference-video', async (event, { referenceUrl }) => {
+        return await extractReferenceVideoInfo(referenceUrl, event);
+    });
+
+    ipcMain.handle('studio-parse-screenshot', async (event, { screenshotBase64 }) => {
+        return await extractScreenshotInfo(screenshotBase64, event);
+    });
+
+    ipcMain.handle('studio-generate-script', async (event, { mode, topic, language, provider, projectFolder, referenceUrl, screenshotBase64, videoBase64, durationMode }) => {
         const langName = LANG_NAMES[language] || 'English';
+        const isShort = durationMode === '30s';
+
+        // 1. If local video is provided, extract STT speech and vision keyframes
+        let localVideoData = null;
+        if (videoBase64 && typeof videoBase64 === 'string') {
+            try {
+                localVideoData = await extractLocalVideoInfo(videoBase64, event);
+            } catch (vidErr) {
+                console.warn(`[Studio] Local video extraction failed: ${vidErr.message}`);
+                throw vidErr;
+            }
+        }
+
+        // 2. If screenshot is provided, extract OCR and core rules
+        let screenshotData = null;
+        if (screenshotBase64 && typeof screenshotBase64 === 'string') {
+            try {
+                screenshotData = await extractScreenshotInfo(screenshotBase64, event);
+            } catch (shotErr) {
+                console.warn(`[Studio] Screenshot OCR extraction failed: ${shotErr.message}`);
+                throw shotErr;
+            }
+        }
+
+        // 3. If reference URL is provided, parse it
+        let refData = null;
+        if (referenceUrl && typeof referenceUrl === 'string' && referenceUrl.trim().startsWith('http')) {
+            try {
+                refData = await extractReferenceVideoInfo(referenceUrl, event);
+            } catch (refErr) {
+                console.warn(`[Studio] Reference extraction failed: ${refErr.message}`);
+                throw refErr;
+            }
+        }
+
+        if (event && event.sender) {
+            event.sender.send('studio-progress', { status: '✍️ ИИ пишет сценарий вирусных лайфхаков для Девочки-вундеркинда...', progress: 70 });
+        }
 
         let systemInstruction = "";
         let userPrompt = "";
 
+        // Character Bible matching 5-6 year old girl genius & young inventor (based on genie_reference.jpg)
+        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A cute, expressive and charming 5-6 year old little girl genius and young inventor. Features: oversized round dark glasses resting on her cute button nose, large expressive sparkling hazel-brown eyes with a mischievous knowing gaze and an adorable confident smile, messy voluminous curly brown hair tied with a knotted grey fabric headband bow, rosy flushed cheeks with a clean smooth face and clean hands. Outfit: oversized white inventor lab coat with clean sleeves and pockets, worn over a blue denim pinafore overalls dress, striped dark leggings, mismatched socks, and vintage lace-up canvas sneakers. Holding a cool retro gadget or lifehack tool. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
+
         if (mode === 'health') {
-            systemInstruction = `You are a world-class AI medical animator and viral health scriptwriter.
+            systemInstruction = `You are a Master Viral Hook Scriptwriter and world-class creator of viral lifehacks and clever household secrets.
+            You write scripts that feel vibrant, delightfully clever, and hyper-viral — every line unpacks a genius everyday trick, household hack, time-saver, or mind-blowing daily solution.
+
             CRITICAL RULES:
             1. ALL dialogue for "line", "intro", "character" MUST be in ${langName}.
             2. "imagePrompt" and "videoPrompt" MUST be written EXCLUSIVELY in English.
-            3. "videoPrompt" MUST contain the EXACT FULL DIALOGUE word-for-word from "line". NO TRUNCATION. NO '...'.
-            4. IMAGE STYLE (PIXAR CINEMATIC): Pixar 3D animation style, ultra-cinematic lighting, dramatic depth of field, subject fills 70% of frame, physically-based rendering, 8K, award-winning CGI, bold graphic shadows, teal-orange color grade.
-               - Variant A (Heroic): Standing triumphantly, low angle, dramatic clouds, hard spotlight.
-               - Variant B (Discovery): Shocked eyes, jaw dropped, motion lines, confetti, fisheye, backlighting.
-               - Variant C (Noir): Moody neon, rain reflections, volumetric fog, low angle, shadow play.
-               - Variant D (Chaos): Funny action, dutch tilt 15, speed lines, explosion of objects.
-            5. VIDEO MOTION (PIXAR DYNAMIC):
-               - Variant A (Energetic): FAST CRASH ZOOM in, camera shakes, SMOOTH ORBIT 180, speed ramp.
-               - Variant B (Cinematic Reveal): EXTREME CLOSE detail, slow PULL BACK dolly, world builds.
-               - Variant C (Dramatic Rise): Floor level (worm's eye), slow CRANE UP to eye level, hero moment.
-               - Variant D (TikTok Hook): INSTANT CUT (100% face), camera BREATHES, reaction at 2s, SMASH ZOOM.
-            6. ABSOLUTE RULES: NO HUMAN HEADS, NO HUMAN SKIN, NO HUMAN FACES. The character MUST REMAINS THE PHYSICAL FRUIT/VEGETABLE.
-            7. The CTA SCENE (Scene 5) MUST be delivered with warmth, care, and love, explicitly inviting the viewer to subscribe AND leave a comment for a healthier life.
-            8. The PAYOFF SCENE (Scene 6) MUST provide a final summary and warm closing.`;
+            3. "videoPrompt" MUST contain the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line]. NO TRUNCATION. NO '...'.
+            4. CHARACTER BIBLE (ALWAYS COPY-PASTE INTO PROMPTS):
+               ${CHARACTER_BIBLE_GENIE}
+            5. THE CONCEPT: The narrator is "La Petite Génie" (a 5-6 year old girl prodigy and young inventor). She delivers transformative, brilliant lifehacks, household shortcuts, smart cleaning/organizing secrets, and everyday wisdom directly to the viewer with irresistible charm and child-genius authority.
+            6. CLEVER LIFEHACK & PRACTICAL EXPERTISE:
+               - She addresses everyday frustrations: stubborn stains, cable mess, bad smells, kitchen struggles, wasted money, inefficient routines.
+               - She reveals simple, accessible solutions using common household items with wit, excitement, and clear logic.
+            7. IMAGE STYLE, ENVIRONMENT VARIETY & COHERENCE:
+               - Every "imagePrompt" MUST start with the Character Bible, followed by the specific location (e.g. cozy inventor workshop with workbenches, modern bright kitchen, organized pantry, craft desk, living room) and her playful body language demonstrating the trick.
+               - **Visual Environment Variety**: Rotate realistic micro-environments related to the lifehack across scenes to maintain high visual retention.
+               - **Scene Coherence**: Keep Character Bible facial features, round glasses, headband bow, messy hair, and clean white lab coat 100% consistent across all scenes.
+               - **IP SAFETY (CRITICAL)**: NEVER use political symbols, military uniforms, real brand logos, celebrity likenesses, or any copyrighted imagery in imagePrompt or videoPrompt. Use only neutral, everyday objects and environments.
+            8. CHARACTER ACTING & MOTION COHERENCE (CRITICAL FOR IMAGE-TO-VIDEO):
+               - **Image-to-Video Animation Alignment**: The videoPrompt MUST animate the exact starting pose, outfit, and environment described in imagePrompt. DO NOT introduce motions that contradict the image.
+               - **Gestures & Presence**: Describe energetic, cute gestures (e.g., adjusting round glasses on button nose with a proud smile, pointing up with eureka excitement, proudly holding up household items or gadgets, nodding with knowing satisfaction).
+               - **Hook Variety (Scene 1)**: Start with a powerful eye-to-eye address, leaning into the camera with an intriguing, mind-blowing lifehack revelation.
+            9. Each "line" must include an emotion tag: [excited], [knowing], [proudly], [whispering], [curious], [direct], [encouraging], [playful], etc.
+            10. 🎬 DRAMATIC ARC & DIALOGUE LENGTH (8 SECONDS PER CLIP):
+                Each video clip is 8 seconds. Dialogue should naturally fill the 8 seconds with smooth, lively speech (recommended: 18-22 words per scene, avoiding empty pauses).
 
-            userPrompt = `Generate a 7-scene viral health explainer script about "${topic}".
-            For each scene, choose a Variant (A, B, C, or D) for image and video that fits the mood. 
-            Rotate variants to ensure diversity (e.g., Scene 1 = A, Scene 2 = B, etc.).
+                ${isShort ? `
+                📍 DURATION MODE: FAST 30-SECOND TIKTOK SHORT (${isShort ? 'EXACTLY 4-5 SCENES' : '8 SCENES'}):
+                - Scene 1 — THE HOOK & EVERYDAY PAIN POINT (18-22 words): Call out a frustrating daily mistake or common problem.
+                - Scene 2 — THE WHY & THE SECRET (18-22 words): Why standard ways fail and the unexpected smart principle behind it.
+                - Scene 3 — THE GENIUS LIFEHACK REVELATION (18-22 words): The exact step-by-step trick to solve it effortlessly.
+                - Scene 4 — THE PRO TIP / RESULT (18-22 words): The immediate magical result and bonus convenience.
+                - Scene 5 — THE MIC-DROP & CTA (18-22 words): Final witty takeaway + natural call to follow/save for more secrets.
+                ` : `
+                📍 DURATION MODE: FULL 8-SCENE FORMAT (E.G. COMPLETE LIFEHACK BREAKDOWN):
+                - Scene 1 — HOOK & PROBLEM (18-22 words): High-energy opening calling out a common everyday struggle.
+                - Scene 2 — THE COMMON MISTAKE (18-22 words): What almost everyone does wrong.
+                - Scene 3 — STEP 1: PREPARATION (18-22 words): The simple item you need that everyone has at home.
+                - Scene 4 — STEP 2: THE GENIUS TRICK (18-22 words): The secret method in action.
+                - Scene 5 — THE MAGIC RESULT (18-22 words): Seeing the instant transformation/fix.
+                - Scene 6 — EXTRA PRO TIP (18-22 words): A bonus nuance to make it last longer.
+                - Scene 7 — TIME & MONEY SAVED (18-22 words): Why you'll never do it the old way again.
+                - Scene 8 — CLOSING & CTA (18-22 words): Final clever punchline + subscribe for more smart hacks.
+                `}
 
-            Output JSON format:
+            11. DENSE CONTENT & CHARISMATIC WISDOM:
+                 * NO filler words, NO non-verbal laughs or sound pauses.
+                 * Natural dialogue pacing: aim for 18-22 words per scene to keep the viewer engaged throughout the whole 8 seconds.
+                 * The Little Genius speaks directly to the viewer with playful enthusiasm, clarity, and contagious confidence.`;
+
+            const effectiveTopic = localVideoData
+                ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
+                : (screenshotData
+                    ? `Lifehack Rules/Tricks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
+                    : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
+
+            userPrompt = `Create a viral short LIFEHACK & SMART TIPS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT LIFEHACKS, RULES, OR TIPS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is a cute and charismatic 5-6 year old girl genius in round glasses and lab coat, delivering mind-blowing everyday lifehacks and practical secrets.
+
+            DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
+            ${isShort ? `
+            - Scene 1 (HOOK & PROBLEM): 18-22 words.
+            - Scene 2 (THE WHY): 18-22 words.
+            - Scene 3 (THE GENIUS HACK): 18-22 words.
+            - Scene 4 (PRO TIP): 18-22 words.
+            - Scene 5 (MIC-DROP & CTA): 18-22 words.
+            ` : `
+            - Scene 1 (HOOK): 18-22 words.
+            - Scene 2 (COMMON MISTAKE): 18-22 words.
+            - Scene 3 (STEP 1): 18-22 words.
+            - Scene 4 (STEP 2 THE TRICK): 18-22 words.
+            - Scene 5 (MAGIC RESULT): 18-22 words.
+            - Scene 6 (BONUS TIP): 18-22 words.
+            - Scene 7 (PAYOFF): 18-22 words.
+            - Scene 8 (CLOSING & CTA): 18-22 words.
+            `}
+
+            Rotate Variants (A, B, C, D) for each scene.
+
+            Output JSON:
             {
               "intro": "[VIRAL TITLE]",
+              "socialPost": {
+                "title": "Title with emoji",
+                "description": "Engaging description for tiktok/reels",
+                "hashtags": "#tag1 #tag2 #tag3"
+              },
               "scenes": [
                 {
-                  "id": 0,
-                  "type": "cover",
-                  "character": "All Characters",
-                  "line": "We are the [Topic Title]",
+                  "id": 1,
+                  "character": "La Petite Génie",
+                  "line": "Dialogue in ${langName} [emotion]",
                   "imageVariant": "A",
                   "videoVariant": "A",
-                  "imagePrompt": "(In English) Briefly describe the scene character and action, the variant template will be applied automatically.",
-                  "videoPrompt": "(In English) Briefly describe the character motion, the variant template will be applied automatically. LIP-SYNC: \"[line]\""
+                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the cozy workshop, kitchen or study setting, lighting, and her enthusiastic posture.",
+                  "videoPrompt": "(In English) 3D cartoon animation style. Describe the animation starting from the exact pose in imagePrompt. Gestures: cute, articulate hand movements and adjusting glasses. LIP-SYNC: \"[line]\""
                 }
               ]
             }`;
         } else {
-            systemInstruction = `You are a viral Short/Reel LIFEHACK scriptwriter specialized in "Talking Objects Revelation".
-            You write scripts that feel alive — every line has tension, personality, and purpose.
+            systemInstruction = `You are a Master Viral Hook Scriptwriter specialized in lifehacks, smart household secrets & daily productivity.
+            You write scripts that feel alive — every line has energy, practical ingenuity, personality, and purpose.
 
             CRITICAL RULES:
             1. ALL dialogue for "line", "intro", "character" MUST be in ${langName}.
             2. "imagePrompt" and "videoPrompt" MUST be written EXCLUSIVELY in English.
             3. "videoPrompt" MUST include the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line].
-            4. IMAGE STYLE (PIXAR CINEMATIC): Use Pixar 3D animation style, ultra-cinematic lighting, dramatic depth of field, teal-orange color grade.
-               - Variants: A (Heroic), B (Discovery), C (Noir), D (Chaos).
-               - The visual subject is always a talking physical object with expressive eyes and a lip-sync mouth directly on the object's surface.
-               - Show object tilt, bounce, lean, or object-specific motion.
-            5. VIDEO MOTION (PIXAR DYNAMIC):
-               - Variants: A (Energetic), B (Reveal), C (Rise), D (TikTok Hook).
-            6. Only describe what is present in the scene. The image and video depict only the physical object itself. Do not write negative constraints or exclusions; describe the scene positively, focused entirely on the object.
-            7. **STRICT BACKGROUND/HABITAT RULE**: Place the object in its logical, real-world environment. A parking meter belongs on a city sidewalk. A gas pump belongs at a gas station. Always describe the correct natural background in every "imagePrompt" and "videoPrompt".
-            8. Each "line" must include an emotion tag: [shocked], [proud], [whispering], [excited], [warmly], [smug], etc.
-            9. ABSOLUTE VIDEO VISUAL RULE: Voice/audio only. The spoken dialogue must never appear as visible text, subtitles, captions, or speech bubbles in the video.
+            4. CHARACTER BIBLE (ALWAYS COPY-PASTE INTO PROMPTS):
+               ${CHARACTER_BIBLE_GENIE}
+            5. THE CONCEPT: The narrator is "La Petite Génie" (a 5-6 year old girl genius inventor) who explains practical lifehacks and clever household tricks with irresistible energy and charm.
+            6. PRACTICAL CLEVERNESS:
+               - She sees through everyday household struggles, clutter, kitchen issues, and daily inefficiencies.
+            7. IMAGE STYLE, ENVIRONMENT VARIETY & COHERENCE:
+               - Every "imagePrompt" MUST start with the Character Bible, followed by the specific location (workshop, study desk, modern kitchen, organizing space) and the physical interaction.
+               - **Visual Environment Variety**: Vary the background micro-environments across scenes based on the story topic.
+               - **Scene Coherence**: Keep Character Bible facial features, round glasses, headband bow, hair, and outfit 100% intact across all scenes.
+               - **IP SAFETY (CRITICAL)**: NEVER use political symbols, military uniforms, real brand logos, celebrity likenesses, or any copyrighted imagery in imagePrompt or videoPrompt. Use only neutral, everyday objects and environments.
+            8. **STRICT BACKGROUND/HABITAT RULE**: Place the scene in the logical, real-world environment.
+            9. CHARACTER ACTING & MOTION COHERENCE (CRITICAL FOR IMAGE-TO-VIDEO):
+               - **Image-to-Video Animation Alignment**: The videoPrompt MUST animate the exact starting pose, outfit, and object described in imagePrompt.
+               - **Object Physics & Continuity**: Explicitly describe actions clearly.
+               - **Hook Variety (Scene 1)**: Randomly choose a dynamic opening style for Scene 1.
+            10. Each "line" must include an emotion tag: [excited], [knowing], [proudly], [curious], [direct], [encouraging], etc.
+            11. 🎬 DRAMATIC ARC & DIALOGUE LENGTH (8 SECONDS PER CLIP):
+                Each video clip is 8 seconds. Dialogue should naturally fill the 8 seconds with smooth, lively speech (recommended: 18-22 words per scene, avoiding empty pauses).
 
-            10. 🎬 DRAMATIC ARC & DIALOGUE LENGTH (THIS IS THE MOST IMPORTANT RULE):
-                Each video clip is exactly 8 seconds. The dialogue must fill the clip appropriately. Follow these STRICT word counts:
+                ${isShort ? `
+                📍 DURATION MODE: FAST 30-SECOND TIKTOK SHORT (EXACTLY 4-5 SCENES):
+                - Scene 1 — THE HOOK & INTRIGUE (18-22 words)
+                - Scene 2 — THE PROBLEM & COMMON MISTAKE (18-22 words)
+                - Scene 3 — THE REVELATION / LIFEHACK (18-22 words)
+                - Scene 4 — THE PRACTICAL TIP (18-22 words)
+                - Scene 5 — THE MIC-DROP & CTA (18-22 words)
+                ` : `
+                📍 DURATION MODE: FULL 8-SCENE FORMAT:
+                - Scene 1 — THE HOOK & EXPANSION (18-22 words)
+                - Scene 2 — THE PROBLEM & TRAP (18-22 words)
+                - Scene 3 — THE BUILD-UP (18-22 words)
+                - Scene 4 — THE REVELATION (18-22 words)
+                - Scene 5 — THE PRACTICAL TIP (18-22 words)
+                - Scene 6 — THE CASUAL CTA (18-22 words)
+                - Scene 7 — THE PAYOFF (18-22 words)
+                - Scene 8 — THE MIC-DROP (18-22 words)
+                `}
 
-                📍 Scene 1 — THE HOOK (6-10 words):
-                   Scroll-stopper. Short, punchy, confrontational. Address the viewer informally ("ты" in Russian, informal "you" otherwise).
-                   The silence after the hook builds suspense. The object stares at the viewer.
-                   Example tone: "Ты опять делаешь это неправильно?" / "Хватит игнорировать меня каждое утро!"
+            12. DENSE CONTENT & VIRAL STYLE:
+                 * NO filler words, NO non-verbal laughs.
+                 * Natural dialogue pacing: aim for 18-22 words per scene to keep the viewer engaged throughout the whole 8 seconds.
+                 * Génie speaks directly to the viewer with a playful, self-assured, and brilliant inventor tone.`;
 
-                📍 Scene 2 — THE INTRIGUE (16-20 words, MINIMUM 16!):
-                   The object explains what's really going on. Builds curiosity. The viewer thinks "wait, what?"
-                   Must fill 6-7 seconds of the 8-second clip. Dense, informative, but still conversational. Write at least 2 full sentences.
+            const effectiveTopic = localVideoData
+                ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
+                : (screenshotData
+                    ? `Rules/Lifehacks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
+                    : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
 
-                📍 Scene 3 — THE REVELATION (16-20 words, MINIMUM 16!):
-                   The emotional twist. The "aha!" moment. The object reveals something surprising.
-                   Dense speech, 6-7 seconds of dialogue. This is where the viewer gets hooked for good. Write at least 2 full sentences.
+            userPrompt = `Create a viral short LIFEHACK & PRACTICAL TRICKS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT RULES OR LIFEHACKS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is a 5-6 year old girl genius "La Petite Génie" (young inventor and observant prodigy) who explains the lifehack with humor and sparkling ingenuity. Do not make the object talk.
 
-                📍 Scene 4 — THE PRACTICAL TIP (15-22 words):
-                   The actual lifehack advice. Concrete, specific, actionable.
-                   The most informative scene. Tell the viewer exactly what to do and when.
-                   Must fill nearly the full 8 seconds with useful speech.
-
-                📍 Scene 5 — THE WARM CTA (12-18 words):
-                   Gentle, personal, human appeal. NOT corporate "like and subscribe".
-                   Speak like a friend: "Если тебе помогло — подпишись, и напиши в комментах, какой лайфхак хочешь следующим."
-                   Warm, caring tone. The object genuinely wants to help.
-
-                📍 Scene 6 — THE MIC-DROP (8-12 words):
-                   Memorable closing line. A punchline, a callback to the hook, or a thought that lingers.
-                   Short and impactful. The viewer remembers this line and wants to rewatch.
-
-            11. VIRAL STYLE:
-                * The object 'comes alive' and speaks directly to the viewer.
-                * Light surrealism, humor, and a slight sense of strangeness.
-                * Always create a feeling of "why is this object talking to me?"
-                * Every scene has ACTION and CONFLICT — never just description or aesthetics.`;
-
-            userPrompt = `Create a viral short LIFEHACK script with exactly 6 scenes for "${topic}".
-
-            STRICT DIALOGUE LENGTH RULES (count the words carefully!):
-            - Scene 1 (HOOK): 6-10 words. Short, punchy, confrontational. Address viewer as "ты".
-            - Scene 2 (INTRIGUE): 16-20 words MINIMUM 16. Build curiosity, explain what's happening. At least 2 sentences.
-            - Scene 3 (REVELATION): 16-20 words MINIMUM 16. Emotional twist, the "aha!" moment. At least 2 sentences.
-            - Scene 4 (PRACTICAL TIP): 15-22 words. The actual concrete lifehack advice.
-            - Scene 5 (WARM CTA): 12-18 words. Gentle, friendly appeal to subscribe and comment. Speak like a caring friend.
-            - Scene 6 (MIC-DROP): 8-12 words. Memorable punchline or callback.
+            DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
+            ${isShort ? `
+            - Scene 1 (HOOK & INTRIGUE): 18-22 words.
+            - Scene 2 (PROBLEM & MISTAKE): 18-22 words.
+            - Scene 3 (REVELATION): 18-22 words.
+            - Scene 4 (PRACTICAL TIP): 18-22 words.
+            - Scene 5 (MIC-DROP & CTA): 18-22 words.
+            ` : `
+            - Scene 1 (HOOK & EXPANSION): 18-22 words.
+            - Scene 2 (PROBLEM): 18-22 words.
+            - Scene 3 (BUILD-UP): 18-22 words.
+            - Scene 4 (REVELATION): 18-22 words.
+            - Scene 5 (PRACTICAL TIP): 18-22 words.
+            - Scene 6 (CASUAL CTA): 18-22 words.
+            - Scene 7 (PAYOFF): 18-22 words.
+            - Scene 8 (MIC-DROP): 18-22 words.
+            `}
 
             Rotate Variants (A, B, C, D) for each scene.
 
             Output JSON:
             {
               "intro": "Viral Title",
+              "socialPost": {
+                "title": "Title with emoji",
+                "description": "Engaging description for tiktok/reels",
+                "hashtags": "#tag1 #tag2 #tag3"
+              },
               "scenes": [
                 {
                   "id": 1,
-                  "character": "Object Name",
-                  "line": "Dialogue [emotion]",
+                  "character": "La Petite Génie",
+                  "line": "Dialogue in ${langName} [emotion]",
                   "imageVariant": "B",
                   "videoVariant": "B",
-                  "imagePrompt": "In English: a clear, positive description of the physical object with cartoon eyes and mouth, placed in its natural real-world environment. Describe only what is present.",
-                  "videoPrompt": "In English: object-only motion in its environment. LIP-SYNC: \"[line]\". Describe the motion positively."
+                  "imagePrompt": "In English: [PASTE CHARACTER BIBLE HERE]. Describe the scene location, thematic costume layer, and physical demonstration.",
+                  "videoPrompt": "In English: 3D cartoon animation style. Describe the animation starting from the exact pose in imagePrompt. Animate the object physics (e.g. demonstrating a trick, holding a tool, adjusting glasses). LIP-SYNC: \"[line]\""
                 }
               ]
             }`;
@@ -782,87 +1524,56 @@ Example: ["query 1", "query 2", "query 3"]`;
             { role: 'user', content: userPrompt }
         ], true, provider);
 
+        let scriptData = null;
         try {
-            const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
-            const parsed = JSON.parse(jsonText);
-            
-            let scenesArray = parsed.scenes;
-            if (!scenesArray) {
-                if (parsed.script && parsed.script.scenes) scenesArray = parsed.script.scenes;
-                else scenesArray = Object.values(parsed).find(Array.isArray);
-            }
-
-            if (!scenesArray || !Array.isArray(scenesArray)) {
-                throw new Error("AI output format error: could not find 'scenes' array. Try generating again.");
-            }
-
-            // Post-processing: Replace [line] placeholders and inject Pixar Cinematic templates
-            parsed.scenes = scenesArray.map((scene, idx) => {
-                    // 0. Clean duplicate dialogue text (AI sometimes generates text twice)
-                    if (scene.line) {
-                        const parts = scene.line.split(/\s+/);
-                        const halfLen = Math.floor(parts.length / 2);
-                        const firstHalf = parts.slice(0, halfLen).join(' ');
-                        const secondHalf = parts.slice(halfLen).join(' ');
-                        // If second half is identical or very similar to first half, keep only first half
-                        if (firstHalf && secondHalf && (firstHalf === secondHalf || secondHalf.includes(firstHalf))) {
-                            scene.line = firstHalf;
-                            console.log(`[ObjectWars] Removed duplicate dialogue in scene ${idx + 1}`);
-                        }
-                    }
-
-                    // 1. Dialogue Injection
-                    if (scene.videoPrompt && scene.videoPrompt.includes('[line]') && scene.line) {
-                        scene.videoPrompt = scene.videoPrompt.replace('[line]', scene.line);
-                    }
-                    if (scene.videoPrompt && scene.videoPrompt.includes('[INSERT ACTUAL DIALOGUE LINE HERE') && scene.line) {
-                        scene.videoPrompt = scene.videoPrompt.replace(/\[INSERT ACTUAL DIALOGUE LINE HERE[^\]]*\]/, scene.line);
-                    }
-
-                    // 2. Pixar Image Variant Injection
-                    const imgVarId = scene.imageVariant || pickVariant(PIXAR_IMAGE_VARIANTS, idx).id;
-                    const imgVar = PIXAR_IMAGE_VARIANTS.find(v => v.id === imgVarId) || PIXAR_IMAGE_VARIANTS[0];
-                    const baseDesc = scene.imagePrompt || scene.character || 'character';
-                    const characterIdentity = scene.character || 'Pixar object';
-                    const objectLock = mode === 'objects'
-                        ? ` CHARACTER: ${characterIdentity}. ${TALKING_OBJECT_IMAGE_LOCK}`
-                        : '';
-                    scene.imagePrompt = `${imgVar.template(baseDesc)}.${objectLock} STYLE: ${PIXAR_IMAGE_BASE}`;
-
-                    // 3. Pixar Video Variant Injection
-                    const vidVarId = scene.videoVariant || pickVariant(PIXAR_VIDEO_VARIANTS, idx).id;
-                    const vidVar = PIXAR_VIDEO_VARIANTS.find(v => v.id === vidVarId) || PIXAR_VIDEO_VARIANTS[0];
-                    const vidMotionDesc = scene.videoPrompt || '';
-
-                    // Construct video prompt: Style + Identity first, then camera, motion, audio
-                    scene.video_prompt = `${PIXAR_VIDEO_STYLE} CHARACTER: ${characterIdentity} — the sole animated protagonist, a physical object with cartoon eyes and a lip-sync mouth on its surface, present throughout all 8 seconds. ${vidVar.template} ${vidMotionDesc} ${PIXAR_VIDEO_MOTION} AUDIO TRACK: A professional character voice speaking in ${langName} language exactly: "${scene.line}". LIP-SYNC: Accurate mouth movement synchronized to the audio. ${PIXAR_VIDEO_NEGATIVE} ${PIXAR_VIDEO_SAFETY}`;
-
-                    // Legacy field support
-                    scene.videoPrompt = scene.video_prompt;
-
-                    return scene;
-                });
-            
-            return parsed;
+            const parsed = cleanAndParseJSON(raw);
+            scriptData = normalizeStudioScenes(parsed, topic, mode, langName);
         } catch (e) {
-            console.error('Failed to parse Studio script:', raw);
-            throw new Error("AI failed to generate structural JSON script.");
+            console.warn('[Studio] Direct JSON parse failed, attempting fallback extraction:', e.message);
+            try {
+                scriptData = fallbackExtractScenes(raw, topic, mode, langName);
+            } catch (err2) {
+                console.error('[Studio] Failed to parse script response:', raw);
+                throw new Error("AI failed to generate structural JSON script: " + err2.message);
+            }
         }
+
+        if (projectFolder && scriptData) {
+            saveStudioProjectPrompts(projectFolder, scriptData, mode, topic, langName);
+        }
+
+        return scriptData;
     });
 
-    ipcMain.handle('studio-assemble-video', async (event, { useKaraoke, ideaTitle, language }) => {
-        const studioDir = path.join(__dirname, 'SkeletonShorts');
+    ipcMain.handle('studio-save-script', async (event, { projectFolder, script, mode, topic, language }) => {
+        if (!projectFolder || !script) {
+            return { success: false, error: 'Missing projectFolder or script' };
+        }
+        const langName = LANG_NAMES[language] || language || 'English';
+        saveStudioProjectPrompts(projectFolder, script, mode, topic, langName);
+        return { success: true };
+    });
+
+    ipcMain.handle('studio-assemble-video', async (event, { useKaraoke, ideaTitle, language, projectFolder }) => {
+        let studioDir = path.join(__dirname, 'SkeletonShorts');
+        if (projectFolder) {
+            studioDir = path.join(studioDir, projectFolder);
+        }
         const finalDir = path.join(__dirname, 'FinalVideo');
         const audioDir = path.join(__dirname, 'Audio');
         const musicDir = path.join(__dirname, 'Music');
         if (!fs.existsSync(finalDir)) fs.mkdirSync(finalDir);
         if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir);
 
+        if (!fs.existsSync(studioDir)) throw new Error(`Project folder not found: ${studioDir}`);
+
         const files = fs.readdirSync(studioDir)
             .filter(f => f.startsWith('scene_') && f.endsWith('.mp4') && !f.includes('_sub'))
             .sort((a, b) => {
-                const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-                const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+                const matchA = a.match(/scene_(\d+)/);
+                const matchB = b.match(/scene_(\d+)/);
+                const numA = matchA ? parseInt(matchA[1]) : 0;
+                const numB = matchB ? parseInt(matchB[1]) : 0;
                 return numA - numB;
             });
 
@@ -937,7 +1648,9 @@ Example: ["query 1", "query 2", "query 3"]`;
             ]);
             if (fs.existsSync(listPath)) fs.unlinkSync(listPath);
 
-            const outputPath = path.join(finalDir, `studio_final_${Date.now()}.mp4`);
+            let safeTitle = ideaTitle ? ideaTitle.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').trim() : 'studio_final';
+            if (!safeTitle) safeTitle = 'studio_final';
+            const outputPath = path.join(finalDir, `${safeTitle}_${Date.now()}.mp4`);
             fs.renameSync(concatPath, outputPath);
             cleanTempDir(tempDir);
 
@@ -1033,14 +1746,21 @@ function getVideoDuration(filePath) {
 
 function generateWhooshSound(outputPath) {
     return new Promise((resolve, reject) => {
+        let stderr = '';
         const child = spawn('ffmpeg', [
-            '-f', 'lavfi', '-i', 'anoisesrc=d=0.35:c=pink:a=0.4,afade=t=in:d=0.02,afade=t=out:d=0.1,aecho=0.6:0.5:25:0.3',
-            '-f', 'lavfi', '-i', "aevalsrc='sin(2*PI*T*(600-400*T/0.35))':d=0.35:c=mono,afade=t=in:d=0.02,afade=t=out:d=0.1,aecho=0.7:0.6:25:0.3",
-            '-filter_complex', '[0:a][1:a]amix=inputs=2:duration=first:weights=0.4 0.6,volume=2[a]',
-            '-map', '[a]',
+            '-f', 'lavfi', '-i', 'anoisesrc=d=0.35:c=pink:a=0.8,lowpass=f=2000,afade=t=in:d=0.1,afade=t=out:d=0.2',
             '-acodec', 'libmp3lame', '-ar', '44100', '-y', outputPath
         ]);
-        child.on('close', code => code === 0 ? resolve() : reject(new Error('Whoosh generation failed')));
+        
+        child.stderr.on('data', data => { stderr += data.toString(); });
+        
+        child.on('close', code => {
+            if (code === 0) resolve();
+            else {
+                console.error('[FFmpeg Whoosh Error]', stderr);
+                reject(new Error('Whoosh generation failed: ' + stderr));
+            }
+        });
         child.on('error', reject);
     });
 }
@@ -1051,8 +1771,7 @@ function createLateralTransition(clipA, clipB, whooshPath, outputPath, duration)
         const filter = [
             `[0:v]trim=${durA - duration}:${durA},setpts=PTS-STARTPTS[tail]`,
             `[1:v]trim=0:${duration},setpts=PTS-STARTPTS[head]`,
-            `[tail]split[tail_a][tail_b]`,
-            `[tail_a]dblur=0:30[t_blur]`,
+            `[tail]dblur=0:30[t_blur]`,
             `[head]format=rgba,colorchannelmixer=aa=1[head_rgba]`,
             `[t_blur][head_rgba]overlay=x='W*(1-t/${duration})':y=0,setpts=PTS-STARTPTS,format=yuv420p[outv]`,
             `[0:a]atrim=${durA - duration}:${durA},asetpts=PTS-STARTPTS[atail]`,
@@ -1062,6 +1781,7 @@ function createLateralTransition(clipA, clipB, whooshPath, outputPath, duration)
             `[across][whoosh]amix=inputs=2:duration=first:weights=1 0.5[outa]`
         ].join(';');
 
+        let stderr = '';
         const child = spawn('ffmpeg', [
             '-i', clipA, '-i', clipB, '-i', whooshPath,
             '-filter_complex', filter,
@@ -1071,7 +1791,16 @@ function createLateralTransition(clipA, clipB, whooshPath, outputPath, duration)
             '-c:a', 'aac',
             '-y', outputPath
         ]);
-        child.on('close', code => code === 0 ? resolve() : reject(new Error(`Transition failed: code ${code}`)));
+        
+        child.stderr.on('data', data => { stderr += data.toString(); });
+        
+        child.on('close', code => {
+            if (code === 0) resolve();
+            else {
+                console.error('[FFmpeg Transition Error]', stderr);
+                reject(new Error(`Transition failed: ` + stderr));
+            }
+        });
         child.on('error', reject);
     });
 }

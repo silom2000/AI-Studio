@@ -42,7 +42,7 @@ type Script = {
 
 type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'meta' | 'grok';
 type TtsService = 'voiceapi' | 'elevenlabs';
-type AiTextModel = 'custom' | 'pollinations';
+type AiTextModel = 'custom' | 'omniroute' | 'pollinations';
 
 const VIDEO_MODELS: { value: VideoModel; label: string; desc: string }[] = [
   { value: 'veo_31_lite', label: 'Veo 3.1 Lite', desc: 'Balanced generation' },
@@ -59,6 +59,7 @@ const TTS_SERVICES: { value: TtsService; label: string; desc: string }[] = [
 
 const AI_TEXT_MODELS: { value: AiTextModel; label: string; desc: string }[] = [
   { value: 'custom', label: 'Custom Proxy', desc: 'Local Gemini proxy (CUSTOM_AI_URL)' },
+  { value: 'omniroute', label: 'OmniRoute (Claude)', desc: 'Claude Sonnet via OmniRoute' },
   { value: 'pollinations', label: 'Pollinations', desc: 'Free fallback (openai-large)' },
 ];
 
@@ -107,7 +108,7 @@ export function SurviveTab() {
     setProjectFolder('');
     setCharacterRefUrl(null);
     try {
-      const result = await window.electronAPI.surviveGenerateIdeas({ language });
+      const result = await window.electronAPI.surviveGenerateIdeas({ language, aiModel });
       setIdeas(result || []);
     } catch (err: any) {
       alert('Failed to generate ideas: ' + err.message);
@@ -140,7 +141,8 @@ export function SurviveTab() {
       const scriptData = await window.electronAPI.surviveGenerateScript({
         idea,
         language,
-        projectFolder: folderName
+        projectFolder: folderName,
+        aiModel
       });
       setScript(scriptData);
       

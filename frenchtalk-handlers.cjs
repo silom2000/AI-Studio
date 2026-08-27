@@ -4,6 +4,7 @@ const fs = require('fs');
 const sharp = require('sharp');
 const historyManager = require('./history-manager.cjs');
 const ai = require('./ai-client.cjs');
+const { searchWeb } = require('./search-helper.cjs');
 
 const FRENCHTALK_DIR = path.join(__dirname, 'FrenchTalk');
 const BLOGGER_FILE = path.join(FRENCHTALK_DIR, 'blogger.json');
@@ -12,7 +13,7 @@ const BLOGGER_FILE = path.join(FRENCHTALK_DIR, 'blogger.json');
 const BLOGGER_VOICE_DESCRIPTION = 'young French woman, bright cheerful energetic voice, slightly cheeky and playful tone, fast-paced millennial speech';
 
 // ─── CINEMATIC AESTHETICS ───────────────────────────────────────────────────
-const CINEMATIC_MODIFIERS = `Cinematic aesthetics: Hasselblad 80mm f/2.8 medium format, golden hour backlight with warm SSS, softbox 45° wraparound, subtle haze, depth layering, Kodak Portra 400 film simulation with visible grain structure, lifted blacks and warm shadow rolloff, visible skin micro-texture, natural pores, subsurface scattering, individual eyelash variation, hair translucency, ultra-detailed 8K resolution equivalent, photorealistic, professional editorial photography vibe.`;
+const CINEMATIC_MODIFIERS = `Professional studio digital video aesthetics: crisp edge-to-edge full-frame coverage filling the entire screen boundary completely, unobstructed clean visual field, ultra-sharp optical focus, warm ambient interior lighting with soft facial illumination, realistic skin micro-texture, natural subsurface scattering, fine hair details, high dynamic range digital color science with rich warm tones, deep clean shadows, photorealistic 8K sensor quality, polished editorial visual style.`;
 
 // ─── CTA (Call-To-Action) PHRASE BANK ───────────────────────────────────────
 // Inspired by Cinema World Builder's Dialogue Engine — each CTA has a distinct
@@ -222,7 +223,7 @@ Voice: ${bloggerVoice}
 MOOD: ${style.mood} Playful call-to-action energy.
 ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     const isRelaxedIndoor = /bedroom|bed|sofa|living room|couch/i.test(location);
@@ -249,7 +250,7 @@ She says: "${dialogueText}"
 Voice: ${bloggerVoice}
 Audio: Ambient sounds of ${location}. ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     if (role === 'vlog_comment') {
@@ -265,7 +266,7 @@ Voice: ${bloggerVoice}
 MOOD: Intimate, witty, playful, sharing a girl secret.
 ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     if (role === 'aside') {
@@ -280,7 +281,7 @@ Voice: ${bloggerVoice}
 MOOD: Sarcastic, witty, playful — sharing a private joke with the viewer.
 ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     if (role === 'blogger' && isHook) {
@@ -295,7 +296,7 @@ Voice: ${bloggerVoice}
 MOOD: Cheeky, provocative, excited.
 ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     if (role === 'blogger') {
@@ -310,7 +311,7 @@ Voice: ${bloggerVoice}
 MOOD: Curious, slightly provocative smile.
 ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     if (role === 'stranger') {
@@ -326,11 +327,11 @@ Voice: ${strangerVoice}
 MOOD: ${emotion} — authentic, slightly caught off-guard.
 ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
-No text overlay. No subtitles.`;
+Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     // Fallback
-    return `Vertical TikTok street video, 9:16 portrait. ${dialogueText}. ${streetNoiseSuffix}\n${CINEMATIC_MODIFIERS}\nNo text overlay.`;
+    return `Vertical TikTok street video, 9:16 portrait. ${dialogueText}. ${streetNoiseSuffix}\n${CINEMATIC_MODIFIERS}\nClean edge-to-edge full-screen photographic framing, pure digital video feed.`;
 }
 
 function saveEpisodePromptsMetadata(episodeDir, episodeTitle, newPrompt) {
@@ -405,31 +406,6 @@ async function ensureImageAspectRatio(inputPath, targetAspectRatio, outputPath) 
     } catch (err) {
         console.error(`[FrenchTalk] Error resizing image:`, err);
         return inputPath;
-    }
-}
-
-// Simple DuckDuckGo HTML search
-async function searchWeb(query) {
-    try {
-        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-                'Accept-Language': 'fr,en-US;q=0.9,en;q=0.8'
-            }
-        });
-        if (!response.ok) throw new Error(`DDG returned status ${response.status}`);
-        const html = await response.text();
-        const snippetMatches = html.matchAll(/<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g);
-        const snippets = [];
-        for (const match of snippetMatches) {
-            const clean = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-            if (clean) snippets.push(clean);
-        }
-        return snippets.slice(0, 5).join('\n\n');
-    } catch (e) {
-        console.error('[FrenchTalk Search] DDG search failed:', e.message);
-        return '';
     }
 }
 
@@ -750,7 +726,8 @@ RULES:
 
 Output ONLY the script lines, nothing else.`;
 
-        const scriptRaw = await ai.chat([{ role: 'user', content: scriptPrompt }], false);
+        let scriptRaw = await ai.chat([{ role: 'user', content: scriptPrompt }], false);
+        scriptRaw = scriptRaw.replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
 
         // Translate to Russian
         let scriptRu = '';
@@ -764,6 +741,7 @@ Match the tone — cheeky, playful, witty.
 Script:
 ${scriptRaw}`;
             scriptRu = await ai.chat([{ role: 'user', content: translationPrompt }], false);
+            scriptRu = scriptRu.replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
         } catch (transErr) {
             console.error('[FrenchTalk AutoTopic] Translation failed:', transErr.message);
         }
@@ -772,7 +750,8 @@ ${scriptRaw}`;
         const scriptLines = scriptRaw.trim().split('\n').filter(l => l.trim().length > 0);
         const overlongLines = [];
         for (let i = 0; i < scriptLines.length; i++) {
-            const match = scriptLines[i].match(/^([^:]+):\s*(.*)$/);
+            const cleanLine = scriptLines[i].trim();
+            const match = cleanLine.match(/^([^:]+):\s*(.*)$/);
             if (match) {
                 const wordCount = match[2].trim().split(/\s+/).length;
                 const isOutro = match[1].trim().toLowerCase() === 'outro';
@@ -801,6 +780,22 @@ ${scriptRaw}`;
             scriptRu: scriptRu.trim(),
             overlongLines
         };
+    });
+
+    // Standalone translation of script to Russian
+    ipcMain.handle('frenchtalk-translate-script', async (event, { script, bloggerName }) => {
+        console.log(`[FrenchTalk Translate Script] Translating script to Russian...`);
+        const translationPrompt = `Translate this FrenchTalk TikTok script to Russian line-by-line.
+Keep the exact speaker format: "Speaker: Russian translation".
+Do not change speaker names (${bloggerName || 'Camille'}, Stranger, Aside, Outro).
+Match the tone — cheeky, playful, witty.
+Return ONLY the translated script without any intro, explanatory notes, or markdown codeblocks.
+
+Script:
+${script}`;
+        const raw = await ai.chat([{ role: 'user', content: translationPrompt }], false);
+        const cleanScriptRu = raw.trim().replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
+        return { scriptRu: cleanScriptRu };
     });
 
     // 8. Analyze Video and generate FrenchTalk script from it
@@ -1361,6 +1356,531 @@ Output EXACTLY in this JSON format, nothing else:
             scriptRu: scriptRu.trim(),
             metadata: tiktokMetadata
         };
+    });
+
+    let STREAM_PACK_DAYS = {
+        Monday: {
+            labelRu: 'Понедельник',
+            outfit: 'cozy beige knitted oversized sweater',
+            outfitRu: 'Уютный бежевый вязаный оверсайз свитер',
+            location: 'cozy living room couch, warm soft ambient home lamp lighting, aesthetic interior',
+            locationRu: 'Уютная гостиная, диван, теплое домашнее освещение'
+        },
+        Tuesday: {
+            labelRu: 'Вторник',
+            outfit: 'elegant white silk top with delicate shoulder straps',
+            outfitRu: 'Шелковый топ у окна',
+            location: 'modern apartment window with morning natural sun rays, high-rise view in Paris',
+            locationRu: 'У окна с утренним естественным светом'
+        },
+        Wednesday: {
+            labelRu: 'Среда',
+            outfit: 'stylish linen kitchen apron over a simple casual t-shirt',
+            outfitRu: 'Кухонный фартук',
+            location: 'bright modern Parisian kitchen with coffee maker and aesthetic marble countertop',
+            locationRu: 'Современная светлая кухня'
+        },
+        Thursday: {
+            labelRu: 'Четверг',
+            outfit: 'sophisticated chic black button-up blouse',
+            outfitRu: 'Черная элегантная блуза',
+            location: 'aesthetic home office study with bookshelves, soft background bokeh lamp',
+            locationRu: 'Домашний кабинет с книжными полками'
+        },
+        Friday: {
+            labelRu: 'Пятница',
+            outfit: 'glamorous deep-red silk evening dress',
+            outfitRu: 'Вечернее платье на диване с вином',
+            location: 'relaxing on a plush sofa with a crystal glass of red wine on the side table, evening intimate ambient mood lighting',
+            locationRu: 'Уютный диван, вечернее освещение, бокал вина'
+        },
+        Saturday: {
+            labelRu: 'Суббота',
+            outfit: 'luxurious satin sleepwear pajamas set',
+            outfitRu: 'Шелковая пижама в спальне',
+            location: 'cozy master bedroom, warm bedding, relaxed weekend morning atmosphere',
+            locationRu: 'Уютная спальня, атмосфера выходного дня'
+        },
+        Sunday: {
+            labelRu: 'Воскресенье',
+            outfit: 'sport-chic activewear outfit, stylish beige fitness zip hoodie',
+            outfitRu: 'Спорт-шик на балконе',
+            location: 'sunny apartment Parisian balcony overlooking rooftops and plants, fresh open-air natural lighting',
+            locationRu: 'Солнечный балкон с растениями и видом на крыши'
+        }
+    };
+
+    const streamDaysFile = path.join(FRENCHTALK_DIR, 'stream_pack_days.json');
+    if (fs.existsSync(streamDaysFile)) {
+        try {
+            const loaded = JSON.parse(fs.readFileSync(streamDaysFile, 'utf8'));
+            STREAM_PACK_DAYS = Object.assign(STREAM_PACK_DAYS, loaded);
+        } catch (e) {
+            console.warn('[StreamPacks] Could not load custom stream_pack_days.json:', e.message);
+        }
+    }
+
+    const IDLE_ACTIONS = [
+        { descEn: "Looking straight into camera with a warm gentle smile, subtly nodding and blinking naturally.", descRu: "Смотрит в камеру с теплой улыбкой, легкий кивок, естественная мимика." },
+        { descEn: "Gently tucking a strand of hair behind ear while smiling softly at the stream audience.", descRu: "Поправляет прядь волос за ухо, нежно улыбаясь зрителям." },
+        { descEn: "Holding a favorite coffee mug, taking a gentle sip, holding warm eye contact with camera.", descRu: "Держит чашку кофе, делает глоток, поддерживая визуальный контакт." },
+        { descEn: "Looking down at smartphone in hands, scrolling slightly, then glancing up at camera with a bright smile.", descRu: "Листает телефон в руках, затем поднимает взгляд на камеру с улыбкой." },
+        { descEn: "Subtly adjusting posture, resting chin gracefully on hand, looking directly at camera with charming gaze.", descRu: "Подпирает подбородок рукой, очаровательный взгляд прямо в камеру." },
+        { descEn: "Checking reflection in camera preview, giving a cute quick playful expression and tender smile.", descRu: "Оценивающе смотрит в камеру, милое игривое выражение лица." },
+        { descEn: "Relaxed thoughtful expression, looking slightly off-camera then turning bright eyes straight to viewer.", descRu: "Задумчивый взгляд в сторону, затем перевод взгляда прямо на зрителя." },
+        { descEn: "Soft gentle laugh without opening mouth wide, cheerful and pleasant welcoming demeanor.", descRu: "Мягкая тихая улыбчивая реакция, доброжелательная мимика без слов." },
+        { descEn: "Gently stretching shoulders while seated comfortably, enjoying the cozy stream atmosphere.", descRu: "Уютно устраивается, комфортная расслабленная атмосфера стрима." },
+        { descEn: "Holding a cup of tea, warming hands on it, looking down in peace then smiling at viewer.", descRu: "Греет руки о чашку, мирно смотрит на зрителей." },
+        { descEn: "Subtly adjusting collar or sleeves of outfit, keeping elegant posture and friendly eye contact.", descRu: "Поправляет одежду, элегантная осанка, дружелюбный взгляд." },
+        { descEn: "Peaceful steady eye contact with chat, slow gentle blinking, quiet listening expression.", descRu: "Внимательный взгляд в камеру, слушающая мимика, легкое моргание." }
+    ];
+
+    const FALLBACK_TALKING_REPLIES = [
+        { text: "Honnêtement, mon secret pour rester de bonne humeur à Paris, c'est un bon croissant au beurre le matin !", ru: "Честно говоря, мой секрет хорошего настроения в Париже — это свежий масляный круассан по утрам!" },
+        { text: "Vous trouvez pas que la météo aujourd'hui est parfaite pour rester au chaud à papoter avec vous ?", ru: "Не кажется ли вам, что погода сегодня просто идеальная, чтобы сидеть в тепле и болтать с вами?" },
+        { text: "Oh là là, regarde ce commentaire dans le chat ! T'es vraiment trop mignon d'écrire ça !", ru: "Ого, посмотри на этот комментарий в чате! Ты невероятно милый, что пишешь такое!" },
+        { text: "Alors dites-moi dans le chat, qui parmi vous a déjà eu l'occasion de visiter les rues de Paris ?", ru: "Ну-ка расскажите в чате, кто из вас уже успел побывать на улочках Парижа?" },
+        { text: "J'hésite encore entre boire un thé au jasmin ou un grand chocolat chaud ce soir, un conseil ?", ru: "Я всё ещё сомневаюсь, выпить ли вечером жасминовый чай или горячий шоколад, что посоветуете?" },
+        { text: "Pour moi, le style parisien c'est avant tout de se sentir élégante tout en restant hyper à l'aise !", ru: "Для меня парижский стиль — это прежде всего чувствовать себя элегантно, оставаясь при этом в полном комфорте!" },
+        { text: "Arrêtez de me taquiner sur ma passion pour la pâtisserie française, c'est mon seul vrai péché mignon !", ru: "Хватит дразнить меня из-за моей страсти к французской выпечке, это моя единственная слабость!" },
+        { text: "Si tu passes une journée un peu difficile, rappelle-toi que demain est une toute nouvelle aventure !", ru: "Если у тебя сегодня выдался тяжёлый день, помни, что завтра начнётся совершенно новое приключение!" },
+        { text: "Regardez l'ambiance lumineuse ici, c'est tellement cosy pour discuter tranquillement entre amis ce soir !", ru: "Посмотрите на это уютное освещение, здесь так здорово спокойно болтать по душам сегодняшним вечером!" },
+        { text: "C'est fou comme le temps passe vite quand on s'amuse bien ensemble, vous me donnez tellement d'énergie !", ru: "С ума сойти, как быстро летит время, когда нам так весело вместе, вы дарите мне столько энергии!" },
+        { text: "Quel est votre film ou série préférée du moment ? J'ai vraiment besoin de recommendations pour ce soir !", ru: "Какой у вас любимый фильм или сериал прямо сейчас? Мне срочно нужны рекомендации на вечер!" },
+        { text: "Franchement, j'adore trop vos questions ce soir, vous avez toujours un sens de l'humour incroyable !", ru: "Честно говоря, обожаю ваши вопросы сегодня вечером, у вас просто потрясающее чувство юмора!" },
+        { text: "Le meilleur conseil beauté que je puisse vous donner, c'est de sourire de tout votre cœur chaque jour !", ru: "Лучший совет по красоте, который я могу дать — это каждый день улыбаться от всего сердца!" },
+        { text: "Un jour, il faudrait absolument qu'on organise une grande rencontre IRL dans un charmant café parisien !", ru: "Однажды нам обязательно нужно устроить настоящую встречу в каком-нибудь очаровательном парижском кафе!" },
+        { text: "Je regarde souvent les toits de Paris et je me dis à quel point cette ville est pleine de magie.", ru: "Я часто смотрю на крыши Парижа и понимаю, насколько же этот город наполнен магией." },
+        { text: "Merci à tous ceux qui viennent d'arriver dans le live, installez-vous confortablement, vous êtes chez vous !", ru: "Спасибо всем, кто только что присоединился к эфиру, устраивайтесь поудобнее, чувствуйте себя как дома!" },
+        { text: "Est-ce que vous aussi vous avez des petites habitudes bizarres le soir ? Avouez tout dans le chat !", ru: "А у вас тоже есть забавные вечерние привычки? Признавайтесь честно в чате!" },
+        { text: "Ce que j'aime le plus dans notre communauté, c'est toute cette bienveillance et ce positif au quotidien !", ru: "Что я больше всего ценю в нашем сообществе — это постоянную доброжелательность и ежедневный позитив!" },
+        { text: "Je vous prépare une surprise trop sympa pour le prochain épisode de vlogs, vous n'êtes pas prêts !", ru: "Я готовлю для вас невероятно классный сюрприз в следующем влоге, вы даже не представляете!" },
+        { text: "Allez, envoyez-moi tous des petits cœurs dans le chat pour qu'on fasse réchauffer la soirée !", ru: "Давайте, отправляйте мне миллионы сердечек в чате, чтобы согреть наш сегодняшний вечер!" }
+    ];
+
+    const FALLBACK_GIFT_REACTIONS = [
+        { text: "Oh mon dieu ! Ce cadeau est juste incroyable ! Tu es une vraie merveille, je t'envoie mille bisous !", ru: "О боже мой! Этот подарок просто невероятен! Ты настоящее чудо, отправляю тебе тысячу поцелуев!" },
+        { text: "Wouah, je n'en reviens pas ! Merci du fond du cœur pour ta générosité exceptionnelle, tu as illuminé ma soirée !", ru: "Вау, глазам не верю! Спасибо от всего сердца за твою невероятную щедрость, ты сделал мой вечер!" },
+        { text: "Mais quelle incroyable surprise ! Tu es officiel mon coup de cœur du stream ce soir, un immense merci !", ru: "Какой потрясающий сюрприз! Ты официально любимец нашего сегодняшнего стрима, огромное спасибо!" },
+        { text: "Olala, tu me chouchoutes beaucoup trop là ! Ça me touche énormément, gros câlin viruel à toi !", ru: "Ого, ты меня просто невероятно балуешь! Меня это так тронуло, обнимаю тебя крепко-крепко!" },
+        { text: "C'est folie totale ! Merci pour ce super don, tu me donnes un sourire radieux pour tout le reste de la semaine !", ru: "Это просто безумие! Спасибо за этот шикарный донат, ты подарил мне лучезарную улыбку на всю неделю!" },
+        { text: "Un geste aussi adorable, ça me fait fondre direct ! T'es vraiment une superstar absolue dans mon cœur !", ru: "Такой очаровательный жест заставляет меня просто таять! Ты настоящая суперзвезда в моём сердце!" }
+    ];
+
+    ipcMain.handle('frenchtalk-save-streampack-days-info', async (event, updatedDaysInfo) => {
+        const toSave = JSON.parse(JSON.stringify(updatedDaysInfo));
+        for (const d of Object.keys(toSave)) {
+            delete toSave[d].bgRoomBase64;
+            delete toSave[d].sceneBase64;
+        }
+        STREAM_PACK_DAYS = Object.assign(STREAM_PACK_DAYS, toSave);
+        const file = path.join(FRENCHTALK_DIR, 'stream_pack_days.json');
+        fs.writeFileSync(file, JSON.stringify(STREAM_PACK_DAYS, null, 2), 'utf8');
+        return { success: true, daysInfo: STREAM_PACK_DAYS };
+    });
+
+    ipcMain.handle('frenchtalk-get-streampacks', async () => {
+        const result = {};
+        const daysInfoWithImages = JSON.parse(JSON.stringify(STREAM_PACK_DAYS));
+        for (const [day, info] of Object.entries(daysInfoWithImages)) {
+            const dir = path.join(FRENCHTALK_DIR, `StreamPack_${day}`);
+            const imagesDir = path.join(dir, 'images');
+            const bgRoomPath = path.join(imagesDir, `bg_room_${day}.jpg`);
+            if (fs.existsSync(bgRoomPath)) {
+                try { info.bgRoomBase64 = `data:image/jpeg;base64,${fs.readFileSync(bgRoomPath, 'base64')}`; } catch(e){}
+            } else {
+                info.bgRoomBase64 = null;
+            }
+            const scenePath = path.join(imagesDir, `pro_home_scene_${day}.jpg`);
+            if (fs.existsSync(scenePath)) {
+                try { info.sceneBase64 = `data:image/jpeg;base64,${fs.readFileSync(scenePath, 'base64')}`; } catch(e){}
+            } else {
+                info.sceneBase64 = null;
+            }
+
+            const jsonPath = path.join(dir, 'pack_data.json');
+            if (fs.existsSync(jsonPath)) {
+                try {
+                    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+                    for (const clip of data.clips || []) {
+                        if (clip.videoPath && fs.existsSync(clip.videoPath)) {
+                            if (!clip.videoBase64) {
+                                const b64 = fs.readFileSync(clip.videoPath).toString('base64');
+                                clip.videoBase64 = `data:video/mp4;base64,${b64}`;
+                            }
+                        } else {
+                            clip.videoPath = null;
+                            clip.videoBase64 = null;
+                            if (clip.status === 'done' || clip.status === 'generating') clip.status = 'idle';
+                        }
+                    }
+                    result[day] = data;
+                } catch (e) {
+                    console.error(`[FrenchTalk StreamPacks] Failed to read ${day}:`, e.message);
+                    result[day] = null;
+                }
+            } else {
+                result[day] = null;
+            }
+        }
+        return { packs: result, daysInfo: daysInfoWithImages };
+    });
+
+    ipcMain.handle('frenchtalk-generate-streampack-script', async (event, { day }) => {
+        const dayInfo = STREAM_PACK_DAYS[day];
+        if (!dayInfo) throw new Error(`Неизвестный день недели: ${day}`);
+
+        const blogger = getBlogger();
+        if (!blogger) throw new Error('Блогер не настроен. Сначала создайте персонажа в вкладке Blogger Setup.');
+
+        const dir = path.join(FRENCHTALK_DIR, `StreamPack_${day}`);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const imagesDir = path.join(dir, 'images');
+        if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+
+        event.sender.send('frenchtalk-progress', { status: `🔴 Генерирую французские стримерские реплики для ${dayInfo.labelRu}...`, progress: 30 });
+
+        const prompt = `You are a professional comedy and script writer for a viral AI live streamer named ${blogger.name}, a charismatic, young French woman broadcasting live from her home in Paris on a ${day} (${dayInfo.labelRu}).
+She is wearing: ${dayInfo.outfit}. Setting: ${dayInfo.location}.
+
+CRITICAL INSTRUCTION FOR CREATIVE VARIETY:
+Do NOT repeat phrases, structure, or topics! Every single reply must cover a completely DIFFERENT topic, emotion, and conversational situation. Avoid boring generic thank-yous. Make them rich, lively, intimate, funny, sassy, and genuinely engaging!
+
+Generate exactly:
+1. "talking_replies": 15 short French spoken replies to imaginary chat viewers (10 to 18 words each). Each must follow a distinct theme:
+   - Reply 1: Commenting on her outfit or style of the day.
+   - Reply 2: A playful reaction to a flirtatious or humorous chat comment.
+   - Reply 3: Sharing a Parisian daily life observation or cafe adventure.
+   - Reply 4: Asking viewers about their favorite hobby or mood today.
+   - Reply 5: A witty piece of girl advice or lifestyle philosophy.
+   - Reply 6: Talking about French food, wine, coffee, or pastries.
+   - Reply 7: Teasing an upcoming mystery project or travel plan.
+   - Reply 8: Reacting to the relaxing vibe of her room/setting right now.
+   - Reply 9: Sassy commentary on modern relationships or dating in Paris.
+   - Reply 10: Sending warmth and encouragement to someone feeling down.
+   - Reply 11: A cute joke or playful confession about her weekend habits.
+   - Reply 12: Responding to a question about French culture or romance.
+   - Reply 13: Asking fans to guess her secret talent or dream destination.
+   - Reply 14: Commenting on music, books, or a movie she loves.
+   - Reply 15: Sending a cozy evening or morning blessing to all viewers.
+
+2. "gift_reactions": 3 excited French gift/donation thank-you expressions (10 to 16 words each). Each must have a different energetic tone:
+   - Reaction 1: Romantic & flirtatious (air kisses, sweet adoration).
+   - Reaction 2: Explosive joy & shock (overwhelmed gratitude, laughing).
+   - Reaction 3: Playful VIP honor (proclaiming the donor a superstar or champion of the chat).
+
+Output ONLY valid JSON:
+{
+  "talking_replies": [
+    { "text": "..." }
+  ],
+  "gift_reactions": [
+    { "text": "..." }
+  ]
+}`;
+
+        let talkingReplies = [];
+        let giftReactions = [];
+
+        try {
+            const raw = await ai.chat([{ role: 'user', content: prompt }], true);
+            const clean = raw.replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
+            const jsonMatch = clean.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                talkingReplies = (parsed.talking_replies || []).slice(0, 15);
+                giftReactions = (parsed.gift_reactions || []).slice(0, 3);
+            }
+        } catch (e) {
+            console.error('[FrenchTalk StreamPacks] AI prompt error:', e.message);
+        }
+
+        // Fill creatively varied defaults if model returned fewer or failed
+        let fallbackTalkIdx = 0;
+        while (talkingReplies.length < 15) {
+            const fallback = FALLBACK_TALKING_REPLIES[fallbackTalkIdx % FALLBACK_TALKING_REPLIES.length];
+            if (!talkingReplies.some(r => r.text === fallback.text)) {
+                talkingReplies.push({ text: fallback.text, translationRu: fallback.ru });
+            }
+            fallbackTalkIdx++;
+            if (fallbackTalkIdx > 100) break;
+        }
+        let fallbackGiftIdx = 0;
+        while (giftReactions.length < 3) {
+            const fallback = FALLBACK_GIFT_REACTIONS[fallbackGiftIdx % FALLBACK_GIFT_REACTIONS.length];
+            if (!giftReactions.some(r => r.text === fallback.text)) {
+                giftReactions.push({ text: fallback.text, translationRu: fallback.ru });
+            }
+            fallbackGiftIdx++;
+            if (fallbackGiftIdx > 50) break;
+        }
+
+        const untranslatedTalk = talkingReplies.filter(r => !r.translationRu);
+        const untranslatedGift = giftReactions.filter(r => !r.translationRu);
+        const allSpokenToTranslate = [...untranslatedTalk.map(r => r.text), ...untranslatedGift.map(r => r.text)];
+
+        if (allSpokenToTranslate.length > 0) {
+            event.sender.send('frenchtalk-progress', { status: `🌐 Перевожу новые реплики на русский язык...`, progress: 70 });
+            const transPrompt = `Translate these ${allSpokenToTranslate.length} short French sentences into Russian line by line. Keep exact cheerful and playful tone.
+Return ONLY a valid JSON array of ${allSpokenToTranslate.length} string translations in exact matching order:
+${JSON.stringify(allSpokenToTranslate, null, 2)}`;
+
+            let translations = [];
+            try {
+                const transRaw = await ai.chat([{ role: 'user', content: transPrompt }], true);
+                const cleanTrans = transRaw.replace(/```[a-z]*\n?/gi, '').replace(/```\n?/gi, '').trim();
+                const arrMatch = cleanTrans.match(/\[[\s\S]*\]/);
+                if (arrMatch) {
+                    translations = JSON.parse(arrMatch[0]);
+                }
+            } catch (e) {
+                console.error('[FrenchTalk StreamPacks] Translation error:', e.message);
+            }
+
+            let tIdx = 0;
+            for (let i = 0; i < untranslatedTalk.length; i++) {
+                untranslatedTalk[i].translationRu = translations[tIdx++] || 'Авто-перевод недоступен';
+            }
+            for (let i = 0; i < untranslatedGift.length; i++) {
+                untranslatedGift[i].translationRu = translations[tIdx++] || 'Спасибо огромное за подарок!';
+            }
+        }
+
+        const clips = [];
+        for (let i = 0; i < 12; i++) {
+            clips.push({
+                index: i,
+                role: 'idle_loop',
+                text: IDLE_ACTIONS[i].descEn,
+                translationRu: IDLE_ACTIONS[i].descRu,
+                words: 0,
+                status: 'idle',
+                videoPath: null,
+                videoBase64: null
+            });
+        }
+        for (let i = 0; i < 15; i++) {
+            clips.push({
+                index: 12 + i,
+                role: 'talking_reply',
+                text: talkingReplies[i].text,
+                translationRu: talkingReplies[i].translationRu,
+                words: talkingReplies[i].text.split(/\s+/).length,
+                status: 'idle',
+                videoPath: null,
+                videoBase64: null
+            });
+        }
+        for (let i = 0; i < 3; i++) {
+            clips.push({
+                index: 27 + i,
+                role: 'gift_reaction',
+                text: giftReactions[i].text,
+                translationRu: giftReactions[i].translationRu,
+                words: giftReactions[i].text.split(/\s+/).length,
+                status: 'idle',
+                videoPath: null,
+                videoBase64: null
+            });
+        }
+
+        const packData = { day, labelRu: dayInfo.labelRu, outfit: dayInfo.outfit, outfitRu: dayInfo.outfitRu, location: dayInfo.location, locationRu: dayInfo.locationRu, clips };
+        fs.writeFileSync(path.join(dir, 'pack_data.json'), JSON.stringify(packData, null, 2));
+        event.sender.send('frenchtalk-progress', { status: '', progress: 0 });
+
+        return packData;
+    });
+
+    ipcMain.handle('frenchtalk-generate-streampack-image', async (event, { day, type }) => {
+        const dayInfo = STREAM_PACK_DAYS[day];
+        if (!dayInfo) throw new Error(`Неизвестный день недели: ${day}`);
+
+        const blogger = getBlogger();
+        if (!blogger) throw new Error('Блогер не настроен. Сначала создайте персонажа в вкладке Blogger Setup.');
+
+        const dir = path.join(FRENCHTALK_DIR, `StreamPack_${day}`);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const imagesDir = path.join(dir, 'images');
+        if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+
+        const cleanupTemp = () => {
+            if (fs.existsSync(imagesDir)) {
+                fs.readdirSync(imagesDir).forEach(f => {
+                    if (f.includes('_temp') || f.includes('temp1')) {
+                        try { fs.unlinkSync(path.join(imagesDir, f)); } catch (e) {}
+                    }
+                });
+            }
+        };
+
+        if (type === 'room') {
+            console.log(`[StreamPacks] Generating background room image for ${day}...`);
+            event.sender.send('frenchtalk-progress', { status: `🖼️ Генерирую уютный интерьер комнаты для ${dayInfo.labelRu}...`, progress: 50 });
+            const bgImgPath = path.join(imagesDir, `bg_room_${day}.jpg`);
+            const bgPrompt = `Architectural interior photography of a classic cozy Parisian home room: ${dayInfo.location}. Still-life photograph showing only interior design, residential sofa or furniture, decorations, indoor plants, and warm ambient room lamp lighting. Architectural showroom display of an unpopulated residential room, vertical 9:16 aspect ratio, cinematic cozy lighting.`;
+            try {
+                const bgPaths = await ai.generateImage({
+                    prompt: bgPrompt,
+                    aspectRatio: '9:16',
+                    sectionDir: imagesDir,
+                    sceneIndex: `bg_room_${day}_temp_${Date.now()}`
+                });
+                const genBgPath = Array.isArray(bgPaths) ? bgPaths[0] : bgPaths;
+                if (genBgPath && fs.existsSync(genBgPath)) {
+                    fs.copyFileSync(genBgPath, bgImgPath);
+                }
+                cleanupTemp();
+            } catch (e) {
+                cleanupTemp();
+                throw new Error(`Ошибка генерации комнаты: ${e.message}`);
+            }
+            if (!fs.existsSync(bgImgPath)) {
+                throw new Error(`Не удалось сохранить изображение комнаты для ${dayInfo.labelRu}.`);
+            }
+            event.sender.send('frenchtalk-progress', { status: '', progress: 0 });
+            return { success: true, bgRoomBase64: `data:image/jpeg;base64,${fs.readFileSync(bgImgPath, 'base64')}` };
+        } 
+        else if (type === 'scene') {
+            const bgImgPath = path.join(imagesDir, `bg_room_${day}.jpg`);
+            if (!fs.existsSync(bgImgPath)) {
+                throw new Error(`Сначала сгенерируйте интерьер комнаты! Ниже нажмите кнопку «Создать комнату».`);
+            }
+
+            let refImgPath = blogger.imagePath;
+            if (!refImgPath || !fs.existsSync(refImgPath)) {
+                const bloggerImgDir = path.join(FRENCHTALK_DIR, 'BloggerImages');
+                if (fs.existsSync(bloggerImgDir)) {
+                    const files = fs.readdirSync(bloggerImgDir).filter(f => /\.(jpg|jpeg|png)$/i.test(f) && !f.startsWith('stranger'));
+                    if (files.length > 0) refImgPath = path.join(bloggerImgDir, files[0]);
+                }
+            }
+            if (!refImgPath || !fs.existsSync(refImgPath)) {
+                throw new Error('Базовый реф-image блогера не найден в Blogger Setup.');
+            }
+
+            const hostImgBase64 = fs.readFileSync(refImgPath, 'base64');
+            const roomImgBase64 = fs.readFileSync(bgImgPath, 'base64');
+
+            console.log(`[StreamPacks] Generating pro camera home scene start image for ${day}...`);
+            event.sender.send('frenchtalk-progress', { status: `📸 Создаю профессиональный кадр (Hasselblad X2D, реализм кожи и света) дома для ${dayInfo.labelRu}...`, progress: 50 });
+
+            const masterScenePath = path.join(imagesDir, `pro_home_scene_${day}.jpg`);
+            const refImgsForMaster = [{ data: hostImgBase64 }, { data: roomImgBase64 }];
+
+            const masterPrompt = `INSTRUCTION FOR REFERENCE IMAGES: You must maintain 100% exact facial identity, face anatomy, blonde hair color, facial features, and body structure of the female blogger from the FIRST reference image. The SECOND reference image is strictly the interior room background and atmosphere behind her.
+
+SUBJECT & FRAMING: A hyperrealistic vertical 9:16 influencer livestream portrait of the exact same young beautiful French woman from the first reference image. Prominent close-to-medium conversational portrait framing, filling the foreground of the shot as she sits comfortably on her couch in her Parisian home (${dayInfo.location}). She is looking straight into the camera lens with a warm, cheerful, inviting smile.
+OUTFIT: She is wearing exactly: ${dayInfo.outfit}.
+REALISM & DETAILS: Skin with visible micro-texture, natural pores, subtle sebaceous shine, soft subsurface scattering (SSS), natural lip texture with vertical striations, moist corneas. Hyperrealistic eyes: depth and wetness of iris, micro-reflections in cornea, natural eyelid crease, individual eyelashes with natural variation.
+CAMERA & LENS: Shot on Hasselblad X2D with 80mm f/1.4 portrait lens (wide-open f/1.4 aperture for ultra shallow depth of field), medium format rendering, film-like micro-contrast, prominent 3D subject pop with clean separation from the background.
+LIGHTING & DEPTH OF FIELD: Lit by soft window light and warm ambient room lamps, wraparound fill light, natural skin gradients without harsh specular highlights, catchlight in eyes from indoor window reflection. Cinematic shallow depth of field with realistic optical background blur: while the woman in the foreground is razor-sharp down to every micro-detail of her eyelashes and skin, the entire interior living room behind her (walls, paintings, plants, lamp, curtain, window from the second reference image) is gently and beautifully out of focus (softened with creamy optical background blur at f/1.4 and warm practical light bokeh balls). Professional award-winning photography quality, artistic optical separation between sharp foreground subject and soft blurred ambient background. ${CINEMATIC_MODIFIERS}`;
+
+            try {
+                const masterPaths = await ai.generateImage({
+                    prompt: masterPrompt,
+                    aspectRatio: '9:16',
+                    sectionDir: imagesDir,
+                    sceneIndex: `pro_home_scene_${day}_temp_${Date.now()}`,
+                    referenceImages: refImgsForMaster
+                });
+                const genMasterPath = Array.isArray(masterPaths) ? masterPaths[0] : masterPaths;
+                if (genMasterPath && fs.existsSync(genMasterPath)) {
+                    fs.copyFileSync(genMasterPath, masterScenePath);
+                }
+                cleanupTemp();
+            } catch (e) {
+                cleanupTemp();
+                throw new Error(`Ошибка генерации сцены на диване: ${e.message}`);
+            }
+            if (!fs.existsSync(masterScenePath)) {
+                throw new Error(`Не удалось сохранить кадр на диване для ${dayInfo.labelRu}.`);
+            }
+            event.sender.send('frenchtalk-progress', { status: '', progress: 0 });
+            return { success: true, sceneBase64: `data:image/jpeg;base64,${fs.readFileSync(masterScenePath, 'base64')}` };
+        }
+        throw new Error(`Неизвестный тип картинки: ${type}`);
+    });
+
+    ipcMain.handle('frenchtalk-generate-streampack-clip', async (event, { day, clipIndex, videoModel = 'omni_flash', aspectRatio = '9:16' }) => {
+        const dayInfo = STREAM_PACK_DAYS[day];
+        if (!dayInfo) throw new Error(`Неизвестный день недели: ${day}`);
+
+        const blogger = getBlogger();
+        if (!blogger) throw new Error('Блогер не настроен.');
+
+        const dir = path.join(FRENCHTALK_DIR, `StreamPack_${day}`);
+        const jsonPath = path.join(dir, 'pack_data.json');
+        if (!fs.existsSync(jsonPath)) throw new Error(`Сначала сгенерируйте сценарий для ${dayInfo.labelRu}`);
+
+        const packData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        const clip = packData.clips.find(c => c.index === clipIndex);
+        if (!clip) throw new Error(`Клип №${clipIndex + 1} не найден в пакете.`);
+
+        const imagesDir = path.join(dir, 'images');
+        const masterScenePath = path.join(imagesDir, `pro_home_scene_${day}.jpg`);
+        if (!fs.existsSync(masterScenePath)) {
+            throw new Error(`⚠️ Референсная картинка сцены с девушкой еще не сгенерирована! Пожалуйста, сначала сгенерируйте и проверьте картинки (комнату и сцену) в карточке настройки дня выше перед запуском видеоклипов.`);
+        }
+
+        const startImageBase64 = fs.readFileSync(masterScenePath, 'base64');
+        const referenceImages = [{ data: startImageBase64 }];
+
+        const CONTINUITY_LOCK = `STRICT REFERENCE CONTINUITY ANCHOR: You must strictly animate directly from the provided start reference image without changing any visual details. Freeze and lock 100% identity and environment from the reference picture: the room background, wall colors, paintings on wall, bookcase, plants, ambient lamp lighting, sofa style and color, subject's facial appearance, hairstyle, and outfit must remain completely identical to the reference starting image. Do not hallucinate or alter any room furniture or colors. Fixed stationary tripod camera angle, zero camera movement, zero panning, zero zooming.`;
+
+        let videoPrompt = '';
+        if (clip.role === 'idle_loop') {
+            videoPrompt = `Animate only the subject's subtle body movements and facial expression from the starting image: ${clip.text} STRICT TECHNICAL CONSTRAINT: SHE IS COMPLETELY SILENT, LIPS CLOSED, NO TALKING, DO NOT OPEN MOUTH TO SPEAK OR TALK. Natural relaxed idle breathing, gentle natural eye blinking, holding steady eye contact forward toward the viewer. AUDIO: quiet indoor room atmosphere without vocal speech. ${CONTINUITY_LOCK}`;
+        } else if (clip.role === 'talking_reply') {
+            videoPrompt = `Animate realistic lip movements, expressive conversational facial mimicry, natural hand gestures, and polite warm smiling from the starting image while she speaks directly toward the viewer, saying in French: "${clip.text}". VOICE: ${blogger.voiceDescription || BLOGGER_VOICE_DESCRIPTION}. AUDIO: spoken French dialogue with natural indoor acoustics. ${CONTINUITY_LOCK}`;
+        } else if (clip.role === 'gift_reaction') {
+            videoPrompt = `Animate active energetic hand gestures of overjoyed emotional delight, vivid facial mimicry of heartfelt excitement, beaming a bright radiant smile from the starting image while saying in French: "${clip.text}". VOICE: ${blogger.voiceDescription || BLOGGER_VOICE_DESCRIPTION}. AUDIO: ecstatic emotional spoken French reaction. ${CONTINUITY_LOCK}`;
+        }
+
+        const safeVideoPrompt = videoPrompt
+            .replace(/large natural bust/gi, 'elegant posture')
+            .replace(/curvy feminine figure/gi, 'graceful figure')
+            .replace(/low-cut/gi, 'v-neck')
+            .replace(/cleavage/gi, 'neckline')
+            .replace(/sexual/gi, '')
+            .replace(/naked/gi, '')
+            .replace(/nude/gi, '');
+
+        let prefix = 'idle_';
+        if (clip.role === 'talking_reply') prefix = 'talking_';
+        else if (clip.role === 'gift_reaction') prefix = 'reaction_';
+
+        const generatedPath = await ai.generateVideo({
+            prompt: safeVideoPrompt,
+            model: videoModel,
+            mode: 'start_image',
+            aspectRatio,
+            resolution: '720p',
+            sectionDir: dir,
+            subFolder: '',
+            sceneIndex: `${prefix}temp_${clipIndex}_${Date.now()}`,
+            referenceImages,
+            generateAudio: true
+        });
+
+        const finalFileName = `${prefix}${String(clipIndex + 1).padStart(2, '0')}_${Date.now()}.mp4`;
+        const finalPath = path.join(dir, finalFileName);
+
+        if (fs.existsSync(generatedPath)) {
+            fs.renameSync(generatedPath, finalPath);
+        } else {
+            throw new Error(`Не удалось найти сгенерированный видеофайл.`);
+        }
+
+        const b64 = fs.readFileSync(finalPath).toString('base64');
+        const videoBase64 = `data:video/mp4;base64,${b64}`;
+
+        // Update pack_data.json
+        clip.status = 'done';
+        clip.videoPath = finalPath;
+        clip.videoBase64 = videoBase64;
+        fs.writeFileSync(jsonPath, JSON.stringify(packData, null, 2));
+
+        return { videoPath: finalPath, videoBase64, clipIndex };
     });
 }
 

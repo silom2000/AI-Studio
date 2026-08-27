@@ -198,34 +198,52 @@ const generateImageViaGLabs = async (options = {}) => {
         const baseDir = subFolder ? path.join(sectionDir, subFolder) : sectionDir;
         if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
 
-        const bodyData = { prompt, model, aspect_ratio: aspectRatio, count };
-        let requestEndpoint = '/api/image/generate';
+        // Helper to execute single G-Labs image generation attempt
+        const executeImageAttempt = async (targetModel, attemptNumber, maxAttempts) => {
+            const bodyData = { prompt, model: targetModel, aspect_ratio: aspectRatio, count };
+            let requestEndpoint = '/api/image/generate';
 
-        if (model === 'grok') {
-            requestEndpoint = '/api/grok/generate';
-            bodyData.mode = referenceImages && referenceImages.length > 0 ? 'i2i' : 't2i';
+            if (targetModel === 'grok') {
+                requestEndpoint = '/api/grok/generate';
+                bodyData.mode = referenceImages && referenceImages.length > 0 ? 'i2i' : 't2i';
+            }
+
+            if (referenceImages && referenceImages.length > 0) {
+                bodyData.reference_images = referenceImages;
+            }
+            if (typeof strength === 'number') {
+                bodyData.strength = strength;
+            }
+
+            console.log(`[G-Labs IMG] Requesting model=${targetModel} (attempt ${attemptNumber}/${maxAttempts})...`);
+            const { statusCode, text } = await gLabsRequest(requestEndpoint, {
+                method: 'POST',
+                body: JSON.stringify(bodyData),
+            });
+
+            if (statusCode !== 202 && statusCode !== 200) {
+                throw new Error(`G-Labs image generate failed (${statusCode}): ${text}`);
+            }
+
+            const taskId = JSON.parse(text).task_id;
+            console.log(`[G-Labs IMG] Task created: ${taskId} for model=${targetModel}`);
+            return await pollTask(taskId, onProgress);
+        };
+
+        let result = null;
+        const primaryModel = model && model !== 'openai' && model !== 'gpt_image' && model !== 'openai_image' ? model : 'nano_banana_2';
+
+        try {
+            result = await executeImageAttempt(primaryModel, 1, 1);
+        } catch (err) {
+            console.warn(`[G-Labs IMG] Model (${primaryModel}) failed: ${err.message}`);
         }
 
-        if (referenceImages && referenceImages.length > 0) {
-            bodyData.reference_images = referenceImages;
+        // If the single attempt failed: do not crash the queue/task, return empty list so the scene is skipped gracefully
+        if (!result || !result.results || result.results.length === 0) {
+            console.warn(`[G-Labs IMG] All image generation attempts failed for scene ${sceneIndex + 1}. Skipping image generation for this scene.`);
+            return [];
         }
-        if (typeof strength === 'number') {
-            bodyData.strength = strength;
-        }
-
-        const { statusCode, text } = await gLabsRequest(requestEndpoint, {
-            method: 'POST',
-            body: JSON.stringify(bodyData),
-        });
-
-        if (statusCode !== 202 && statusCode !== 200) {
-            throw new Error(`G-Labs image generate failed (${statusCode}): ${text}`);
-        }
-
-        const taskId = JSON.parse(text).task_id;
-        console.log(`[G-Labs IMG Int] Task created: ${taskId}`);
-
-        const result = await pollTask(taskId, onProgress);
 
         const savedPaths = [];
         for (let i = 0; i < result.results.length; i++) {
@@ -301,8 +319,14 @@ const generateVideoViaGLabs = async (options = {}) => {
             if (options.generateAudio) {
                 bodyData.generate_audio = true;
             }
+            if (options.referenceAudio || options.audio) {
+                const rawAudio = options.referenceAudio || options.audio;
+                const cleanAudio = typeof rawAudio === 'string' ? rawAudio.replace(/^data:audio\/\w+;base64,/, '') : rawAudio;
+                bodyData.reference_audio = cleanAudio;
+                bodyData.audio = cleanAudio;
+            }
             if (finalRefImages && finalRefImages.length > 0) {
-                bodyData.reference_images = finalRefImages;
+                bodyData.reference_images = finalRefImages.map(img => img.data || img);
             }
         }
 

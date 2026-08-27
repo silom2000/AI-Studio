@@ -4,6 +4,7 @@ const fs = require('fs');
 const sharp = require('sharp');
 const historyManager = require('./history-manager.cjs');
 const ai = require('./ai-client.cjs');
+const { searchWeb } = require('./search-helper.cjs');
 
 const PRIMATECAST_DIR = path.join(__dirname, 'PrimateCast');
 const CHARACTERS_FILE = path.join(PRIMATECAST_DIR, 'characters.json');
@@ -575,31 +576,6 @@ Return ONLY valid JSON in this format:
         fs.writeFileSync(txtPath, txtContent, 'utf8');
         return { success: true };
     });
-
-    // Simple DuckDuckGo HTML search helper to retrieve background snippets
-    async function searchWeb(query) {
-        try {
-            const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-                    'Accept-Language': 'ru,en-US;q=0.9,en;q=0.8'
-                }
-            });
-            if (!response.ok) throw new Error(`DDG returned status ${response.status}`);
-            const html = await response.text();
-            const snippetMatches = html.matchAll(/<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g);
-            const snippets = [];
-            for (const match of snippetMatches) {
-                const clean = match[1].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-                if (clean) snippets.push(clean);
-            }
-            return snippets.slice(0, 5).join('\n\n');
-        } catch (e) {
-            console.error('[PrimateCast Search] DDG search failed:', e.message);
-            return '';
-        }
-    }
 
     // SEO Keywords: fetch actual high-volume search queries for a country
     ipcMain.handle('primatecast-get-seo-keywords', async (event, { language, country }) => {

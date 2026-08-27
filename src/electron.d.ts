@@ -12,6 +12,9 @@ export interface DialogueSpeaker {
   id: number;
   name: string;
   description: string;
+  gender?: 'male' | 'female';
+  vocalPersona?: string;
+  emotionalBaseline?: string;
   voiceProfile?: {
     gender: 'male' | 'female';
     ageRange: string;
@@ -20,6 +23,8 @@ export interface DialogueSpeaker {
     speed: number;
     pitch: string;
     emotionalTone: string;
+    vocalPersona?: string;
+    emotionalBaseline?: string;
     voiceSearchKeywords: string[];
   };
   voiceId?: string;
@@ -34,11 +39,18 @@ export interface DialogueSegment {
   startTime: number;
   endTime: number;
   duration: number;
+  sceneType?: string;
+  emotion?: string;
+  vocalDelivery?: string;
   videoUrl?: string;
   audioUrl?: string;
   sceneFrameUrl?: string;
   sceneFrameBase64?: string;
+  cleanUrl?: string | null;
+  cleanBase64?: string | null;
   videoPrompt?: string;
+  lipsyncApplies?: boolean;
+  isAnimated?: boolean;
 }
 
 export interface DialogueResult {
@@ -66,6 +78,7 @@ export interface VideoPromptData {
   isAnimated: boolean;
   duration: number;
   status: string;
+  translatedText?: string;
 }
 
 export interface GLabsTask {
@@ -87,19 +100,6 @@ export interface GLabsProgressData {
   attempt?: number;
 }
 
-export interface SkeletonScene {
-  scene: number;
-  checkpoint: string;
-  environment: string;
-  script_line: string;
-  visual_detail: string;
-  motion_detail: string;
-  image_prompt: string;
-  video_prompt: string;
-  ltx_video_prompt: string;
-  audio_url?: string;
-}
-
 export interface StudioScene {
   id: number;
   character: string;
@@ -115,8 +115,15 @@ export interface StudioScene {
   audio_url?: string;
 }
 
+export interface SocialPost {
+  title: string;
+  description: string;
+  hashtags: string;
+}
+
 export interface StudioScript {
   intro: string;
+  socialPost?: SocialPost;
   scenes: StudioScene[];
 }
 
@@ -133,20 +140,14 @@ export interface IElectronAPI {
   assembleFinalVideo: () => Promise<string>,
   onAssemblyProgress: (callback: (data: any) => void) => void,
   synthesizeUnifiedSpeech: (fullScript: string, language: string, voiceModel?: string) => Promise<string>,
-  // Skeleton Shorteners stubs
-  skeletonGenerateIdeas: (language: string) => Promise<string>,
-  skeletonGenerateScript: (ideaTitle: string, language: string, videoModel: string) => Promise<{ script: string, scenes: SkeletonScene[] }>,
+  // Image & Video generation (used by StudioTab)
   skeletonGenerateImage: (data: any) => Promise<string>,
-  skeletonGenerateAudio: (data: { script: string; scenes: SkeletonScene[]; language: string }) => Promise<{ fullAudioUrl: string; sceneAudioUrls: string[] }>,
   skeletonGenerateVideo: (data: any) => Promise<string>,
-  skeletonAssembleVideo: (data: any) => Promise<string>,
-  onSkeletonVideoProgress: (callback: (data: any) => void) => void,
-  onSkeletonAssemblyProgress: (callback: (data: any) => void) => void,
   
   // Cinematic Timelapse
   timelapseGetEnvironments: (mode?: string) => Promise<string[]>,
-  timelapseGeneratePrompts: (selectionIndex: number, selectedEnv: string) => Promise<any>,
-  timelapseGenerateCustomPrompts: (customIdea: string, images: (string | null)[], video: string | null, mode?: string) => Promise<any>,
+  timelapseGeneratePrompts: (selectionIndex: number, selectedEnv: string, provider?: string) => Promise<any>,
+  timelapseGenerateCustomPrompts: (customIdea: string, images: (string | null)[], video: string | null, mode?: string, provider?: string) => Promise<any>,
   timelapseGenerateReversePrompts: (baseImage: string) => Promise<any>,
   timelapseGenerateImage: (imgIndex: number, prompt: string, model?: string, subFolder?: string, referenceImage?: string | null) => Promise<string>,
   timelapseGenerateVideo: (videoIndex: number, prompt: string, subFolder?: string, referenceImages?: (string | null)[], videoModel?: string) => Promise<string>,
@@ -154,14 +155,37 @@ export interface IElectronAPI {
 
   // Studio Tabs
   studioGenerateIdeas: (mode: 'health' | 'objects', language: string, provider?: string) => Promise<string[]>,
-  studioGenerateScript: (mode: 'health' | 'objects', topic: string, language: string, provider?: string) => Promise<StudioScript>,
+  studioGenerateScript: (
+    modeOrParams: 'health' | 'objects' | {
+      mode: 'health' | 'objects';
+      topic?: string;
+      language: string;
+      provider?: string;
+      projectFolder?: string;
+      referenceUrl?: string;
+      screenshotBase64?: string;
+      videoBase64?: string;
+      durationMode?: '30s' | 'full';
+    },
+    topic?: string,
+    language?: string,
+    provider?: string,
+    projectFolder?: string,
+    referenceUrl?: string,
+    durationMode?: '30s' | 'full'
+  ) => Promise<StudioScript>,
+  studioParseReferenceVideo: (referenceUrl: string) => Promise<{ url: string; transcript: string } | null>,
+  studioParseScreenshot: (screenshotBase64: string) => Promise<{ text: string } | null>,
+  onStudioProgress: (callback: (data: { status: string; progress?: number }) => void) => void,
+  removeStudioProgressListener: () => void,
+  studioSaveScript: (data: { projectFolder: string; script: StudioScript; mode?: string; topic?: string; language?: string }) => Promise<{ success: boolean; error?: string }>,
   studioAssembleVideo: (data: any) => Promise<string>,
   saveTextFiles: (files: { filename: string; content: string }[]) => Promise<{ success: boolean; error?: string }>,
 
   // AI Stories
   storyCreateFolder: () => Promise<string>,
-  storyGenerateIdeas: (topic: string, language: string) => Promise<any>,
-  storyGenerateScript: (params: { idea: any, language: string, projectFolder: string }) => Promise<any>,
+  storyGenerateIdeas: (topic: string, language: string, provider?: string) => Promise<any>,
+  storyGenerateScript: (params: { idea: any, language: string, projectFolder: string, provider?: string }) => Promise<any>,
   storyGenerateImage: (data: any) => Promise<string>,
   storyGenerateAudio: (data: any) => Promise<string>,
   storyGenerateVideo: (data: any) => Promise<string>,
@@ -169,8 +193,8 @@ export interface IElectronAPI {
   onStoryImageProgress: (callback: (data: any) => void) => void,
 
   // Survive вЂ” Extreme Survival Scenarios
-  surviveGenerateIdeas: (params: { language: string }) => Promise<any[]>,
-  surviveGenerateScript: (params: { idea: any, language: string, projectFolder: string }) => Promise<any>,
+  surviveGenerateIdeas: (params: { language: string, aiModel?: string }) => Promise<any[]>,
+  surviveGenerateScript: (params: { idea: any, language: string, projectFolder: string, aiModel?: string }) => Promise<any>,
   surviveGenerateImage: (data: any) => Promise<string>,
   surviveGenerateAudio: (data: any) => Promise<string>,
   surviveGenerateVideo: (data: any) => Promise<string>,
@@ -180,8 +204,8 @@ export interface IElectronAPI {
   localizeStep2Diarize: (params: { projectFolder: string, transcriptWords: any[], utterances: any[], frames: any[] }) => Promise<{ speakers: any[], timeline: any[], segments: any[], sceneFrames: any[] }>,
   localizeStep3Characters: (params: { projectFolder: string, frames: any[], sceneFrames?: any[], segments?: any[], speakers: any[] }) => Promise<{ characters: any[], sceneDescription: string, sceneFrames?: any[] }>,
   localizeStep4Voices: (params: { projectFolder: string, segments: any[], speakers: any[] }) => Promise<{ voiceProfiles: any, speakerVoices: any, speakers: any[] }>,
-  localizeTranslateSegments: (projectFolder: string, segments: DialogueSegment[], targetLanguage: string) => Promise<DialogueSegment[]>,
-  localizeGenerateMetadata: (projectFolder: string, transcript: string, targetLanguage: string, originalTitle: string) => Promise<{ title: string, description: string, hashtags: string }>,
+  localizeTranslateSegments: (projectFolder: string, segments: DialogueSegment[], targetLanguage: string, provider?: string) => Promise<DialogueSegment[]>,
+  localizeGenerateMetadata: (projectFolder: string, transcript: string, targetLanguage: string, originalTitle: string, provider?: string) => Promise<{ title: string, description: string, hashtags: string }>,
   localizeGenerateSegmentVideo: (params: {
     projectFolder: string;
     segmentIndex: number;
@@ -193,7 +217,9 @@ export interface IElectronAPI {
     sceneDescription?: string;
     speakerVoices?: Record<number, { voice_id: string; name: string }>;
     customPrompt?: string;
-  }) => Promise<{ videoUrl: string; audioUrl: string | null; segmentIndex: number; videoPrompt?: string; promptData?: any }>,
+    isMusicVideoMode?: boolean;
+    videoModel?: 'omni_flash' | 'veo3_fast';
+  }) => Promise<{ videoUrl: string; audioUrl: string | null; segmentIndex: number; videoPrompt?: string; promptData?: any; translatedText?: string }>,
   localizeBatchGenerateSegments: (data: {
     projectFolder: string;
     segments: DialogueSegment[];
@@ -203,6 +229,8 @@ export interface IElectronAPI {
     characters?: LocalizeCharacter[];
     sceneDescription?: string;
     speakerVoices?: Record<number, { voice_id: string; name: string }>;
+    isMusicVideoMode?: boolean;
+    videoModel?: 'omni_flash' | 'veo3_fast';
   }) => Promise<Array<{ segmentIndex: number; videoUrl: string | null; audioUrl: string | null; status?: string; error?: string }>>,
   localizeRegenerateCharacterImage: (projectFolder: string, characterIndex: number, customPrompt?: string) => Promise<string>,
   localizeRetranslate: (projectFolder: string, transcript: string, targetLanguage: string) => Promise<{ translatedText: string }>,
@@ -213,6 +241,7 @@ export interface IElectronAPI {
     characters: LocalizeCharacter[];
     sceneDescription: string;
   }) => Promise<VideoPromptData[]>,
+  localizeRemergeProject: (projectFolder: string) => Promise<{ segments: DialogueSegment[]; sceneFrames?: any[] }>,
 
   // G-Labs Integration
   glabsHealthCheck: () => Promise<{ running: boolean; tasks_pending?: number; tasks_running?: number; error?: string }>,
@@ -246,6 +275,12 @@ export interface IElectronAPI {
   frenchtalkGenerateLocationRef: (data: { locationName: string, visualPrompt: string, model?: string }) => Promise<{ imagePath: string, base64: string }>,
   frenchtalkGetLocationRefs: () => Promise<Array<{ name: string, path: string, url: string, base64: string }>>,
   frenchtalkAutoVlogTopic: (data: { language: string, country: string, bloggerName: string, vlogTopic: string, outfit: string, location: string, customInput?: string, useWebSearch?: boolean }) => Promise<{ script: string, scriptRu?: string, metadata?: { title: string, description: string, hashtags: string } }>,
+  frenchtalkTranslateScript: (data: { script: string, bloggerName: string }) => Promise<{ scriptRu: string }>,
+  frenchtalkGetStreamPacks: () => Promise<Record<string, any>>,
+  frenchtalkSaveStreamPackDaysInfo: (data: Record<string, any>) => Promise<{ success: boolean, daysInfo: Record<string, any> }>,
+  frenchtalkGenerateStreamPackScript: (data: { day: string }) => Promise<{ day: string, clips: any[] }>,
+  frenchtalkGenerateStreamPackImage: (data: { day: string, type: 'room' | 'scene' }) => Promise<{ success: boolean, bgRoomBase64?: string, sceneBase64?: string }>,
+  frenchtalkGenerateStreamPackClip: (data: { day: string, clipIndex: number, videoModel?: string, aspectRatio?: string }) => Promise<{ videoPath: string, videoBase64: string, clipIndex: number }>,
   onFrenchTalkProgress: (callback: (data: { status: string, progress: number }) => void) => void,
   removeFrenchTalkProgressListener: () => void,
 

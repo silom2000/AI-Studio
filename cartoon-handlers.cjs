@@ -178,7 +178,7 @@ function registerCartoonHandlers(ipcMain) {
     // ─────────────────────────────────────────────────────────────────────────
     // 1. Generate exactly 2 Profession Ideas
     // ─────────────────────────────────────────────────────────────────────────
-    ipcMain.handle('cartoon-generate-ideas', async (event, { topic, language }) => {
+    ipcMain.handle('cartoon-generate-ideas', async (event, { topic, language, provider }) => {
         const systemPrompt = `Ты — сценарист образовательных мультяшных роликов для TikTok и YouTube Shorts.
 Твоя задача — создавать идеи для коротких историй о ПРОФЕССИЯХ.
 
@@ -242,7 +242,7 @@ ${completedText}
         const raw = await ai.chat([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
-        ], true);
+        ], true, provider);
 
         try {
             const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
@@ -255,7 +255,7 @@ ${completedText}
     // ─────────────────────────────────────────────────────────────────────────
     // 2. Generate 8-Scene Cartoon Script & Prompts
     // ─────────────────────────────────────────────────────────────────────────
-    ipcMain.handle('cartoon-generate-script', async (event, { idea, language, projectFolder }) => {
+    ipcMain.handle('cartoon-generate-script', async (event, { idea, language, projectFolder, provider }) => {
         const langName = language || 'English';
 
         const systemPrompt = `Ты — сценарист образовательных мультяшных роликов TikTok.
@@ -444,7 +444,7 @@ ${ideaContext}
         const raw = await ai.chat([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
-        ], true);
+        ], true, provider);
 
         try {
             const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw;

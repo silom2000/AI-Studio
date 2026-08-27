@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-    Stethoscope,
     ImageIcon,
     Video,
     RefreshCw,
@@ -11,7 +10,11 @@ import {
     AlertTriangle,
     Download,
     FileAudio,
-    FileText
+    FileText,
+    Copy,
+    CheckCircle,
+    ClipboardPaste,
+    Upload
 } from 'lucide-react';
 import { StudioScript, StudioScene } from './electron.d';
 import './StudioTab.css';
@@ -30,8 +33,9 @@ const LANGUAGES = [
 ];
 
 const LLM_PROVIDERS = [
+    { value: 'custom', label: 'Custom Proxy (Local)', desc: 'Ваш локальный/серверный прокси' },
+    { value: 'omniroute', label: 'OmniRoute (Claude)', desc: 'Claude Sonnet via OmniRoute' },
     { value: 'pollinations', label: 'Pollinations', desc: 'Free, openai-large model' },
-    { value: 'custom', label: 'Custom Proxy', desc: 'Local or remote endpoint' },
 ];
 
 type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'grok';
@@ -45,8 +49,14 @@ const VIDEO_MODELS: { value: VideoModel; label: string; desc: string }[] = [
 
 const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const [topic, setTopic] = useState('');
+    const [referenceUrl, setReferenceUrl] = useState('');
+    const [screenshotBase64, setScreenshotBase64] = useState<string | null>(null);
+    const [videoBase64, setVideoBase64] = useState<string | null>(null);
+    const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+    const [durationMode, setDurationMode] = useState<'30s' | 'full'>('30s');
+    const [progressStatus, setProgressStatus] = useState<string>('');
     const [lang, setLang] = useState('Russian');
-    const [llmProvider, setLlmProvider] = useState<string>('pollinations');
+    const [llmProvider, setLlmProvider] = useState<string>('custom');
     const [imageModel, setImageModel] = useState<string>('freepik-mystic');
     const [videoModel, setVideoModel] = useState<VideoModel>('veo_31_lite');
     const [script, setScript] = useState<StudioScript | null>(null);
@@ -58,6 +68,96 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const stopAutoGenerationRef = React.useRef(false);
     const [isIdeasLoading, setIsIdeasLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [copiedField, setCopiedField] = useState<string | null>(null);
+
+    React.useEffect(() => {
+        const handlePaste = (e: ClipboardEvent) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.startsWith('image/')) {
+                    const file = items[i].getAsFile();
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            if (typeof reader.result === 'string') {
+                                setScreenshotBase64(reader.result);
+                                setVideoBase64(null);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                        break;
+                    }
+                } else if (items[i].type.startsWith('video/')) {
+                    const file = items[i].getAsFile();
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            if (typeof reader.result === 'string') {
+                                setVideoBase64(reader.result);
+                                setScreenshotBase64(null);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                        break;
+                    }
+                }
+            }
+        };
+        window.addEventListener('paste', handlePaste);
+        return () => window.removeEventListener('paste', handlePaste);
+    }, []);
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (typeof reader.result === 'string') {
+                    if (file.type.startsWith('video/') || /\.(mp4|mov|webm|mkv|avi)$/i.test(file.name)) {
+                        setVideoBase64(reader.result);
+                        setScreenshotBase64(null);
+                    } else {
+                        setScreenshotBase64(reader.result);
+                        setVideoBase64(null);
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    React.useEffect(() => {
+        if (window.electronAPI.onStudioProgress) {
+            window.electronAPI.onStudioProgress((data) => {
+                if (data && data.status) {
+                    setProgressStatus(data.status);
+                }
+            });
+        }
+        return () => {
+            if (window.electronAPI.removeStudioProgressListener) {
+                window.electronAPI.removeStudioProgressListener();
+            }
+        };
+    }, []);
+
+    const copyToClipboard = (text: string, field: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedField(field);
+        setTimeout(() => setCopiedField(null), 2000);
+    };
+
+    const pasteFromClipboard = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text) {
+                setReferenceUrl(text.trim());
+            }
+        } catch (e) {
+            console.error('Clipboard read failed:', e);
+        }
+    };
     const [viralIdeas, setViralIdeas] = useState<{ original: string; translation: string }[]>([]);
 
     // Assembly
@@ -88,10 +188,27 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         }
     };
 
+    const saveProjectPrompts = React.useCallback(async (currentScript: StudioScript, folderName: string) => {
+        if (!folderName || !currentScript) return;
+        try {
+            await window.electronAPI.studioSaveScript({
+                projectFolder: folderName,
+                script: currentScript,
+                mode,
+                topic,
+                language: lang
+            });
+        } catch (e: any) {
+            console.warn('[StudioTab] Failed to save prompts to project folder:', e.message);
+        }
+    }, [mode, topic, lang]);
+
     const generateScript = async () => {
-        if (!topic) return;
+        const effectiveTopic = topic.trim() || (referenceUrl.trim() ? `Reference: ${referenceUrl.trim()}` : '') || (screenshotBase64 ? 'Screenshot Rules Reference' : '') || (videoBase64 ? 'Video Demonstration Reference' : '');
+        if (!effectiveTopic && !referenceUrl.trim() && !screenshotBase64 && !videoBase64) return;
         setIsLoading(true);
         setError(null);
+        setProgressStatus('🚀 Запуск генерации сценария...');
         setViralIdeas([] as { original: string; translation: string }[]);
         try {
             const now = new Date();
@@ -99,23 +216,42 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
             const folder = `Studio_${timestamp}`;
             setProjectFolder(folder);
 
-            const result = await window.electronAPI.studioGenerateScript(mode, topic, lang, llmProvider);
-            setScript({
+            const result = await window.electronAPI.studioGenerateScript({
+                mode,
+                topic: effectiveTopic,
+                language: lang,
+                provider: llmProvider,
+                projectFolder: folder,
+                referenceUrl: referenceUrl.trim(),
+                screenshotBase64: screenshotBase64 || undefined,
+                videoBase64: videoBase64 || undefined,
+                durationMode
+            });
+            const initializedScript: StudioScript = {
                 ...result,
                 scenes: result.scenes.map(s => ({ ...s, status: 'idle' }))
-            });
+            };
+            setScript(initializedScript);
         } catch (err: any) {
             setError(err.message);
         } finally {
             setIsLoading(false);
+            setProgressStatus('');
         }
     };
 
     const updateScene = (id: number, updates: Partial<StudioScene>) => {
-        setScript(prev => prev ? {
-            ...prev,
-            scenes: prev.scenes.map(s => s.id === id ? { ...s, ...updates } : s)
-        } : null);
+        setScript(prev => {
+            if (!prev) return null;
+            const updated = {
+                ...prev,
+                scenes: prev.scenes.map(s => s.id === id ? { ...s, ...updates } : s)
+            };
+            if (projectFolder) {
+                saveProjectPrompts(updated, projectFolder);
+            }
+            return updated;
+        });
     };
 
     const generateImage = async (sceneIndex: number, sceneId: number): Promise<string | null> => {
@@ -170,8 +306,9 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         try {
             const url = await window.electronAPI.studioAssembleVideo({
                 useKaraoke: false,
-                ideaTitle: script.intro,
-                language: lang
+                ideaTitle: script.socialPost?.title || script.intro || 'video',
+                language: lang,
+                projectFolder: projectFolder
             });
             setFinalVideoUrl(url);
         } catch (e: any) {
@@ -185,6 +322,8 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         setScript(null);
         setViralIdeas([]);
         setTopic('');
+        setReferenceUrl('');
+        setScreenshotBase64(null);
         setError(null);
         setFinalVideoUrl(null);
         setProjectFolder('');
@@ -242,17 +381,21 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
 
     const exportPrompts = async () => {
         if (!script) return;
-        
+
+        if (projectFolder) {
+            saveProjectPrompts(script, projectFolder);
+        }
+
         const imagePrompts = script.scenes.map(s => s.imagePrompt).join('\n\n');
         const videoPrompts = script.scenes.map(s => s.videoPrompt).join('\n\n');
-        
+
         const safeTopic = script.intro.replace(/[^a-z0-9а-яё]/gi, '_').substring(0, 50);
-        
+
         const files = [
             { filename: `${safeTopic}_image.txt`, content: imagePrompts },
             { filename: `${safeTopic}_video.txt`, content: videoPrompts }
         ];
-        
+
         try {
             const result = await window.electronAPI.saveTextFiles(files);
             if (result.success) {
@@ -367,10 +510,10 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                     <div className="studio-header-inner">
                         <div className="studio-logo">
                             <div className="studio-logo-icon">
-                                {mode === 'health' ? <Stethoscope color="white" size={24} /> : <Box color="white" size={24} />}
+                                {mode === 'health' ? <Lightbulb color="white" size={24} /> : <Box color="white" size={24} />}
                             </div>
                             <h1>
-                                AI <span className="mode-text">{mode === 'health' ? 'HealthTalk' : 'ObjectWars'}</span>
+                                AI <span className="mode-text">{mode === 'health' ? 'GenieTalk' : 'ObjectWars'}</span>
                             </h1>
                         </div>
                         {script && (
@@ -394,26 +537,316 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                         )}
 
                         <section className="control-panel">
+                            {/* Duration mode selector & Reference URL input */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '16px' }}>
+                                {/* Duration & Mode Toggle */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⏱️ Длительность видео:</span>
+                                        <div style={{ display: 'inline-flex', background: '#0f172a', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDurationMode('30s')}
+                                                style={{
+                                                    padding: '5px 12px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: durationMode === '30s' ? '#3b82f6' : 'transparent',
+                                                    color: durationMode === '30s' ? '#fff' : '#94a3b8',
+                                                    transition: 'all 0.15s'
+                                                }}
+                                            >
+                                                ⚡ 30 сек (4-5 сцен — TikTok)
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setDurationMode('full')}
+                                                style={{
+                                                    padding: '5px 12px',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: durationMode === 'full' ? '#3b82f6' : 'transparent',
+                                                    color: durationMode === 'full' ? '#fff' : '#94a3b8',
+                                                    transition: 'all 0.15s'
+                                                }}
+                                            >
+                                                🎬 Полное (8 сцен / ~60с)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Reference Video URL Input */}
+                                <div className="input-group" style={{ margin: 0 }}>
+                                    <label className="input-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span>🔗 ССЫЛКА НА РЕФЕРЕНС (TIKTOK / REELS / SHORTS) — НЕОБЯЗАТЕЛЬНО</span>
+                                        {referenceUrl && (
+                                            <span style={{ color: '#38bdf8', fontSize: '11px', fontWeight: 500 }}>
+                                                ✓ Видео будет скачано, транскрибировано и адаптировано под Вундеркинда
+                                            </span>
+                                        )}
+                                    </label>
+                                    <div className="topic-inner" style={{ position: 'relative', display: 'flex', gap: '8px' }}>
+                                        <input
+                                            type="text"
+                                            value={referenceUrl}
+                                            onChange={(e) => setReferenceUrl(e.target.value)}
+                                            placeholder="Вставьте ссылку на TikTok, Instagram Reels или YouTube Shorts..."
+                                            className="studio-input"
+                                            style={{
+                                                borderColor: referenceUrl.trim() ? '#3b82f6' : undefined,
+                                                background: referenceUrl.trim() ? 'rgba(59, 130, 246, 0.05)' : undefined,
+                                                paddingRight: referenceUrl ? '36px' : undefined
+                                            }}
+                                        />
+                                        {referenceUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setReferenceUrl('')}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: '115px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: '#94a3b8',
+                                                    cursor: 'pointer',
+                                                    padding: '4px'
+                                                }}
+                                                title="Очистить ссылку"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={pasteFromClipboard}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '0 14px',
+                                                background: 'rgba(255, 255, 255, 0.06)',
+                                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                                borderRadius: '8px',
+                                                color: '#e2e8f0',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            title="Вставить ссылку из буфера обмена"
+                                        >
+                                            <ClipboardPaste size={15} /> Вставить
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Screenshot / Video Reference & Multimodal Analysis */}
+                                <div className="input-group" style={{ margin: 0 }}>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                        accept="image/*,video/*,.mp4,.mov,.webm,.avi,.mkv"
+                                        style={{ display: 'none' }}
+                                    />
+                                    <label className="input-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span>🖼️ / 🎬 ФАЙЛ РЕФЕРЕНСА: СКРИНШОТ ИЛИ ЛОКАЛЬНОЕ ВИДЕО (CTRL+V ИЛИ ЗАГРУЗКА)</span>
+                                        {(screenshotBase64 || videoBase64) && (
+                                            <span style={{ color: '#10b981', fontSize: '11px', fontWeight: 500 }}>
+                                                ✓ {videoBase64 ? 'Видеофайл загружен! STT и Vision AI проанализируют демонстрацию и речь' : 'Скриншот загружен! Vision OCR извлечет все правила и факты'}
+                                            </span>
+                                        )}
+                                    </label>
+
+                                    {!screenshotBase64 && !videoBase64 ? (
+                                        <div
+                                            onClick={() => fileInputRef.current?.click()}
+                                            style={{
+                                                border: '2px dashed rgba(255, 255, 255, 0.15)',
+                                                borderRadius: '10px',
+                                                padding: '14px 18px',
+                                                background: 'rgba(255, 255, 255, 0.02)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                transition: 'all 0.2s ease',
+                                                color: '#94a3b8'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.borderColor = '#3b82f6';
+                                                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    <ImageIcon size={20} color="#38bdf8" />
+                                                    <Video size={20} color="#a855f7" />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0' }}>
+                                                        Нажмите для выбора картинки/видео или нажмите <span style={{ color: '#38bdf8', background: 'rgba(56, 189, 248, 0.15)', padding: '2px 6px', borderRadius: '4px' }}>Ctrl + V</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                                        Поддерживаются картинки с правилами (OCR) и видеоролики MP4/MOV (извлечение речи + анализ действий Vision AI)
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    fileInputRef.current?.click();
+                                                }}
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '6px',
+                                                    padding: '6px 12px',
+                                                    background: 'rgba(255, 255, 255, 0.08)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                                    borderRadius: '6px',
+                                                    color: '#e2e8f0',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <Upload size={14} /> Выбрать файл
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            style={{
+                                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                borderRadius: '10px',
+                                                padding: '10px 14px',
+                                                background: 'rgba(16, 185, 129, 0.05)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: '12px'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                {screenshotBase64 ? (
+                                                    <img
+                                                        src={screenshotBase64}
+                                                        alt="Скриншот референса"
+                                                        style={{
+                                                            width: '56px',
+                                                            height: '56px',
+                                                            objectFit: 'cover',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid rgba(255,255,255,0.2)'
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        src={videoBase64!}
+                                                        muted
+                                                        playsInline
+                                                        style={{
+                                                            width: '56px',
+                                                            height: '56px',
+                                                            objectFit: 'cover',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid rgba(255,255,255,0.2)',
+                                                            background: '#000'
+                                                        }}
+                                                    />
+                                                )}
+                                                <div>
+                                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <CheckCircle size={15} /> {videoBase64 ? 'Видеофайл референса прикреплен' : 'Скриншот успешно прикреплен'}
+                                                    </div>
+                                                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                                                        {videoBase64
+                                                            ? 'STT распознает голос, а Vision AI проанализирует кадры и перенесет методику в новый сценарий'
+                                                            : 'Vision AI распознает текст и структуру списка и перепишет в вирусный сценарий'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setScreenshotBase64(null);
+                                                    setVideoBase64(null);
+                                                }}
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    padding: '6px 12px',
+                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                    borderRadius: '6px',
+                                                    color: '#f87171',
+                                                    fontSize: '12px',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <X size={14} /> Удалить
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="control-panel-grid">
                                 <div className="input-group topic-input-container">
-                                    <label className="input-label">TOPIC / IDEA</label>
+                                    <label className="input-label">
+                                        {screenshotBase64
+                                            ? "УТОЧНЕНИЕ К СКРИНШОТУ (ОПЦИОНАЛЬНО)"
+                                            : (referenceUrl.trim() ? "ДОПОЛНИТЕЛЬНЫЙ КОММЕНТАРИЙ / ТЕМА (ОПЦИОНАЛЬНО)" : "ТЕМА / ИДЕЯ (РУЧНОЙ ВВОД)")}
+                                    </label>
                                     <div className="topic-inner">
                                         <input
                                             type="text"
                                             value={topic}
                                             onChange={(e) => setTopic(e.target.value)}
-                                            placeholder={mode === 'health' ? "E.g., Benefits of Avocado for Gut Health" : "Dramatic story of a forgotten potato..."}
+                                            placeholder={
+                                                screenshotBase64
+                                                    ? "Оставьте пустым, чтобы взять все правила из скриншота, или задайте тон..."
+                                                    : (referenceUrl.trim() ? "Оставьте пустым, чтобы взять историю из видео целиком, или уточните фокус..." : (mode === 'health' ? "Например: 5 секретов чистки кухни, Лайфхак для быстрой уборки или Как сложить вещи" : "История забытой картошки..."))
+                                            }
                                             className="studio-input"
                                         />
-                                        <button onClick={fetchViralIdeas} disabled={isIdeasLoading} className="idea-bulb-btn">
+                                        <button onClick={fetchViralIdeas} disabled={isIdeasLoading} className="idea-bulb-btn" title="Сгенерировать трендовые темы через AI">
                                             {isIdeasLoading ? <RefreshCw className="spin" size={20} /> : <Lightbulb size={20} />}
                                         </button>
                                     </div>
                                 </div>
 
                                 {!script && (
-                                    <button onClick={generateScript} disabled={isLoading || !topic} className="generate-btn">
-                                        {isLoading ? <RefreshCw className="spin" size={18} /> : <Zap size={18} />} GENERATE SCRIPT
+                                    <button
+                                        onClick={generateScript}
+                                        disabled={isLoading || (!topic.trim() && !referenceUrl.trim() && !screenshotBase64)}
+                                        className="generate-btn"
+                                        style={{
+                                            background: screenshotBase64 ? 'linear-gradient(135deg, #059669, #0d9488)' : (referenceUrl.trim() ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : undefined),
+                                            boxShadow: screenshotBase64 ? '0 4px 14px rgba(16, 185, 129, 0.4)' : (referenceUrl.trim() ? '0 4px 14px rgba(59, 130, 246, 0.4)' : undefined)
+                                        }}
+                                    >
+                                        {isLoading ? <RefreshCw className="spin" size={18} /> : <Zap size={18} />}
+                                        {screenshotBase64
+                                            ? ' 🔍 РАСПОЗНАТЬ СКРИНШОТ И СОЗДАТЬ СЦЕНАРИЙ'
+                                            : (referenceUrl.trim() ? ' ⚡ РАЗОБРАТЬ РЕФЕРЕНС И СОЗДАТЬ СЦЕНАРИЙ' : ' GENERATE SCRIPT')}
                                     </button>
                                 )}
 
@@ -444,6 +877,14 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                 )}
                             </div>
 
+                            {/* Progress bar / notification */}
+                            {isLoading && progressStatus && (
+                                <div style={{ marginTop: '12px', padding: '10px 16px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', display: 'flex', alignItems: 'center', gap: '10px', color: '#93c5fd', fontSize: '13px' }}>
+                                    <RefreshCw className="spin" size={16} />
+                                    <span>{progressStatus}</span>
+                                </div>
+                            )}
+
                             {viralIdeas.length > 0 && (
                                 <div className="viral-ideas-container">
                                     {viralIdeas.map((idea, idx) => (
@@ -458,6 +899,41 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                 </div>
                             )}
                         </section>
+
+                        {script && script.socialPost && (
+                            <section className="social-post-panel">
+                                <h3 className="section-subtitle">📱 SOCIAL POST</h3>
+                                <div className="social-post-grid">
+                                    <div className="social-field">
+                                        <div className="social-field-header">
+                                            <span className="social-field-label">TITLE</span>
+                                            <button onClick={() => copyToClipboard(script.socialPost!.title, 'title')} className="copy-btn">
+                                                {copiedField === 'title' ? <CheckCircle size={16} color="#10b981" /> : <Copy size={16} />}
+                                            </button>
+                                        </div>
+                                        <div className="social-field-content">{script.socialPost.title}</div>
+                                    </div>
+                                    <div className="social-field">
+                                        <div className="social-field-header">
+                                            <span className="social-field-label">DESCRIPTION</span>
+                                            <button onClick={() => copyToClipboard(script.socialPost!.description, 'desc')} className="copy-btn">
+                                                {copiedField === 'desc' ? <CheckCircle size={16} color="#10b981" /> : <Copy size={16} />}
+                                            </button>
+                                        </div>
+                                        <div className="social-field-content">{script.socialPost.description}</div>
+                                    </div>
+                                    <div className="social-field">
+                                        <div className="social-field-header">
+                                            <span className="social-field-label">HASHTAGS</span>
+                                            <button onClick={() => copyToClipboard(script.socialPost!.hashtags, 'hash')} className="copy-btn">
+                                                {copiedField === 'hash' ? <CheckCircle size={16} color="#10b981" /> : <Copy size={16} />}
+                                            </button>
+                                        </div>
+                                        <div className="social-field-content">{script.socialPost.hashtags}</div>
+                                    </div>
+                                </div>
+                            </section>
+                        )}
 
                         {finalVideoUrl && (
                             <section className="final-assembly-preview">
@@ -511,6 +987,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                                         value={scene.imagePrompt}
                                                         onChange={(e) => updateScene(scene.id, { imagePrompt: e.target.value })}
                                                         className="studio-textarea"
+                                                        spellCheck={false}
                                                     />
                                                 </div>
 
@@ -520,6 +997,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                                         value={scene.videoPrompt}
                                                         onChange={(e) => updateScene(scene.id, { videoPrompt: e.target.value })}
                                                         className="studio-textarea"
+                                                        spellCheck={false}
                                                     />
                                                 </div>
                                             </div>
