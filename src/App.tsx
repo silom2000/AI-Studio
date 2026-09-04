@@ -11,7 +11,7 @@ import PrimateCastTab from './PrimateCastTab';
 import FrenchTalkTab from './FrenchTalkTab';
 import './TimelapseTab.css';
 
-type AppTab = 'timelapse' | 'health' | 'objects' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk';
+type AppTab = 'timelapse' | 'health' | 'psychology' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk';
 
 function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('timelapse');
@@ -49,8 +49,8 @@ function App() {
         <button style={tabStyle('health')} onClick={() => setActiveTab('health')}>
           💡 GenieTalk
         </button>
-        <button style={tabStyle('objects')} onClick={() => setActiveTab('objects')}>
-          📦 ObjectWars
+        <button style={tabStyle('psychology')} onClick={() => setActiveTab('psychology')}>
+          🧠 Psychology
         </button>
         <button style={tabStyle('story')} onClick={() => setActiveTab('story')}>
           📖 AI Stories
@@ -86,8 +86,8 @@ function App() {
       <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'health' ? 'flex' : 'none', flexDirection: 'column' }}>
         <StudioTab mode="health" />
       </div>
-      <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'objects' ? 'flex' : 'none', flexDirection: 'column' }}>
-        <StudioTab mode="objects" />
+      <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'psychology' ? 'flex' : 'none', flexDirection: 'column' }}>
+        <StudioTab mode="psychology" />
       </div>
 
 {/* ── STORY TAB ──────────────────────────────────── */}

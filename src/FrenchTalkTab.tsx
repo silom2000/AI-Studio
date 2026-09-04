@@ -11,6 +11,7 @@ const MARKETS = [
   { id: 'en-us', flag: '🇺🇸', label: 'English (USA)', language: 'English', country: 'United States' },
   { id: 'en-gb', flag: '🇬🇧', label: 'English (UK)', language: 'English', country: 'United Kingdom' },
   { id: 'de', flag: '🇩🇪', label: 'Deutsch', language: 'German', country: 'Germany' },
+  { id: 'pl', flag: '🇵🇱', label: 'Polski (Polska)', language: 'Polish', country: 'Poland' },
 ];
 
 const VIDEO_MODELS = [
@@ -21,7 +22,7 @@ const VIDEO_MODELS = [
 const IMAGE_MODELS = [
   { value: 'nano_banana_2', label: 'Nano Banana 2' },
   { value: 'nano_banana_pro', label: 'Nano Banana Pro' },
-  { value: 'grok', label: 'Grok Generation' },
+  { value: 'nano_banana_2_lite', label: 'Nano Banana 2 Lite' },
 ];
 
 type SegmentRole = 'blogger' | 'stranger' | 'aside' | 'outro' | 'vlog_action' | 'vlog_comment';
@@ -123,6 +124,10 @@ const FrenchTalkTab: React.FC = () => {
   const [vlogTopic, setVlogTopic] = useState('beauty_secret');
   const [customVlogTopic, setCustomVlogTopic] = useState('');
   const [useWebSearchVlog, setUseWebSearchVlog] = useState(false);
+  const [vlogReferenceUrl, setVlogReferenceUrl] = useState('');
+  const [vlogScreenshotBase64, setVlogScreenshotBase64] = useState<string | null>(null);
+  const [vlogVideoBase64, setVlogVideoBase64] = useState<string | null>(null);
+  const vlogFileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [isGeneratingLocationRef, setIsGeneratingLocationRef] = useState(false);
   const [locationRefs, setLocationRefs] = useState<Array<{ name: string; path: string; url: string; base64: string }>>([]);
   const [isGeneratingVlogScript, setIsGeneratingVlogScript] = useState(false);
@@ -240,7 +245,78 @@ const FrenchTalkTab: React.FC = () => {
     return () => clearTimeout(timer);
   }, [segments, episodeTitle, location, bloggerOutfit, aspectRatio, blogger]);
 
-  // Auto-reset stranger reference when episode title changes — new episode = new character
+  // Clipboard paste listener for Screenshots & Videos (Ctrl+V)
+  React.useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const b64 = event.target?.result as string;
+              setVlogScreenshotBase64(b64);
+              setVlogVideoBase64(null);
+            };
+            reader.readAsDataURL(blob);
+          }
+          break;
+        } else if (item.type.indexOf('video') !== -1) {
+          const blob = item.getAsFile();
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const b64 = event.target?.result as string;
+              setVlogVideoBase64(b64);
+              setVlogScreenshotBase64(null);
+            };
+            reader.readAsDataURL(blob);
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
+  const handleVlogFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm|avi|mkv)$/i.test(file.name);
+    const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const b64 = event.target?.result as string;
+      if (isVideo) {
+        setVlogVideoBase64(b64);
+        setVlogScreenshotBase64(null);
+      } else if (isImage) {
+        setVlogScreenshotBase64(b64);
+        setVlogVideoBase64(null);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const pasteVlogUrlFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setVlogReferenceUrl(text.trim());
+      }
+    } catch (err) {
+      console.error('Failed to read clipboard:', err);
+    }
+  };
   const prevEpisodeTitleRef = React.useRef('');
   React.useEffect(() => {
     const prev = prevEpisodeTitleRef.current;
@@ -1151,7 +1227,10 @@ const FrenchTalkTab: React.FC = () => {
         outfit: effectiveOutfit,
         location: vlogLocation,
         customInput: customVlogTopic,
-        useWebSearch: useWebSearchVlog
+        useWebSearch: useWebSearchVlog,
+        referenceUrl: vlogReferenceUrl || undefined,
+        screenshotBase64: vlogScreenshotBase64 || undefined,
+        videoBase64: vlogVideoBase64 || undefined
       });
 
       setVlogScript(result.script);
@@ -1223,9 +1302,24 @@ const FrenchTalkTab: React.FC = () => {
     }
   };
 
+  const handleVlogReset = () => {
+    setVlogLocation('Paris Studio Apartment - Living Room');
+    setVlogOutfit('Cozy Homewear / Loungewear');
+    setCustomVlogOutfit('');
+    setVlogTopic('beauty_secret');
+    setCustomVlogTopic('');
+    setUseWebSearchVlog(false);
+    setVlogReferenceUrl('');
+    setVlogScreenshotBase64(null);
+    setVlogVideoBase64(null);
+    setVlogScript('');
+    setVlogMetadata(null);
+    setVlogSegments([]);
+  };
+
   const renderVlogTab = () => (
     <div style={{ display: 'flex', flexDirection: 'column', padding: '20px', gap: '16px' }}>
-      
+
       {/* VLOG GENERATION PANEL */}
       <div style={{
         background: 'linear-gradient(135deg, #2e0a24 0%, #4e1b3e 50%, #2e0a24 100%)',
@@ -1233,7 +1327,20 @@ const FrenchTalkTab: React.FC = () => {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <h3 style={{ margin: 0, color: '#f8c4e0', fontSize: '15px' }}>💅 Life & Girl Secrets — Личный Влог Блогера</h3>
-          <div style={{ fontSize: '12px', color: '#ffb3da' }}>Локации студии, рецепты, фитнес, теннис & бассейн</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ fontSize: '12px', color: '#ffb3da' }}>Локации студии, рецепты, фитнес, теннис & бассейн</div>
+            <button
+              onClick={handleVlogReset}
+              title="Сбросить все настройки и результаты"
+              style={{
+                padding: '5px 12px', backgroundColor: 'transparent', color: '#ffb3da',
+                border: '1px solid #7a2a6a', borderRadius: '6px', cursor: 'pointer',
+                fontSize: '12px', whiteSpace: 'nowrap', transition: 'all 0.15s'
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#4e1b3e'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; }}
+            >🔄 Reset</button>
+          </div>
         </div>
 
         {/* Location & References */}
@@ -1302,6 +1409,87 @@ const FrenchTalkTab: React.FC = () => {
               style={{ width: '100%', padding: '8px', backgroundColor: '#3e1635', color: '#fff', border: '1px solid #7a2a6a', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }} />
           </div>
         )}
+
+        {/* ─── Multimodal Reference Panel ─── */}
+        <div style={{ backgroundColor: '#1a0528', padding: '12px', borderRadius: '8px', border: '1px solid #6a1e5d', marginBottom: '14px' }}>
+          <div style={{ fontSize: '12px', color: '#e8c4a0', fontWeight: 'bold', marginBottom: '8px' }}>
+            🌐 Референс из сети (TikTok / Reels / Shorts / Facebook) или локальный файл (скриншот / видео)
+          </div>
+
+          {/* URL row */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+            <input
+              type="text"
+              value={vlogReferenceUrl}
+              onChange={e => setVlogReferenceUrl(e.target.value)}
+              placeholder="Вставьте ссылку на TikTok, Reels, Shorts, Facebook..."
+              style={{ flex: 1, padding: '7px 10px', backgroundColor: '#3e1635', color: '#fff', border: vlogReferenceUrl ? '1px solid #3b82f6' : '1px solid #7a2a6a', borderRadius: '6px', fontSize: '12px' }}
+            />
+            <button
+              onClick={pasteVlogUrlFromClipboard}
+              style={{ padding: '7px 12px', backgroundColor: '#3e1635', color: '#ccc', border: '1px solid #7a2a6a', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+            >📋 Вставить</button>
+            {vlogReferenceUrl && (
+              <button
+                onClick={() => setVlogReferenceUrl('')}
+                style={{ padding: '7px 10px', backgroundColor: 'transparent', color: '#f87171', border: '1px solid #7a2a6a', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}
+              >✕</button>
+            )}
+          </div>
+
+          {/* File upload row */}
+          <input
+            type="file"
+            ref={vlogFileInputRef}
+            onChange={handleVlogFileUpload}
+            accept="image/*,video/*,.mp4,.mov,.webm,.avi,.mkv"
+            style={{ display: 'none' }}
+          />
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button
+              onClick={() => vlogFileInputRef.current?.click()}
+              style={{ padding: '7px 12px', backgroundColor: '#3e1635', color: '#ccc', border: '1px solid #7a2a6a', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+            >📂 Загрузить файл</button>
+            <span style={{ fontSize: '11px', color: '#888' }}>или нажмите Ctrl+V для вставки скриншота / видео из буфера</span>
+          </div>
+
+          {/* Preview of loaded screenshot/video */}
+          {(vlogScreenshotBase64 || vlogVideoBase64) && (
+            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#2a0e24', padding: '8px', borderRadius: '6px', border: '1px solid #5a1e4d' }}>
+              {vlogScreenshotBase64 && (
+                <img
+                  src={vlogScreenshotBase64}
+                  alt="screenshot"
+                  onClick={() => setLightboxImage(vlogScreenshotBase64)}
+                  style={{ width: '48px', height: '64px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #7a2a6a', cursor: 'pointer', flexShrink: 0 }}
+                />
+              )}
+              {vlogVideoBase64 && (
+                <span style={{ fontSize: '22px', flexShrink: 0 }}>🎬</span>
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>
+                  {vlogVideoBase64
+                    ? '✓ Видеофайл загружен — STT + Vision AI извлекут речь и действия'
+                    : '✓ Скриншот загружен — Vision OCR извлечёт весь текст и правила'}
+                </div>
+                <div style={{ fontSize: '10px', color: '#888', marginTop: '2px' }}>
+                  Будет адаптировано под блогера при генерации сценария
+                </div>
+              </div>
+              <button
+                onClick={() => { setVlogScreenshotBase64(null); setVlogVideoBase64(null); }}
+                style={{ padding: '4px 8px', backgroundColor: 'transparent', color: '#f87171', border: '1px solid #7a2a6a', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', flexShrink: 0 }}
+              >Удалить</button>
+            </div>
+          )}
+
+          {vlogReferenceUrl && (
+            <div style={{ marginTop: '6px', fontSize: '10px', color: '#60a5fa' }}>
+              ✓ Ссылка будет скачана, транскрибирована и адаптирована под блогера
+            </div>
+          )}
+        </div>
 
         {/* Location Reference Gallery */}
         <div style={{ backgroundColor: '#250c20', padding: '12px', borderRadius: '8px', border: '1px solid #5a1e4d', marginBottom: '14px' }}>

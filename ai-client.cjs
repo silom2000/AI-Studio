@@ -37,13 +37,13 @@ class AntigravityClient {
     async chat(messages, jsonMode = false, forcedProvider = null) {
         const providers = [];
 
-        // 1. Groq (Llama 3.3 70B - Fast and High Quality)
+        // 1. Groq (Fast and High Quality)
         if (process.env.GROQ_API_KEY) {
             providers.push({
                 id: 'groq',
                 url: 'https://api.groq.com/openai/v1/chat/completions',
                 key: process.env.GROQ_API_KEY,
-                model: 'llama-3.3-70b-versatile'
+                model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'
             });
         }
 
@@ -53,7 +53,7 @@ class AntigravityClient {
                 id: 'qwen',
                 url: process.env.QWEN_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions',
                 key: process.env.QWEN_API_KEY,
-                model: 'qwen/qwen3.5-397b-a17b'
+                model: process.env.QWEN_MODEL || 'qwen/qwen3.5-397b-a17b'
             });
         }
 
@@ -63,7 +63,7 @@ class AntigravityClient {
                 id: 'kimi',
                 url: process.env.KIMI_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions',
                 key: process.env.KIMI_API_KEY,
-                model: 'moonshotai/kimi-k2.5'
+                model: process.env.KIMI_MODEL || 'moonshotai/kimi-k2.5'
             });
         }
 
@@ -73,15 +73,18 @@ class AntigravityClient {
                 id: 'mimo',
                 url: process.env.MIMO_API_URL || 'https://api.xiaomimimo.com/v1/chat/completions',
                 key: process.env.MIMO_API_KEY,
-                model: 'mimo-v2.5-pro',
+                model: process.env.MIMO_MODEL || 'mimo-v2.5-pro',
                 isMimo: true
             });
         }
 
         // 5. Custom Local Proxy
         if (process.env.CUSTOM_AI_URL) {
-            const WORKING_MODELS = ['claude-sonnet-4-6'];
-            for (const m of WORKING_MODELS) {
+            const customModels = (process.env.CUSTOM_AI_MODEL || 'claude-sonnet-4-6')
+                .split(',')
+                .map(m => m.trim())
+                .filter(Boolean);
+            for (const m of customModels) {
                 providers.push({
                     id: 'custom',
                     url: process.env.CUSTOM_AI_URL,
@@ -106,7 +109,7 @@ class AntigravityClient {
             id: 'pollinations',
             url: process.env.POLLINATIONS_API_URL || 'https://gen.pollinations.ai/v1/chat/completions',
             key: process.env.POLLINATIONS_API_KEY,
-            model: 'openai-large'
+            model: process.env.POLLINATIONS_MODEL || 'openai-large'
         });
 
         // Ensure "json" is present in messages if jsonMode is requested (prevent Azure/Pollinations/Groq 400 error)
@@ -383,23 +386,25 @@ class AntigravityClient {
         const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) throw new Error('[AiClient:STT] GROQ_API_KEY not set');
 
+        const sttModel = process.env.GROQ_STT_MODEL || 'whisper-large-v3';
         const audioBuffer = fs.readFileSync(audioPath);
         const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
         const body = Buffer.concat([
             Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`),
             audioBuffer,
-            Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-large-v3\r\n`),
+            Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${sttModel}\r\n`),
             Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\nverbose_json\r\n`),
             Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="timestamp_granularities[]"\r\n\r\nword\r\n`),
             Buffer.from(`--${boundary}--\r\n`)
         ]);
 
-        console.log('[AiClient:STT] Sending audio to Groq Whisper (whisper-large-v3)...');
+        console.log(`[AiClient:STT] Sending audio to Groq Whisper (${sttModel})...`);
         const { statusCode, body: resBody } = await request('https://api.groq.com/openai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
                 'Content-Type': `multipart/form-data; boundary=${boundary}`,
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `Bearer ${apiKey}`,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             },
             body,
             headersTimeout: 120000,
@@ -470,17 +475,18 @@ class AntigravityClient {
 
     async _transcribeAudioPollinations(audioPath) {
         const apiKey = process.env.POLLINATIONS_API_KEY?.trim();
+        const sttModel = process.env.POLLINATIONS_STT_MODEL || 'scribe';
         const audioBuffer = fs.readFileSync(audioPath);
         const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
         const body = Buffer.concat([
             Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="audio.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`),
             audioBuffer,
-            Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nscribe\r\n`),
+            Buffer.from(`\r\n--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${sttModel}\r\n`),
             Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\nverbose_json\r\n`),
             Buffer.from(`--${boundary}--\r\n`)
         ]);
 
-        console.log('[AiClient:STT] Sending audio to Pollinations for transcription...');
+        console.log(`[AiClient:STT] Sending audio to Pollinations (${sttModel}) for transcription...`);
         const { statusCode, body: resBody } = await request('https://gen.pollinations.ai/v1/audio/transcriptions', {
             method: 'POST',
             headers: {
@@ -521,12 +527,18 @@ class AntigravityClient {
                     return await this._transcribeAudioGroq(audioPath);
                 } catch (e) {
                     console.error(`[AiClient:STT] Groq attempt ${attempt} failed: ${e.message}`);
+                    // 403 = permanent (no STT access on this plan/region) — skip retries
+                    if (e.message.includes('403')) {
+                        console.warn('[AiClient:STT] Groq returned 403 (no STT access), skipping to Custom STT...');
+                        break;
+                    }
                     if (attempt === retries) console.warn('[AiClient:STT] Groq exhausted, falling back to Custom STT...');
                 }
             }
         }
 
         // ── Priority 2: Custom local proxy (Gemini) ──────────────────────────────
+        const customSttModel = process.env.CUSTOM_STT_MODEL || 'gemini-2.5-flash';
         let customLastError = null;
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
@@ -534,7 +546,7 @@ class AntigravityClient {
                     console.log(`[AiClient:STT] Custom STT: Waiting 2s before retry attempt ${attempt}...`);
                     await new Promise(r => setTimeout(r, 2000));
                 }
-                return await this._transcribeAudioGemini(audioPath, 'gemini-2.5-flash');
+                return await this._transcribeAudioGemini(audioPath, customSttModel);
             } catch (e) {
                 console.error(`[AiClient:STT] Custom STT attempt ${attempt} failed: ${e.message}`);
                 customLastError = e;
@@ -791,8 +803,9 @@ class AntigravityClient {
 
     async generateVideoPromptWithGemini(fileUri, promptText) {
         const apiKey = this._getGeminiKey();
-        console.log(`[AiClient:Gemini] Analyzing video segment with gemini-2.0-flash...`);
-        
+        const videoModel = process.env.GEMINI_VIDEO_MODEL || 'gemini-2.0-flash';
+        console.log(`[AiClient:Gemini] Analyzing video segment with ${videoModel}...`);
+
         const payload = {
             contents: [{
                 parts: [
@@ -807,9 +820,9 @@ class AntigravityClient {
 
         let retries = 5;
         const baseUrl = this._getGeminiBaseUrl();
-        
+
         for (let attempt = 1; attempt <= retries; attempt++) {
-            const res = await fetch(`${baseUrl}/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+            const res = await fetch(`${baseUrl}/v1beta/models/${videoModel}:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

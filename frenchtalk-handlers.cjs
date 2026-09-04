@@ -1281,36 +1281,331 @@ ${CINEMATIC_MODIFIERS}`;
         });
     });
 
+    // ── Helper: Extract text from Screenshot using Vision OCR ────────
+    async function extractVlogScreenshotInfo(screenshotBase64, event) {
+        if (!screenshotBase64 || typeof screenshotBase64 !== 'string') return null;
+        console.log(`[FrenchTalk Vlog Screenshot] Analyzing screenshot via Vision OCR...`);
+        if (event && event.sender) {
+            event.sender.send('frenchtalk-progress', { status: '🔍 Сканирую рецепты/секреты со скриншота через Vision AI...', progress: 30 });
+        }
+
+        const ocrPrompt = `You are a world-class OCR and content analyst.
+Analyze this image carefully. Extract ALL text, beauty secrets, recipes, outfit ideas, fitness tips, lifestyle advice, or quotes verbatim.
+If the image contains numbered steps or ingredient lists, extract EVERY SINGLE detail without skipping anything.
+Also provide a short 1-sentence summary of the main topic.
+
+OUTPUT FORMAT:
+Main Theme: [Core topic]
+Extracted Details:
+1. [Full text / ingredients / steps]
+...`;
+
+        try {
+            const cleanBase64 = screenshotBase64.startsWith('data:') ? screenshotBase64 : `data:image/jpeg;base64,${screenshotBase64}`;
+            const visionResponse = await ai.chat([
+                {
+                    role: 'user',
+                    content: [
+                        { type: 'text', text: ocrPrompt },
+                        { type: 'image_url', image_url: { url: cleanBase64 } }
+                    ]
+                }
+            ]);
+            return { text: visionResponse };
+        } catch (err) {
+            console.error(`[FrenchTalk Vlog Screenshot] Vision OCR failed:`, err.message);
+            throw new Error(`Ошибка распознавания скриншота: ${err.message}`);
+        }
+    }
+
+    // ── Helper: Extract Speech and Keyframes from Local Video Upload ────────
+    async function extractVlogLocalVideoInfo(videoBase64, event) {
+        if (!videoBase64 || typeof videoBase64 !== 'string') return null;
+        console.log(`[FrenchTalk Vlog Local Video] Processing uploaded local video file...`);
+        if (event && event.sender) {
+            event.sender.send('frenchtalk-progress', { status: '📥 Извлекаю аудио и ключевые кадры из загруженного видео...', progress: 20 });
+        }
+
+        const crypto = require('crypto');
+        const { spawn, execSync } = require('child_process');
+        const tempDir = path.join(FRENCHTALK_DIR, 'TempReference');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+        const tempFilePrefix = `vlog_vid_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+        const tempVideoPath = path.join(tempDir, `${tempFilePrefix}.mp4`);
+        const targetMp3 = path.join(tempDir, `${tempFilePrefix}.mp3`);
+        const framesDir = path.join(tempDir, `${tempFilePrefix}_frames`);
+        if (!fs.existsSync(framesDir)) fs.mkdirSync(framesDir, { recursive: true });
+
+        try {
+            const cleanBase64 = videoBase64.replace(/^data:video\/[a-zA-Z0-9.-]+;base64,/, '');
+            fs.writeFileSync(tempVideoPath, Buffer.from(cleanBase64, 'base64'));
+
+            await new Promise((resolve, reject) => {
+                const proc = spawn('ffmpeg', [
+                    '-i', tempVideoPath,
+                    '-vn',
+                    '-acodec', 'libmp3lame',
+                    '-b:a', '128k',
+                    '-y', targetMp3
+                ], { windowsHide: true });
+                let stderr = '';
+                proc.stderr.on('data', d => { stderr += d.toString(); });
+                proc.on('close', code => {
+                    if (code === 0 && fs.existsSync(targetMp3)) resolve(true);
+                    else reject(new Error(`ffmpeg audio extraction failed (code ${code}): ${stderr.slice(-300)}`));
+                });
+                proc.on('error', err => reject(new Error(`Failed to start ffmpeg: ${err.message}`)));
+            });
+
+            if (event && event.sender) {
+                event.sender.send('frenchtalk-progress', { status: '🗣️ Распознаю речь из видео через STT...', progress: 45 });
+            }
+            let transcriptText = '';
+            try {
+                const sttResult = await ai.transcribe(targetMp3);
+                transcriptText = (sttResult && sttResult.text ? sttResult.text : '').trim();
+            } catch (sttErr) {
+                console.warn(`[FrenchTalk Vlog Local Video] STT transcription failed: ${sttErr.message}`);
+            }
+
+            if (event && event.sender) {
+                event.sender.send('frenchtalk-progress', { status: '🔍 Анализирую действия и предметы через Vision AI...', progress: 60 });
+            }
+
+            let duration = 10;
+            try {
+                const durationStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${tempVideoPath}"`).toString().trim();
+                duration = Math.max(1, parseFloat(durationStr) || 10);
+            } catch (_) {}
+
+            const sampleCount = 4;
+            const timestamps = [];
+            for (let i = 0; i < sampleCount; i++) {
+                const t = Math.min(duration - 0.2, Math.max(0.2, (duration / (sampleCount + 1)) * (i + 1)));
+                timestamps.push(t.toFixed(2));
+            }
+
+            const frameBase64List = [];
+            for (let i = 0; i < timestamps.length; i++) {
+                const t = timestamps[i];
+                const framePath = path.join(framesDir, `frame_${i + 1}.jpg`);
+                try {
+                    execSync(`ffmpeg -ss ${t} -i "${tempVideoPath}" -vframes 1 -q:v 3 -y "${framePath}"`, { windowsHide: true });
+                    if (fs.existsSync(framePath)) {
+                        const frameBuf = fs.readFileSync(framePath);
+                        frameBase64List.push(`data:image/jpeg;base64,${frameBuf.toString('base64')}`);
+                    }
+                } catch (frameErr) {}
+            }
+
+            let visualDescription = '';
+            if (frameBase64List.length > 0) {
+                try {
+                    const contentParts = [
+                        {
+                            type: 'text',
+                            text: `Analyze these consecutive frames from a reference video.
+Identify in detail:
+1. What objects, cosmetics, clothes, or ingredients are shown.
+2. What specific routine, recipe, makeup technique, styling or lifestyle action is demonstrated.
+3. Step-by-step summary of the actions.`
+                        }
+                    ];
+                    for (const fBase64 of frameBase64List) {
+                        contentParts.push({ type: 'image_url', image_url: { url: fBase64 } });
+                    }
+                    visualDescription = await ai.chat([{ role: 'user', content: contentParts }]);
+                } catch (visionErr) {}
+            }
+
+            try {
+                if (fs.existsSync(tempVideoPath)) fs.unlinkSync(tempVideoPath);
+                if (fs.existsSync(targetMp3)) fs.unlinkSync(targetMp3);
+                if (fs.existsSync(framesDir)) {
+                    for (const f of fs.readdirSync(framesDir)) fs.unlinkSync(path.join(framesDir, f));
+                    fs.rmdirSync(framesDir);
+                }
+            } catch (_) {}
+
+            return {
+                transcript: transcriptText,
+                visualDescription: visualDescription,
+                combinedSummary: `Video Spoken Content: "${transcriptText || 'None'}"\n\nVisual Actions & Demonstration: "${visualDescription || 'None'}"`
+            };
+        } catch (err) {
+            console.error(`[FrenchTalk Vlog Local Video] Error:`, err.message);
+            throw new Error(`Ошибка обработки видео: ${err.message}`);
+        }
+    }
+
+    // ── Helper: Download and Transcribe Reference Video URL via yt-dlp ──────
+    async function extractVlogReferenceVideoInfo(referenceUrl, event) {
+        if (!referenceUrl || typeof referenceUrl !== 'string' || !referenceUrl.trim().startsWith('http')) {
+            return null;
+        }
+        const crypto = require('crypto');
+        const { spawn } = require('child_process');
+        const cleanUrl = referenceUrl.trim();
+        console.log(`[FrenchTalk Vlog Reference] Extracting audio from URL: ${cleanUrl}`);
+        if (event && event.sender) {
+            event.sender.send('frenchtalk-progress', { status: '📥 Скачиваю видео по ссылке (TikTok/Reels/Shorts/Facebook)...', progress: 15 });
+        }
+
+        const tempDir = path.join(FRENCHTALK_DIR, 'TempReference');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+        const tempFilePrefix = `ref_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+        const outputTemplate = path.join(tempDir, `${tempFilePrefix}.%(ext)s`);
+        const targetMp3 = path.join(tempDir, `${tempFilePrefix}.mp3`);
+
+        try {
+            const cookiesFile = path.join(__dirname, 'instagram_cookies.txt');
+            const ytdlpArgs = [
+                '-x',
+                '--audio-format', 'mp3',
+                '--audio-quality', '4',
+                '--no-playlist',
+                '--max-filesize', '100M',
+                '--socket-timeout', '30',
+                ...(fs.existsSync(cookiesFile) ? ['--cookies', cookiesFile] : []),
+                '-o', outputTemplate,
+                cleanUrl
+            ];
+
+            await new Promise((resolve, reject) => {
+                const proc = spawn('yt-dlp', ytdlpArgs, { windowsHide: true });
+                let stderr = '';
+                proc.stderr.on('data', d => { stderr += d.toString(); });
+                proc.on('close', code => {
+                    if (code === 0) resolve(true);
+                    else reject(new Error(`yt-dlp failed (code ${code}): ${stderr.slice(-300)}`));
+                });
+                proc.on('error', err => reject(new Error(`Failed to start yt-dlp: ${err.message}`)));
+            });
+
+            let extractedAudioPath = targetMp3;
+            if (!fs.existsSync(extractedAudioPath)) {
+                const found = fs.readdirSync(tempDir).find(f => f.startsWith(tempFilePrefix) && (f.endsWith('.mp3') || f.endsWith('.m4a') || f.endsWith('.wav') || f.endsWith('.webm')));
+                if (found) extractedAudioPath = path.join(tempDir, found);
+            }
+
+            if (!fs.existsSync(extractedAudioPath)) {
+                throw new Error('Не удалось извлечь аудиодорожку из референсного видео.');
+            }
+
+            if (event && event.sender) {
+                event.sender.send('frenchtalk-progress', { status: '🗣️ Распознаю речь и секреты блогера...', progress: 45 });
+            }
+
+            const sttResult = await ai.transcribe(extractedAudioPath);
+            const transcriptText = (sttResult && sttResult.text ? sttResult.text : '').trim();
+
+            try {
+                if (fs.existsSync(extractedAudioPath)) fs.unlinkSync(extractedAudioPath);
+            } catch (e) {}
+
+            if (!transcriptText) {
+                throw new Error('Не удалось распознать речь из референсного видео.');
+            }
+
+            return {
+                url: cleanUrl,
+                transcript: transcriptText
+            };
+        } catch (err) {
+            console.error(`[FrenchTalk Vlog Reference] Extraction error:`, err.message);
+            throw new Error(`Ошибка разбора референсного видео: ${err.message}`);
+        }
+    }
+
     // 13. Generate Girl Secrets & Vlog Script (Action -> Comment -> Outro)
     ipcMain.handle('frenchtalk-auto-vlog-topic', async (event, {
-        language, country, bloggerName, vlogTopic, outfit, location, customInput = '', webContext = ''
+        language, country, bloggerName, vlogTopic, outfit, location, customInput = '', webContext = '',
+        referenceUrl = '', screenshotBase64 = null, videoBase64 = null
     }) => {
         console.log(`[FrenchTalk Vlog] Generating script for topic="${vlogTopic}", outfit="${outfit}", location="${location}"`);
 
-        const prompt = `You are a scriptwriter for a viral aesthetic TikTok vlog series featuring ${bloggerName}, a young, witty, beautiful French blogger in Paris.
+        // 1. Process reference materials if present
+        let localVideoData = null;
+        if (videoBase64 && typeof videoBase64 === 'string') {
+            try {
+                localVideoData = await extractVlogLocalVideoInfo(videoBase64, event);
+            } catch (vErr) {
+                console.warn(`[FrenchTalk Vlog] Video extraction error:`, vErr.message);
+            }
+        }
 
-VLOG THEME / TOPIC: "${vlogTopic}" (${customInput || 'Girl secrets, lifestyle, cooking, workout, or pool day'})
+        let screenshotData = null;
+        if (screenshotBase64 && typeof screenshotBase64 === 'string') {
+            try {
+                screenshotData = await extractVlogScreenshotInfo(screenshotBase64, event);
+            } catch (sErr) {
+                console.warn(`[FrenchTalk Vlog] Screenshot extraction error:`, sErr.message);
+            }
+        }
+
+        let refData = null;
+        if (referenceUrl && typeof referenceUrl === 'string' && referenceUrl.trim().startsWith('http')) {
+            try {
+                refData = await extractVlogReferenceVideoInfo(referenceUrl, event);
+            } catch (rErr) {
+                console.warn(`[FrenchTalk Vlog] URL extraction error:`, rErr.message);
+            }
+        }
+
+        if (event && event.sender) {
+            event.sender.send('frenchtalk-progress', { status: '✍️ ИИ пишет сценарий Личного Влога Блогера...', progress: 75 });
+        }
+
+        const effectiveTopic = localVideoData
+            ? `Video Demonstration & Speech: "${localVideoData.combinedSummary.slice(0, 700)}..."`
+            : (screenshotData
+                ? `Rules/Recipe/Tips from Screenshot: "${screenshotData.text.slice(0, 500)}..."`
+                : (refData ? `Transcript from Reference Video (${refData.url}): "${refData.transcript.slice(0, 500)}..."` : (customInput || vlogTopic)));
+
+        const prompt = `You are a master viral scriptwriter for health, nutrition and girl secrets TikTok vlogs featuring ${bloggerName}, a chic, charming lifestyle blogger who is passionate about healthy eating, calories, diet, and vitamins.
+
+CHANNEL NICHE: Health, healthy eating, calories, diet, vitamins, weight management, clean eating, wellness.
+VLOG THEME / TOPIC: "${effectiveTopic}"
 OUTFIT: "${outfit}"
 LOCATION: "${location}"
 LANGUAGE: ${language || 'French'}
 
+IMPORTANT — LOCATION RULE: Do NOT mention city names (Paris, Warsaw, London, etc.) or phrases like "my Parisian home / apartment / kitchen" in ANY line. Keep location references universal — just "my kitchen", "my room", "here at home", etc.
+
+${localVideoData ? `\nUPLOADED VIDEO MATERIAL (SPEECH & ACTIONS) — ADAPT THIS EXACT ROUTINE, RECIPE OR HEALTH SECRET FOR ${bloggerName.toUpperCase()} IN ${language.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT NUTRITION TIPS, DIET STEPS OR HEALTH FACTS FOR ${bloggerName.toUpperCase()} IN ${language.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+${refData ? `\nREFERENCE VIDEO CONTENT — ADAPT THIS HEALTH/NUTRITION STORY FOR ${bloggerName.toUpperCase()} IN ${language.toUpperCase()}:\n"""\n${refData.transcript}\n"""\n` : ''}
+
 ══════════════════════════════════════
-⚠️ CRITICAL SPEECH AND ROLE RULES:
-1. THIS IS A SPOKEN VLOG SCRIPT. EVERY SINGLE LINE (both Vlog Action and Blogger Comment) IS REAL SPOKEN DIALOGUE / VOICE-OVER BY ${bloggerName}.
-2. DO NOT write 3rd-person descriptions like "Camille en pyjama masse son visage". Write FIRST-PERSON spoken lines!
-3. PROVIDE REAL, VALUABLE CONTENT: Do NOT generate empty aesthetic fluff. If the topic is cooking, you MUST provide a real recipe with actual ingredients and steps (e.g. "First, I fry 2 cloves of garlic in olive oil", "Add 100g of fresh basil"). If the topic is lifestyle or fashion, provide a practical, concrete tip the viewer can actually use.
-4. GENERATE EXACTLY 7 TO 9 LINES TOTAL (MINIMUM 7 CLIPS).
-5. HARD WORD COUNT LIMIT: EVERY LINE MUST CONTAIN 12 TO 22 WORDS (Optimized for an 8-second video clip). Count your words carefully for each line!
+⚠️ CRITICAL RULES:
+1. THIS IS A SPOKEN VLOG SCRIPT. EVERY LINE IS REAL FIRST-PERSON SPOKEN DIALOGUE by ${bloggerName}. NO 3rd-person descriptions.
+2. HEALTH & NUTRITION CONTENT IS MANDATORY: Every vlog must naturally weave in at least 3-4 of these concrete elements:
+   - Exact calorie counts (e.g. "this has only 90 calories per serving")
+   - Named vitamins or minerals and their benefits (e.g. "rich in Vitamin C and iron")
+   - Specific foods with their health properties (e.g. "avocado's healthy fats keep you full longer")
+   - Diet or eating pattern tips (e.g. "eating protein first stabilizes blood sugar")
+   - Metabolism or digestion insights (e.g. "this speeds up my metabolism in the morning")
+   - Smart food swaps with calorie comparisons (e.g. "instead of cream, I use Greek yogurt — saves 120 calories")
+   - Gut health, antioxidants, omega-3, or micronutrient facts
+   - Practical diet hacks or meal prep secrets with real measurable results
+3. NO empty aesthetic fluff. Every line must carry real, actionable value — a specific food name, calorie number, vitamin, or health benefit.
+4. GENERATE EXACTLY 8 TO 9 LINES TOTAL (MINIMUM 8 CLIPS — mandatory).
+5. HARD WORD COUNT LIMIT: EVERY LINE MUST CONTAIN 12 TO 22 WORDS (optimized for 8-second video clip). Count carefully!
+6. NEVER mention city names or "Parisian" — keep location neutral.
 ══════════════════════════════════════
 
-STRUCTURE (7-9 spoken lines):
-▶ LINE 1 — Vlog Action: ${bloggerName} introduces the specific task/recipe/topic she is doing in ${location}. 12-20 words.
-▶ LINE 2 — Blogger Comment: First concrete, actionable tip or specific ingredient/step directly to camera. 12-22 words.
-▶ LINE 3 — Vlog Action: ${bloggerName} speaks while performing the next specific step (with real details) in ${location}. 12-20 words.
-▶ LINE 4 — Blogger Comment: Second valuable advice, secret, or specific instruction to camera. 12-22 words.
-▶ LINE 5 — Vlog Action: ${bloggerName} speaks while showing the final result or final step in ${location}. 12-20 words.
-▶ LINE 6 — Blogger Comment: Final cheeky advice / vlog commentary summarizing the value provided. 12-22 words.
-▶ LINE 7+ — Outro: Flirty, witty call-to-action asking for likes, comments & subscribe. 10-18 words.
+STRUCTURE (8-9 spoken lines — minimum 8):
+▶ LINE 1 — Vlog Action: ${bloggerName} introduces today's health/nutrition topic or recipe with an intriguing hook. 12-20 words. Include a specific food or health angle.
+▶ LINE 2 — Blogger Comment: First concrete health tip, calorie fact, or vitamin secret shared directly to camera. 12-22 words.
+▶ LINE 3 — Vlog Action: ${bloggerName} speaks while preparing/demonstrating — mentions a specific ingredient and its benefit. 12-20 words.
+▶ LINE 4 — Blogger Comment: Second nutrition insight — a smart food swap, calorie count, or named vitamin/mineral. 12-22 words.
+▶ LINE 5 — Vlog Action: ${bloggerName} continues with the next step, revealing a diet hack or health trick. 12-20 words.
+▶ LINE 6 — Blogger Comment: Third specific health fact — something surprising about calories, digestion, or a superfood. 12-22 words.
+▶ LINE 7 — Vlog Action: ${bloggerName} shows the final result — tastes it or demonstrates the outcome with enthusiasm. 12-20 words.
+▶ LINE 8 — Blogger Comment: Final punchy health summary — a memorable nutrition truth or diet secret to remember. 12-22 words.
+▶ LINE 9 (optional but preferred) — Outro: Flirty, witty call-to-action referencing health/wellness + asking for likes & subscribe. 10-18 words.
 
 Format EXACTLY as:
 Speaker: [direct spoken text]

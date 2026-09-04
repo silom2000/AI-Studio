@@ -116,6 +116,10 @@ export default function GLabsTab() {
   const [tasks, setTasks] = useState<GLabsTask[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
+  // Multi-thread / Concurrency pool
+  const [isMultiThread, setIsMultiThread] = useState<boolean>(true);
+  const [concurrency, setConcurrency] = useState<number>(20);
+
   // Generate form
   const [mode, setMode] = useState<GenerateMode>('image');
   const [prompt, setPrompt] = useState('');
@@ -208,10 +212,50 @@ export default function GLabsTab() {
     }
   };
 
+  // ── Multi-thread / Concurrency control ────────────────────────────────────
+  const loadMultiThreadConfig = useCallback(async () => {
+    try {
+      if (window.electronAPI.glabsGetMultiThread) {
+        const config = await window.electronAPI.glabsGetMultiThread();
+        setIsMultiThread(config.isMultiThread);
+        setConcurrency(config.concurrency);
+      }
+    } catch (e) {
+      console.error('[GLabsTab] loadMultiThreadConfig error', e);
+    }
+  }, []);
+
+  const handleToggleMultiThread = async (enabled: boolean) => {
+    setIsMultiThread(enabled);
+    try {
+      if (window.electronAPI.glabsSetMultiThread) {
+        const config = await window.electronAPI.glabsSetMultiThread(enabled, concurrency);
+        setIsMultiThread(config.isMultiThread);
+        setConcurrency(config.concurrency);
+      }
+    } catch (e) {
+      console.error('[GLabsTab] handleToggleMultiThread error', e);
+    }
+  };
+
+  const handleConcurrencyChange = async (val: number) => {
+    setConcurrency(val);
+    try {
+      if (window.electronAPI.glabsSetMultiThread) {
+        const config = await window.electronAPI.glabsSetMultiThread(isMultiThread, val);
+        setIsMultiThread(config.isMultiThread);
+        setConcurrency(config.concurrency);
+      }
+    } catch (e) {
+      console.error('[GLabsTab] handleConcurrencyChange error', e);
+    }
+  };
+
   // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
     checkHealth();
     loadTasks();
+    loadMultiThreadConfig();
 
     // Subscribe to live task progress
     window.electronAPI.onGLabsTaskProgress((data) => {
@@ -275,6 +319,76 @@ export default function GLabsTab() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Multi-thread Concurrency Settings */}
+        <div style={{
+          background: '#141414',
+          border: '1px solid #282828',
+          borderRadius: '8px',
+          padding: '10px 12px',
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <label style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: isMultiThread ? '#60a5fa' : '#888',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={isMultiThread}
+                onChange={e => handleToggleMultiThread(e.target.checked)}
+                style={{ accentColor: '#3b82f6', cursor: 'pointer' }}
+              />
+              Многопоток (40 аккаунтов)
+            </label>
+            <span style={{
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              background: isMultiThread ? 'rgba(59,130,246,0.15)' : 'rgba(239,68,68,0.15)',
+              color: isMultiThread ? '#60a5fa' : '#f87171',
+              fontWeight: 600
+            }}>
+              {isMultiThread ? 'Параллельно' : '1 поток (узкое горлышко)'}
+            </span>
+          </div>
+
+          {isMultiThread && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: '#888' }}>
+                Макс. параллельных задач:
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  type="number"
+                  min={1}
+                  max={40}
+                  value={concurrency}
+                  onChange={e => handleConcurrencyChange(Math.max(1, Math.min(40, parseInt(e.target.value) || 1)))}
+                  style={{
+                    width: '48px',
+                    padding: '3px 6px',
+                    borderRadius: '4px',
+                    border: '1px solid #333',
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    fontSize: '11px',
+                    textAlign: 'center'
+                  }}
+                />
+                <span style={{ fontSize: '10px', color: '#666' }}>/ 40</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mode selector */}

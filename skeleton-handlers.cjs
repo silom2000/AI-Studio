@@ -64,8 +64,51 @@ const PIXAR_IMAGE_VARIANTS = [
     }
 ];
 
-// —— Pixar Base Image Prompt (appended to every variant) ————————
-const PIXAR_IMAGE_BASE = `ultra-cinematic lighting, clear detailed background, rich warm tones, soft shadows, sharp focus`;
+// —— Psychology Character Bible (Pixar-style, видавший жизнь мужик-советчик) ——
+const CHARACTER_BIBLE_PSYCHOLOGIST = `"3D cartoon animation style, Pixar style. A weathered, street-smart man in his late 50s who has seen everything life has to offer. Features: deep-set eyes with a penetrating, knowing gaze that misses nothing, a broad slightly crooked nose that's been broken at least once, prominent laugh lines and stubble that suggest decades of hard-won experience, salt-and-pepper unkempt hair, a wry half-smirk that says he already knows what you're going to say. Build: stocky and solid, the kind of man you don't argue with twice. Outfit: worn leather jacket over a simple dark shirt, no tie, sleeves sometimes rolled up — looks like someone who never needed to impress anyone. He gestures directly, speaks without sugarcoating, points at the camera like he's talking to an old friend who's making the same mistake for the third time. High-end 3D CGI render, moody dramatic side-lighting, 9:16 vertical portrait aspect ratio."`;
+
+// —— Psychology Image Variants ————————————————————————————————————
+const PSYCH_IMAGE_VARIANTS = [
+    {
+        id: 'A', name: 'Street Corner Wisdom',
+        template: (character) => `${character}, medium shot, leaning against a worn brick wall in a dimly lit urban alley, hands in jacket pockets, confident authoritative posture, atmospheric moody lighting, shallow depth of field, cinematic 9:16 portrait composition`
+    },
+    {
+        id: 'B', name: 'Old Bar Philosopher',
+        template: (character) => `${character}, eye-level portrait shot, seated at a weathered wooden bar or cafe table, one elbow resting on the surface, leaning slightly forward as if sharing a hard truth, warm amber light from above, cinematic 9:16 vertical framing`
+    },
+    {
+        id: 'C', name: 'Direct Confrontation',
+        template: (character) => `${character}, close-up shot, facing camera directly, finger pointed slightly toward viewer, intense knowing expression, dark studio background with single dramatic spotlight, no-nonsense posture`
+    },
+    {
+        id: 'D', name: 'Rooftop Perspective',
+        template: (character) => `${character}, standing on a rooftop at dusk with city lights behind, arms crossed, surveying the world below with the calm confidence of someone who has seen it all, cinematic wide-to-close composition`
+    }
+];
+
+const PSYCH_IMAGE_BASE = `ultra-cinematic lighting, rich moody tones, dramatic shadows, sharp focus, photorealistic 3D render quality`;
+const PIXAR_IMAGE_BASE = `3D cartoon animation style, Pixar style, high-end 3D CGI render, warm studio lighting, vibrant colors, expressive characters, clean smooth surfaces`;
+
+// —— Psychology Video Motion Variants ————————————————————————————————
+const PSYCH_VIDEO_VARIANTS = [
+    {
+        id: 'A', name: 'The Blunt Truth-Teller',
+        template: `CAMERA MOVEMENT: Very slow subtle push-in over 8 seconds. CHARACTER ACTION: He speaks directly into camera with calm authority, gesturing with a single pointed finger or open hand as if laying out facts, occasionally shaking his head slightly at human foolishness, maintaining steady eye contact throughout. Face remains centered for lip-sync.`
+    },
+    {
+        id: 'B', name: 'The Knowing Lean',
+        template: `CAMERA MOVEMENT: Stable framing, slight tilt correction. CHARACTER ACTION: He leans forward slowly as he makes his key point, one eyebrow rising, a dry half-smile forming — the look of someone who called it years ago. He speaks with unhurried confidence, pausing for effect. Face remains perfectly visible for lip-sync.`
+    },
+    {
+        id: 'C', name: 'The Street Professor',
+        template: `CAMERA MOVEMENT: Tightly framed mid-shot. CHARACTER ACTION: He counts points on his fingers with deliberate calm, gestures sideways as if pointing to invisible examples from real life, nods firmly at his own conclusions. Speaks like a man who has no time for lies. Face stays steady for clear lip-sync.`
+    },
+    {
+        id: 'D', name: 'The Unsolicited Advice',
+        template: `CAMERA MOVEMENT: Gentle slow dolly in. CHARACTER ACTION: He spreads his hands open, shrugs with the confidence of someone who's been right too many times, then looks straight at the viewer as if to say "you know I'm right." Delivers the line with a wry, unflinching gaze. Face remains visible for perfect lip-sync.`
+    }
+];
 
 const TALKING_OBJECT_IMAGE_LOCK = ``;
 
@@ -456,24 +499,37 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
             rawVideoPrompt = rawVideoPrompt.replace(/\[INSERT ACTUAL DIALOGUE LINE HERE[^\]]*\]/g, line);
         }
 
-        const imgVar = PIXAR_IMAGE_VARIANTS.find(v => v.id === imageVariant) || PIXAR_IMAGE_VARIANTS[0];
-        const vidVar = PIXAR_VIDEO_VARIANTS.find(v => v.id === videoVariant) || PIXAR_VIDEO_VARIANTS[0];
+        const imgVar = mode === 'psychology'
+            ? (PSYCH_IMAGE_VARIANTS.find(v => v.id === imageVariant) || PSYCH_IMAGE_VARIANTS[0])
+            : (PIXAR_IMAGE_VARIANTS.find(v => v.id === imageVariant) || PIXAR_IMAGE_VARIANTS[0]);
+        const vidVar = mode === 'psychology'
+            ? (PSYCH_VIDEO_VARIANTS.find(v => v.id === videoVariant) || PSYCH_VIDEO_VARIANTS[0])
+            : (PIXAR_VIDEO_VARIANTS.find(v => v.id === videoVariant) || PIXAR_VIDEO_VARIANTS[0]);
 
         const objectLock = mode === 'objects'
             ? ` CHARACTER: ${character}. ${TALKING_OBJECT_IMAGE_LOCK}`
             : '';
 
         const voiceDesc = mode === 'health'
-            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent female child voice — a bright, sweet, melodic 5-6 year old GIRL with a high-pitched, crystal-clear soprano timbre. ` +
-              `NOT a generic child voice, NOT a boy, NOT a toddler, NOT a teenager. ` +
+            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent female child voice — a bright, sweet, melodic little girl genius and young inventor (маленький вундеркинд) with a high-pitched, crystal-clear soprano timbre. ` +
+              `NOT a generic adult voice, NOT a boy, NOT a teenager. ` +
               `VOCAL QUALITIES: Warm and honey-sweet tone with natural girlish breathiness, playful upward inflections at key moments, confident and articulate pronunciation (she is a little genius prodigy), ` +
               `enthusiastic pacing with dramatic pauses before revealing the lifehack secret, genuine childlike wonder and excitement in her delivery. ` +
               `EMOTIONAL RANGE: Cute mischievous energy when teasing the viewer, proud confident tone when explaining the hack, delighted sparkly giggle-adjacent warmth when the trick works. ` +
               `REFERENCE: Think young Boo from Monsters Inc meets a TED-talk kid presenter — adorable but surprisingly smart and articulate.`
+            : mode === 'psychology'
+            ? `VOICE IDENTITY (MUST match exactly every scene): A weathered, gravelly male voice — a man in his late 50s who speaks with the unhurried authority of someone who has seen every human mistake twice. ` +
+              `NOT polished, NOT soft, NOT motivational-speaker cheerful. ` +
+              `VOCAL QUALITIES: Deep, slightly hoarse timbre, deliberate pacing with meaningful pauses, dry sardonic wit underneath every word, speaks directly like he's calling you out personally. ` +
+              `EMOTIONAL RANGE: Blunt and matter-of-fact when stating hard truths, faintly amused when pointing out human predictability, firm and almost impatient when giving advice — like a man who has no patience for excuses. ` +
+              `REFERENCE: Think an older seasoned detective mixed with a street philosopher — someone whose advice you didn't ask for but absolutely needed.`
             : `A professional character voice with clear articulation and expressive delivery`;
 
-        const finalImagePrompt = `${imgVar.template(rawImagePrompt)}.${objectLock} STYLE: ${PIXAR_IMAGE_BASE}`;
-        const finalVideoPrompt = `${PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${vidVar.template} ${rawVideoPrompt} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${line}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
+        const imageBase = mode === 'psychology' ? PSYCH_IMAGE_BASE : PIXAR_IMAGE_BASE;
+        const finalImagePrompt = mode === 'psychology'
+            ? `${imgVar.template(rawImagePrompt)}. STYLE: ${imageBase}`
+            : `${imgVar.template(rawImagePrompt)}.${objectLock} STYLE: ${imageBase}`;
+        const finalVideoPrompt = `${mode === 'psychology' ? 'Mood: raw, direct, street-wise, unflinching.' : PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${vidVar.template} ${rawVideoPrompt} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${line}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
 
         return {
             id: idx + 1,
@@ -707,7 +763,7 @@ For EACH scene (exactly 6), generate following JSON:
         return { fullAudioUrl: '', sceneAudioUrls: (scenes || []).map(() => '') };
     });
 
-    ipcMain.handle('skeleton-generate-image', async (event, { sceneIndex, imagePrompt, imageModel, projectFolder }) => {
+    ipcMain.handle('skeleton-generate-image', async (event, { sceneIndex, imagePrompt, imageModel, projectFolder, mode }) => {
         const skeletonDir = path.join(__dirname, 'SkeletonShorts');
         if (!fs.existsSync(skeletonDir)) fs.mkdirSync(skeletonDir);
         const filePath = path.join(skeletonDir, `scene_${sceneIndex + 1}.jpg`);
@@ -716,18 +772,34 @@ For EACH scene (exactly 6), generate following JSON:
         const cleanModel = imageModel ? imageModel.replace('freepik-', '') : 'nano_banana_2';
         
         let referenceImages = [];
-        let refImgPath = path.join(__dirname, 'genie_reference.png');
-        let mimeType = 'image/png';
-        if (!fs.existsSync(refImgPath)) {
-            refImgPath = path.join(__dirname, 'genie_reference.jpg');
-            mimeType = 'image/jpeg';
+        let refImgPath = null;
+
+        if (mode === 'psychology') {
+            // Use psychology_character.jpg from src/assets as reference
+            const psychPath = path.join(__dirname, 'src', 'assets', 'psychology_character.jpg');
+            if (fs.existsSync(psychPath)) {
+                refImgPath = psychPath;
+            }
+        } else {
+            refImgPath = path.join(__dirname, 'genie_reference.png');
+            let mimeType = 'image/png';
+            if (!fs.existsSync(refImgPath)) {
+                refImgPath = path.join(__dirname, 'genie_reference.jpg');
+                mimeType = 'image/jpeg';
+            }
+            if (fs.existsSync(refImgPath)) {
+                const imageBase64 = fs.readFileSync(refImgPath, { encoding: 'base64' });
+                referenceImages.push({ data: `data:${mimeType};base64,${imageBase64}` });
+                console.log(`[Skeleton Image] Injected global reference image for Génie`);
+                refImgPath = null; // already handled
+            }
         }
-        
-        if (fs.existsSync(refImgPath)) {
+
+        if (refImgPath && fs.existsSync(refImgPath)) {
+            const ext = refImgPath.endsWith('.png') ? 'image/png' : 'image/jpeg';
             const imageBase64 = fs.readFileSync(refImgPath, { encoding: 'base64' });
-            // API expects data string inside an object
-            referenceImages.push({ data: `data:${mimeType};base64,${imageBase64}` });
-            console.log(`[Skeleton Image] Injected global reference image for Génie`);
+            referenceImages.push({ data: `data:${ext};base64,${imageBase64}` });
+            console.log(`[Skeleton Image] Injected reference image for Psychology character`);
         }
         
         event.sender.send('skeleton-image-progress', { sceneIndex, status: 'generating' });
@@ -1194,19 +1266,20 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
 
         try {
             // Use yt-dlp to extract best audio as mp3
-            const ytdlpArgs = [
+            const isInstagram = cleanUrl.includes('instagram.com');
+            const baseArgs = [
                 '-x',
                 '--audio-format', 'mp3',
                 '--audio-quality', '4',
                 '--no-playlist',
                 '--max-filesize', '100M',
                 '--socket-timeout', '30',
+                '--no-update',
                 '-o', outputTemplate,
-                cleanUrl
             ];
 
-            await new Promise((resolve, reject) => {
-                const proc = spawn('yt-dlp', ytdlpArgs, { windowsHide: true });
+            const runYtDlp = (extraArgs) => new Promise((resolve, reject) => {
+                const proc = spawn('yt-dlp', [...baseArgs, ...extraArgs, cleanUrl], { windowsHide: true });
                 let stderr = '';
                 proc.stderr.on('data', (d) => { stderr += d.toString(); });
                 proc.on('close', (code) => {
@@ -1215,6 +1288,30 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                 });
                 proc.on('error', (err) => reject(new Error(`Failed to start yt-dlp: ${err.message}`)));
             });
+
+            if (isInstagram) {
+                // Priority 1: cookies file (most reliable — works regardless of browser state)
+                const cookiesFile = path.join(__dirname, 'instagram_cookies.txt');
+                if (fs.existsSync(cookiesFile)) {
+                    console.log('[Studio] Using instagram_cookies.txt for Instagram download');
+                    await runYtDlp(['--cookies', cookiesFile]);
+                } else {
+                    // Priority 2: Firefox only — Chrome/Edge lock their DB while open
+                    try {
+                        console.log('[Studio] Trying Firefox cookies for Instagram');
+                        await runYtDlp(['--cookies-from-browser', 'firefox']);
+                    } catch (e) {
+                        console.warn('[Studio] Firefox cookies failed:', e.message);
+                        throw new Error(
+                            'Instagram требует авторизацию. Варианты:\n' +
+                            '1. Экспортируй cookies из браузера в файл instagram_cookies.txt и положи рядом с приложением (расширение "Get cookies.txt LOCALLY" для Chrome).\n' +
+                            '2. Войди в Instagram в Firefox и попробуй снова.'
+                        );
+                    }
+                }
+            } else {
+                await runYtDlp([]);
+            }
 
             // Find generated mp3 or audio file
             let extractedAudioPath = targetMp3;
@@ -1302,16 +1399,101 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
         }
 
         if (event && event.sender) {
-            event.sender.send('studio-progress', { status: '✍️ ИИ пишет сценарий вирусных лайфхаков для Девочки-вундеркинда...', progress: 70 });
+            event.sender.send('studio-progress', { status: mode === 'psychology' ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...' : '✍️ ИИ пишет сценарий вирусных лайфхаков для Девочки-вундеркинда...', progress: 70 });
         }
 
         let systemInstruction = "";
         let userPrompt = "";
 
-        // Character Bible matching 5-6 year old girl genius & young inventor (based on genie_reference.jpg)
-        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A cute, expressive and charming 5-6 year old little girl genius and young inventor. Features: oversized round dark glasses resting on her cute button nose, large expressive sparkling hazel-brown eyes with a mischievous knowing gaze and an adorable confident smile, messy voluminous curly brown hair tied with a knotted grey fabric headband bow, rosy flushed cheeks with a clean smooth face and clean hands. Outfit: oversized white inventor lab coat with clean sleeves and pockets, worn over a blue denim pinafore overalls dress, striped dark leggings, mismatched socks, and vintage lace-up canvas sneakers. Holding a cool retro gadget or lifehack tool. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
+        // Character Bible matching little girl genius & young inventor / маленький вундеркинд (based on genie_reference.jpg)
+        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A cute, expressive and charming little girl genius and young inventor (маленький вундеркинд). Features: oversized round dark glasses resting on her cute button nose, large expressive sparkling hazel-brown eyes with a mischievous knowing gaze and an adorable confident smile, messy voluminous curly brown hair tied with a knotted grey fabric headband bow, rosy flushed cheeks with a clean smooth face and clean hands. Outfit: oversized white inventor lab coat with clean sleeves and pockets, worn over a blue denim pinafore overalls dress, striped dark leggings, mismatched socks, and vintage lace-up canvas sneakers. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
 
-        if (mode === 'health') {
+        if (mode === 'psychology') {
+            systemInstruction = `You are a Master Viral Scriptwriter specialized in raw, street-smart psychology and human behavior.
+            You write scripts delivered by a blunt, weathered man who has seen every human mistake twice and has zero patience for sugarcoating.
+
+            CRITICAL RULES:
+            1. ALL dialogue for "line", "intro", "character" MUST be in ${langName}.
+            2. "imagePrompt" and "videoPrompt" MUST be written EXCLUSIVELY in English.
+            3. "videoPrompt" MUST contain the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line].
+            4. CHARACTER BIBLE (ALWAYS COPY-PASTE INTO PROMPTS):
+               ${CHARACTER_BIBLE_PSYCHOLOGIST}
+            5. THE CONCEPT: The narrator is "The Psychologist" — a street-smart, no-BS man in his late 50s who dishes out brutally honest psychological insights, human behavior truths, and real-life advice that nobody asked for but everyone needs to hear.
+            6. TONE & VOICE:
+               - Blunt, dry, direct. Speaks like he's had this conversation a hundred times and is mildly annoyed you still don't get it.
+               - No motivational fluff. No "you can do it." Just raw, honest, slightly sardonic truth.
+               - Uses second-person "you" to make it personal. Short punchy sentences.
+            7. CONTENT — PSYCHOLOGY TOPICS:
+               - Why people stay in toxic relationships. Why manipulation works. Red flags everyone ignores.
+               - Self-sabotage patterns. Why people fear success. How social pressure controls behavior.
+               - Reading people. Body language tells. What people say vs. what they mean.
+               - Hard truths about human nature that feel uncomfortable but undeniably real.
+            8. IMAGE STYLE (MOODY & CINEMATIC):
+               - Every "imagePrompt" MUST start with Character Bible, followed by the specific moody location (urban alley, dimly lit bar, rooftop at dusk, dark office) and his confident body language.
+               - Atmosphere: dramatic shadows, film-noir inspired lighting, real-world gritty environments.
+               - IP SAFETY: No real people, no brand logos, no political symbols.
+            9. CHARACTER ACTING (CRITICAL):
+               - Deliberate, unhurried gestures. Pointed finger when making a key point. Arms crossed when judging. Shrug when stating the obvious.
+               - Image-to-Video alignment: videoPrompt MUST start from the exact pose in imagePrompt.
+            10. Each "line" must include an emotion tag: [blunt], [dry], [direct], [sardonic], [firm], [knowing], [impatient], [wry], [matter-of-fact].
+            11. DIALOGUE LENGTH (8 SECONDS PER CLIP): 18-22 words per scene. Short sentences. No filler.
+
+                ${isShort ? `
+                📍 FAST 30-SECOND FORMAT (4-5 SCENES):
+                - Scene 1 — THE UNCOMFORTABLE TRUTH (18-22 words): Blunt statement of a hard psychological reality.
+                - Scene 2 — WHY IT HAPPENS (18-22 words): The real reason behind the behavior, no excuses.
+                - Scene 3 — THE PATTERN YOU'RE NOT SEEING (18-22 words): What you keep doing wrong without realizing.
+                - Scene 4 — THE HARD ADVICE (18-22 words): What to actually do about it — direct, no sugarcoating.
+                - Scene 5 — THE CLOSING TRUTH (18-22 words): Final blunt takeaway that lands like a gut punch.
+                ` : `
+                📍 FULL 8-SCENE FORMAT:
+                - Scene 1 — THE HOOK & HARD TRUTH (18-22 words)
+                - Scene 2 — WHY PEOPLE DO THIS (18-22 words)
+                - Scene 3 — THE SELF-DECEPTION (18-22 words)
+                - Scene 4 — THE PATTERN (18-22 words)
+                - Scene 5 — WHAT IT COSTS YOU (18-22 words)
+                - Scene 6 — THE REAL SOLUTION (18-22 words)
+                - Scene 7 — WHY MOST WON'T DO IT (18-22 words)
+                - Scene 8 — THE FINAL VERDICT (18-22 words)
+                `}`;
+
+            const effectiveTopic = localVideoData
+                ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
+                : (screenshotData
+                    ? `Psychology insight extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
+                    : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
+
+            userPrompt = `Create a viral psychology short script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS — ADAPT THIS CONTENT FOR THE PSYCHOLOGIST IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT — ADAPT THESE INSIGHTS FOR THE PSYCHOLOGIST IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT — ADAPT THIS FOR THE PSYCHOLOGIST IN ${langName.toUpperCase()}:\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is "The Psychologist" — a blunt, weathered man in his late 50s delivering uncomfortable truths about human behavior with the calm authority of someone who has seen it all.
+
+            DIALOGUE: 18-22 words per scene. Blunt. Direct. Second-person "you". No fluff.
+
+            Rotate Variants (A, B, C, D) for each scene.
+
+            Output JSON:
+            {
+              "intro": "[VIRAL TITLE — provocative, direct]",
+              "socialPost": {
+                "title": "Title with emoji",
+                "description": "Engaging description for tiktok/reels",
+                "hashtags": "#tag1 #tag2 #tag3"
+              },
+              "scenes": [
+                {
+                  "id": 1,
+                  "character": "The Psychologist",
+                  "line": "Dialogue in ${langName} [emotion]",
+                  "imageVariant": "A",
+                  "videoVariant": "A",
+                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the moody urban location, dramatic lighting, and his confident body posture.",
+                  "videoPrompt": "(In English) 3D cartoon animation style. Describe the animation starting from the exact pose in imagePrompt. Deliberate gestures: pointed finger, arms crossed, wry shrug. LIP-SYNC: \"[line]\""
+                }
+              ]
+            }`;
+        } else if (mode === 'health') {
             systemInstruction = `You are a Master Viral Hook Scriptwriter and world-class creator of viral lifehacks and clever household secrets.
             You write scripts that feel vibrant, delightfully clever, and hyper-viral — every line unpacks a genius everyday trick, household hack, time-saver, or mind-blowing daily solution.
 
@@ -1321,7 +1503,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             3. "videoPrompt" MUST contain the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line]. NO TRUNCATION. NO '...'.
             4. CHARACTER BIBLE (ALWAYS COPY-PASTE INTO PROMPTS):
                ${CHARACTER_BIBLE_GENIE}
-            5. THE CONCEPT: The narrator is "La Petite Génie" (a 5-6 year old girl prodigy and young inventor). She delivers transformative, brilliant lifehacks, household shortcuts, smart cleaning/organizing secrets, and everyday wisdom directly to the viewer with irresistible charm and child-genius authority.
+            5. THE CONCEPT: The narrator is "La Petite Génie" (маленький вундеркинд, a girl prodigy and young inventor). She delivers transformative, brilliant lifehacks, household shortcuts, smart cleaning/organizing secrets, and everyday wisdom directly to the viewer with irresistible charm and child-genius authority.
             6. CLEVER LIFEHACK & PRACTICAL EXPERTISE:
                - She addresses everyday frustrations: stubborn stains, cable mess, bad smells, kitchen struggles, wasted money, inefficient routines.
                - She reveals simple, accessible solutions using common household items with wit, excitement, and clear logic.
@@ -1368,49 +1550,51 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                     ? `Lifehack Rules/Tricks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
                     : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
 
-            userPrompt = `Create a viral short LIFEHACK & SMART TIPS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
-            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
-            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT LIFEHACKS, RULES, OR TIPS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
-            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
-            The narrator is a cute and charismatic 5-6 year old girl genius in round glasses and lab coat, delivering mind-blowing everyday lifehacks and practical secrets.
+            userPrompt = `Create a viral HEALTH & NUTRITION short script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT HEALTH/NUTRITION CONTENT FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT NUTRITION FACTS, DIET TIPS, OR VITAMIN SECRETS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT HEALTH STORY, NUTRITION HOOKS AND DIET CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is a cute and charismatic little girl genius (маленький вундеркинд) in round glasses and lab coat, delivering shocking nutrition facts, calorie secrets, and vitamin revelations.
 
-            DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
+            ⚠️ MANDATORY: Every line MUST contain at least one SPECIFIC and CONCRETE nutritional element — an exact calorie count, a named vitamin/mineral, a specific food with its health property, or a measurable diet result. ZERO vague wellness fluff.
+
+            WORD COUNT RULES — HARD LIMIT FOR 8-SECOND VIDEO:
             ${isShort ? `
-            - Scene 1 (HOOK & PROBLEM): 18-22 words.
-            - Scene 2 (THE WHY): 18-22 words.
-            - Scene 3 (THE GENIUS HACK): 18-22 words.
-            - Scene 4 (PRO TIP): 18-22 words.
-            - Scene 5 (MIC-DROP & CTA): 18-22 words.
+            - Scene 1 (MYTH-BUST HOOK): 18-22 words. Include a specific shocking number or food name.
+            - Scene 2 (THE SCIENCE): 18-22 words. Name the vitamin, hormone, or metabolic process.
+            - Scene 3 (THE PRACTICAL SWAP): 18-22 words. Exact food + calorie comparison.
+            - Scene 4 (VISIBLE RESULT): 18-22 words. Concrete timeline — "within 7 days..." or "after 2 weeks..."
+            - Scene 5 (MIC-DROP & CTA): 18-22 words. Final nutrition pro tip + follow prompt.
             ` : `
-            - Scene 1 (HOOK): 18-22 words.
-            - Scene 2 (COMMON MISTAKE): 18-22 words.
-            - Scene 3 (STEP 1): 18-22 words.
-            - Scene 4 (STEP 2 THE TRICK): 18-22 words.
-            - Scene 5 (MAGIC RESULT): 18-22 words.
-            - Scene 6 (BONUS TIP): 18-22 words.
-            - Scene 7 (PAYOFF): 18-22 words.
-            - Scene 8 (CLOSING & CTA): 18-22 words.
+            - Scene 1 (SCROLL-STOPPING HOOK): 18-22 words. Shocking calorie fact or diet myth.
+            - Scene 2 (THE COMMON MISTAKE): 18-22 words. The eating habit sabotaging health — be specific.
+            - Scene 3 (THE NUTRITION SCIENCE): 18-22 words. Name the vitamin/mineral/macronutrient.
+            - Scene 4 (THE SMART FOOD SWAP): 18-22 words. Exact foods + calorie counts named.
+            - Scene 5 (THE MEAL HACK): 18-22 words. How to apply it today — actionable step.
+            - Scene 6 (BONUS VITAMIN TIP): 18-22 words. Specific micronutrient that supercharges the result.
+            - Scene 7 (BODY TRANSFORMATION): 18-22 words. "After 7 days / 30 days..." with measurable change.
+            - Scene 8 (CLOSING WISDOM & CTA): 18-22 words. Memorable nutrition truth + subscribe prompt.
             `}
 
             Rotate Variants (A, B, C, D) for each scene.
 
             Output JSON:
             {
-              "intro": "[VIRAL TITLE]",
+              "intro": "[VIRAL HEALTH TITLE with specific food/vitamin/calorie angle]",
               "socialPost": {
-                "title": "Title with emoji",
-                "description": "Engaging description for tiktok/reels",
-                "hashtags": "#tag1 #tag2 #tag3"
+                "title": "Title with emoji and specific nutrition hook",
+                "description": "Engaging 1-2 sentence description mentioning the key nutrition fact",
+                "hashtags": "#healthtips #nutrition #calories #vitamins #healthyeating #diet"
               },
               "scenes": [
                 {
                   "id": 1,
                   "character": "La Petite Génie",
-                  "line": "Dialogue in ${langName} [emotion]",
+                  "line": "Dialogue in ${langName} with specific calorie/vitamin/food fact [emotion]",
                   "imageVariant": "A",
                   "videoVariant": "A",
-                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the cozy workshop, kitchen or study setting, lighting, and her enthusiastic posture.",
-                  "videoPrompt": "(In English) 3D cartoon animation style. Describe the animation starting from the exact pose in imagePrompt. Gestures: cute, articulate hand movements and adjusting glasses. LIP-SYNC: \"[line]\""
+                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the bright kitchen or nutrition lab setting, with relevant food props (fresh vegetables, vitamin bottle, meal prep station), and her enthusiastic posture.",
+                  "videoPrompt": "(In English) 3D cartoon animation style. Animate from the exact pose in imagePrompt. Gestures: holding up a vegetable or vitamin bottle proudly, pointing at a nutrition label, adjusting glasses while revealing a calorie secret. LIP-SYNC: \"[line]\""
                 }
               ]
             }`;
@@ -1424,7 +1608,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             3. "videoPrompt" MUST include the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line].
             4. CHARACTER BIBLE (ALWAYS COPY-PASTE INTO PROMPTS):
                ${CHARACTER_BIBLE_GENIE}
-            5. THE CONCEPT: The narrator is "La Petite Génie" (a 5-6 year old girl genius inventor) who explains practical lifehacks and clever household tricks with irresistible energy and charm.
+            5. THE CONCEPT: The narrator is "La Petite Génie" (маленький вундеркинд, a girl genius inventor) who explains practical lifehacks and clever household tricks with irresistible energy and charm.
             6. PRACTICAL CLEVERNESS:
                - She sees through everyday household struggles, clutter, kitchen issues, and daily inefficiencies.
             7. IMAGE STYLE, ENVIRONMENT VARIETY & COHERENCE:
@@ -1475,7 +1659,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
             ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT RULES OR LIFEHACKS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
             ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
-            The narrator is a 5-6 year old girl genius "La Petite Génie" (young inventor and observant prodigy) who explains the lifehack with humor and sparkling ingenuity. Do not make the object talk.
+            The narrator is a little girl genius "La Petite Génie" (маленький вундеркинд, young inventor and observant prodigy) who explains the lifehack with humor and sparkling ingenuity. Do not make the object talk.
 
             DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
             ${isShort ? `
@@ -1535,6 +1719,53 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             } catch (err2) {
                 console.error('[Studio] Failed to parse script response:', raw);
                 throw new Error("AI failed to generate structural JSON script: " + err2.message);
+            }
+        }
+
+        // Phonetics & style review — fix unnatural expressions per target language
+        if (scriptData && scriptData.scenes && scriptData.scenes.length > 0) {
+            try {
+                const linesForReview = scriptData.scenes.map(s => ({ id: s.id, line: s.line }));
+                const reviewSystemPrompt = `You are a senior phonetics and speech-style specialist for ${langName}, with deep expertise in children's spoken media and character voice consistency.
+
+Your task: review short spoken dialogue lines delivered by "La Petite Génie" — a witty, self-assured, playful little girl genius (маленький вундеркинд) — and fix ONLY expressions that sound unnatural, awkward, or like a literal foreign translation for a native ${langName} speaker.
+
+CHARACTER VOICE TO PRESERVE (NON-NEGOTIABLE):
+- Playful, clever, slightly cheeky — she speaks like a brilliant child who knows more than the adults.
+- Short punchy sentences with sparkling energy and mischievous confidence.
+- Uses child-natural vocabulary in ${langName} — no bureaucratic, clinical, or overly formal phrasing.
+- Keeps the "wow factor" — revelations feel exciting, tips feel like secrets being shared.
+- Emotion tags like [excited], [playful], [knowing], [whispering] MUST be preserved exactly as-is.
+
+Rules:
+- Fix ONLY what sounds like a bad translation or an unnatural expression for a ${langName} native speaker.
+- Do NOT flatten the character's personality into plain neutral adult speech.
+- Do NOT change lines that already sound natural AND match the character voice.
+- Preserve the original meaning and approximate word count (18-22 words).
+- Return ONLY a JSON array: [{"id": 1, "line": "corrected line"}, ...]
+- No explanations, no markdown, only the JSON array.`;
+
+                const reviewUserPrompt = `Target language: ${langName}
+Dialogue lines to review:
+${JSON.stringify(linesForReview, null, 2)}`;
+
+                const reviewRaw = await ai.chat([
+                    { role: 'system', content: reviewSystemPrompt },
+                    { role: 'user', content: reviewUserPrompt }
+                ], true, provider);
+
+                const reviewParsed = cleanAndParseJSON(reviewRaw);
+                if (Array.isArray(reviewParsed)) {
+                    const reviewMap = {};
+                    reviewParsed.forEach(r => { if (r.id && r.line) reviewMap[r.id] = r.line; });
+                    scriptData.scenes = scriptData.scenes.map(s => ({
+                        ...s,
+                        line: reviewMap[s.id] || s.line
+                    }));
+                    console.log('[Studio] Phonetics review applied to', Object.keys(reviewMap).length, 'scenes');
+                }
+            } catch (reviewErr) {
+                console.warn('[Studio] Phonetics review failed (using original lines):', reviewErr.message);
             }
         }
 

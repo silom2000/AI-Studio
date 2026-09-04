@@ -6,6 +6,7 @@ import {
     Box,
     Zap,
     Lightbulb,
+    Brain,
     X,
     AlertTriangle,
     Download,
@@ -14,13 +15,14 @@ import {
     Copy,
     CheckCircle,
     ClipboardPaste,
-    Upload
+    Upload,
+    Film
 } from 'lucide-react';
 import { StudioScript, StudioScene } from './electron.d';
 import './StudioTab.css';
 
 interface StudioTabProps {
-    mode: 'health' | 'objects';
+    mode: 'health' | 'objects' | 'psychology';
 }
 
 const LANGUAGES = [
@@ -69,6 +71,51 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const [isIdeasLoading, setIsIdeasLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [copiedField, setCopiedField] = useState<string | null>(null);
+
+    // ── Multi-thread G-Labs Concurrency State ──
+    const [isMultiThread, setIsMultiThread] = useState<boolean>(true);
+    const [concurrency, setConcurrency] = useState<number>(20);
+
+    React.useEffect(() => {
+        const fetchMultiThread = async () => {
+            try {
+                if (window.electronAPI?.glabsGetMultiThread) {
+                    const cfg = await window.electronAPI.glabsGetMultiThread();
+                    setIsMultiThread(cfg.isMultiThread);
+                    setConcurrency(cfg.concurrency);
+                }
+            } catch (e) {
+                console.error('Failed to get multithread config', e);
+            }
+        };
+        fetchMultiThread();
+    }, []);
+
+    const handleToggleMultiThread = async (enabled: boolean) => {
+        setIsMultiThread(enabled);
+        try {
+            if (window.electronAPI?.glabsSetMultiThread) {
+                const cfg = await window.electronAPI.glabsSetMultiThread(enabled, concurrency);
+                setIsMultiThread(cfg.isMultiThread);
+                setConcurrency(cfg.concurrency);
+            }
+        } catch (e) {
+            console.error('Failed to set multithread', e);
+        }
+    };
+
+    const handleConcurrencyChange = async (val: number) => {
+        setConcurrency(val);
+        try {
+            if (window.electronAPI?.glabsSetMultiThread) {
+                const cfg = await window.electronAPI.glabsSetMultiThread(isMultiThread, val);
+                setIsMultiThread(cfg.isMultiThread);
+                setConcurrency(cfg.concurrency);
+            }
+        } catch (e) {
+            console.error('Failed to set concurrency', e);
+        }
+    };
 
     React.useEffect(() => {
         const handlePaste = (e: ClipboardEvent) => {
@@ -263,7 +310,8 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                 sceneIndex: sceneIndex,
                 imagePrompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION. ${scene.imagePrompt}`,
                 imageModel: imageModel as any,
-                projectFolder
+                projectFolder,
+                mode
             });
             updateScene(sceneId, { status: 'idle', selectedImage: imageUrl, generatedImages: [imageUrl] });
             return imageUrl;
@@ -336,6 +384,117 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         setIsAutoGenerating(false);
     };
 
+    // ── Batch Image Generation (All Actors in Parallel) ────────────────────────
+    const generateAllActors = async () => {
+        const currentScript = scriptRef.current;
+        if (!currentScript || !currentScript.scenes) return;
+        setIsAutoGenerating(true);
+        stopAutoGenerationRef.current = false;
+        setError(null);
+
+        try {
+            const scenesToGenerate = currentScript.scenes.filter(s => !s.selectedImage);
+            if (scenesToGenerate.length === 0) {
+                alert('У всех сцен уже есть сгенерированные актёры!');
+                return;
+            }
+
+            if (isMultiThread) {
+                // All scenes trigger in parallel across multi-thread pool
+                await Promise.all(
+                    currentScript.scenes.map(async (s, i) => {
+                        if (stopAutoGenerationRef.current) return;
+                        if (!s.selectedImage) {
+                            try {
+                                await generateImage(i, s.id);
+                            } catch (err: any) {
+                                console.warn(`[BatchActors] Scene ${i + 1} image failed:`, err.message);
+                            }
+                        }
+                    })
+                );
+            } else {
+                // Sequential single-thread fallback
+                for (let i = 0; i < currentScript.scenes.length; i++) {
+                    if (stopAutoGenerationRef.current) break;
+                    const s = currentScript.scenes[i];
+                    if (!s.selectedImage) {
+                        try {
+                            await generateImage(i, s.id);
+                        } catch (err: any) {
+                            console.warn(`[BatchActors] Scene ${i + 1} image failed:`, err.message);
+                        }
+                        if (i < currentScript.scenes.length - 1 && !stopAutoGenerationRef.current) {
+                            await new Promise(res => setTimeout(res, 5000));
+                        }
+                    }
+                }
+            }
+        } catch (err: any) {
+            console.error("Batch Actors Error:", err);
+            setError("Генерация актёров прервана: " + err.message);
+        } finally {
+            setIsAutoGenerating(false);
+            stopAutoGenerationRef.current = false;
+        }
+    };
+
+    // ── Batch Video Animation (All Videos in Parallel) ─────────────────────────
+    const animateAllScenes = async () => {
+        const currentScript = scriptRef.current;
+        if (!currentScript || !currentScript.scenes) return;
+        setIsAutoGenerating(true);
+        stopAutoGenerationRef.current = false;
+        setError(null);
+
+        try {
+            const readyScenes = currentScript.scenes.filter(s => s.selectedImage && !s.generatedVideoUrl);
+            if (readyScenes.length === 0) {
+                alert('Нет сцен, готовых к анимации (сначала сгенерируйте изображения)!');
+                return;
+            }
+
+            if (isMultiThread) {
+                // All videos animate simultaneously across multi-thread pool
+                await Promise.all(
+                    currentScript.scenes.map(async (s, i) => {
+                        if (stopAutoGenerationRef.current) return;
+                        if (s.selectedImage && !s.generatedVideoUrl) {
+                            try {
+                                await animateScene(i, s.id, s.selectedImage);
+                            } catch (err: any) {
+                                console.warn(`[BatchVideos] Scene ${i + 1} video failed:`, err.message);
+                            }
+                        }
+                    })
+                );
+            } else {
+                // Sequential single-thread fallback
+                for (let i = 0; i < currentScript.scenes.length; i++) {
+                    if (stopAutoGenerationRef.current) break;
+                    const s = currentScript.scenes[i];
+                    if (s.selectedImage && !s.generatedVideoUrl) {
+                        try {
+                            await animateScene(i, s.id, s.selectedImage);
+                        } catch (err: any) {
+                            console.warn(`[BatchVideos] Scene ${i + 1} video failed:`, err.message);
+                        }
+                        if (i < currentScript.scenes.length - 1 && !stopAutoGenerationRef.current) {
+                            await new Promise(res => setTimeout(res, 10000));
+                        }
+                    }
+                }
+            }
+        } catch (err: any) {
+            console.error("Batch Videos Error:", err);
+            setError("Анимация видео прервана: " + err.message);
+        } finally {
+            setIsAutoGenerating(false);
+            stopAutoGenerationRef.current = false;
+        }
+    };
+
+    // ── Auto Generate All (Parallel End-to-End Pipeline) ───────────────────────
     const runAutoGeneration = async () => {
         const currentScript = scriptRef.current;
         if (!currentScript || !currentScript.scenes) return;
@@ -343,31 +502,70 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         stopAutoGenerationRef.current = false;
         setError(null);
 
-        const imageUrls: (string | null)[] = [];
-
         try {
-            for (let i = 0; i < currentScript.scenes.length; i++) {
-                if (stopAutoGenerationRef.current) break;
-                const s = currentScript.scenes[i];
-                if (!s.selectedImage) {
-                    const url = await generateImage(i, s.id);
-                    imageUrls.push(url);
-                    await new Promise(res => setTimeout(res, 500));
-                } else {
-                    imageUrls.push(s.selectedImage);
-                }
-            }
+            if (isMultiThread) {
+                // Fully parallel pipeline: each scene generates image and immediately animates video
+                await Promise.all(
+                    currentScript.scenes.map(async (s, i) => {
+                        if (stopAutoGenerationRef.current) return;
+                        let imageUrl = s.selectedImage || null;
 
-            const updatedScript = scriptRef.current;
-            if (!updatedScript) return;
+                        if (!imageUrl) {
+                            try {
+                                imageUrl = await generateImage(i, s.id);
+                            } catch (imgErr: any) {
+                                console.warn(`[AutoGen] Scene ${i + 1} image failed:`, imgErr.message);
+                            }
+                        }
 
-            for (let i = 0; i < updatedScript.scenes.length; i++) {
-                if (stopAutoGenerationRef.current) break;
-                const s = updatedScript.scenes[i];
-                const img = imageUrls[i] || s.selectedImage;
-                if (img && !s.generatedVideoUrl) {
-                    await animateScene(i, s.id, img);
-                    await new Promise(res => setTimeout(res, 500));
+                        if (stopAutoGenerationRef.current || !imageUrl) return;
+
+                        const latest = scriptRef.current;
+                        const sceneNow = latest?.scenes?.[i];
+                        if (sceneNow && !sceneNow.generatedVideoUrl) {
+                            try {
+                                await animateScene(i, s.id, imageUrl);
+                            } catch (vidErr: any) {
+                                console.warn(`[AutoGen] Scene ${i + 1} video failed:`, vidErr.message);
+                            }
+                        }
+                    })
+                );
+            } else {
+                // Sequential single-thread fallback
+                for (let i = 0; i < currentScript.scenes.length; i++) {
+                    if (stopAutoGenerationRef.current) break;
+                    const s = currentScript.scenes[i];
+
+                    let imageUrl = s.selectedImage || null;
+
+                    if (!imageUrl) {
+                        try {
+                            imageUrl = await generateImage(i, s.id);
+                        } catch (imgErr: any) {
+                            console.warn(`[AutoGen] Scene ${i + 1} image failed, skipping:`, imgErr.message);
+                        }
+                    }
+
+                    if (stopAutoGenerationRef.current) break;
+
+                    if (imageUrl) {
+                        const latest = scriptRef.current;
+                        const sceneNow = latest?.scenes?.[i];
+                        if (sceneNow && !sceneNow.generatedVideoUrl) {
+                            await new Promise(res => setTimeout(res, 10000));
+                            if (stopAutoGenerationRef.current) break;
+                            try {
+                                await animateScene(i, s.id, imageUrl);
+                            } catch (vidErr: any) {
+                                console.warn(`[AutoGen] Scene ${i + 1} video failed, skipping:`, vidErr.message);
+                            }
+                        }
+                    }
+
+                    if (i < currentScript.scenes.length - 1 && !stopAutoGenerationRef.current) {
+                        await new Promise(res => setTimeout(res, 10000));
+                    }
                 }
             }
         } catch (err: any) {
@@ -450,6 +648,72 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                     </div>
                 </div>
 
+                <div className="sidebar-section" style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <h3 className="sidebar-title" style={{ margin: 0, color: '#60a5fa' }}>⚡ G-LABS РЕЖИМ</h3>
+                        <span style={{
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: isMultiThread ? 'rgba(59,130,246,0.2)' : 'rgba(239,68,68,0.2)',
+                            color: isMultiThread ? '#93c5fd' : '#fca5a5',
+                            fontWeight: 700
+                        }}>
+                            {isMultiThread ? 'ПАРАЛЛЕЛЬНО' : '1 ПОТОК'}
+                        </span>
+                    </div>
+
+                    <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: isMultiThread ? '#f8fafc' : '#94a3b8',
+                        userSelect: 'none'
+                    }}>
+                        <input
+                            type="checkbox"
+                            checked={isMultiThread}
+                            onChange={(e) => handleToggleMultiThread(e.target.checked)}
+                            style={{
+                                width: '16px',
+                                height: '16px',
+                                accentColor: '#3b82f6',
+                                cursor: 'pointer'
+                            }}
+                        />
+                        Многопоток (40 аккаунтов)
+                    </label>
+
+                    {isMultiThread && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Параллельных задач:</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={40}
+                                    value={concurrency}
+                                    onChange={(e) => handleConcurrencyChange(Math.max(1, Math.min(40, parseInt(e.target.value) || 1)))}
+                                    style={{
+                                        width: '46px',
+                                        padding: '3px 6px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #3b82f6',
+                                        background: '#0f172a',
+                                        color: '#fff',
+                                        fontSize: '11px',
+                                        textAlign: 'center'
+                                    }}
+                                />
+                                <span style={{ fontSize: '10px', color: '#64748b' }}>/ 40</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 <div className="sidebar-section">
                     <h3 className="sidebar-title">🌍 LANGUAGE</h3>
                     <div className="selection-list">
@@ -510,10 +774,10 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                     <div className="studio-header-inner">
                         <div className="studio-logo">
                             <div className="studio-logo-icon">
-                                {mode === 'health' ? <Lightbulb color="white" size={24} /> : <Box color="white" size={24} />}
+                                {mode === 'health' ? <Lightbulb color="white" size={24} /> : mode === 'psychology' ? <Brain color="white" size={24} /> : <Box color="white" size={24} />}
                             </div>
                             <h1>
-                                AI <span className="mode-text">{mode === 'health' ? 'GenieTalk' : 'ObjectWars'}</span>
+                                AI <span className="mode-text">{mode === 'health' ? 'GenieTalk' : mode === 'psychology' ? 'Psychology' : 'ObjectWars'}</span>
                             </h1>
                         </div>
                         {script && (
@@ -588,7 +852,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                         <span>🔗 ССЫЛКА НА РЕФЕРЕНС (TIKTOK / REELS / SHORTS) — НЕОБЯЗАТЕЛЬНО</span>
                                         {referenceUrl && (
                                             <span style={{ color: '#38bdf8', fontSize: '11px', fontWeight: 500 }}>
-                                                ✓ Видео будет скачано, транскрибировано и адаптировано под Вундеркинда
+                                                ✓ Видео будет скачано, транскрибировано и адаптировано под {mode === 'psychology' ? 'Психолога' : 'Вундеркинда'}
                                             </span>
                                         )}
                                     </label>
@@ -823,7 +1087,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                             placeholder={
                                                 screenshotBase64
                                                     ? "Оставьте пустым, чтобы взять все правила из скриншота, или задайте тон..."
-                                                    : (referenceUrl.trim() ? "Оставьте пустым, чтобы взять историю из видео целиком, или уточните фокус..." : (mode === 'health' ? "Например: 5 секретов чистки кухни, Лайфхак для быстрой уборки или Как сложить вещи" : "История забытой картошки..."))
+                                                    : (referenceUrl.trim() ? "Оставьте пустым, чтобы взять историю из видео целиком, или уточните фокус..." : (mode === 'health' ? "Например: 5 секретов чистки кухни, Лайфхак для быстрой уборки или Как сложить вещи" : mode === 'psychology' ? "Например: почему люди терпят токсичных людей, как не дать собой манипулировать..." : "История забытой картошки..."))
                                             }
                                             className="studio-input"
                                         />
@@ -836,7 +1100,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                 {!script && (
                                     <button
                                         onClick={generateScript}
-                                        disabled={isLoading || (!topic.trim() && !referenceUrl.trim() && !screenshotBase64)}
+                                        disabled={isLoading || (!topic.trim() && !referenceUrl.trim() && !screenshotBase64 && !videoBase64)}
                                         className="generate-btn"
                                         style={{
                                             background: screenshotBase64 ? 'linear-gradient(135deg, #059669, #0d9488)' : (referenceUrl.trim() ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : undefined),
@@ -863,14 +1127,41 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                 )}
 
                                 {script && script.scenes.length > 0 && (
-                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                         {!isAutoGenerating ? (
-                                            <button onClick={runAutoGeneration} className="export-prompts-btn" style={{ background: '#10b981' }}>
-                                                <Zap size={18} /> AUTO GENERATE ALL
-                                            </button>
+                                            <>
+                                                <button
+                                                    onClick={generateAllActors}
+                                                    className="export-prompts-btn"
+                                                    style={{ background: '#3b82f6', color: '#fff', fontWeight: 600 }}
+                                                    title="Параллельно сгенерировать изображения всех актёров"
+                                                >
+                                                    <Zap size={16} /> ⚡ ALL ACTORS
+                                                </button>
+                                                <button
+                                                    onClick={animateAllScenes}
+                                                    className="export-prompts-btn"
+                                                    style={{ background: '#8b5cf6', color: '#fff', fontWeight: 600 }}
+                                                    title="Параллельно анимировать видео для всех готовых изображений"
+                                                >
+                                                    <Film size={16} /> 🎬 ALL VIDEOS
+                                                </button>
+                                                <button
+                                                    onClick={runAutoGeneration}
+                                                    className="export-prompts-btn"
+                                                    style={{ background: '#10b981', color: '#fff', fontWeight: 700 }}
+                                                    title="Полный цикл: генерация всех картинок и мгновенная анимация каждого видео"
+                                                >
+                                                    <Zap size={16} /> ⚡ AUTO GENERATE ALL
+                                                </button>
+                                            </>
                                         ) : (
-                                            <button onClick={stopAutoGeneration} className="export-prompts-btn" style={{ background: '#ef4444' }}>
-                                                <RefreshCw className="spin" size={18} /> STOP
+                                            <button
+                                                onClick={stopAutoGeneration}
+                                                className="export-prompts-btn"
+                                                style={{ background: '#ef4444', color: '#fff', fontWeight: 700 }}
+                                            >
+                                                <RefreshCw className="spin" size={16} /> STOP
                                             </button>
                                         )}
                                     </div>

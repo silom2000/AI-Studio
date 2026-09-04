@@ -132,11 +132,35 @@ const downloadGLabsFile = async (fileUrl, destPath) => {
     return destPath;
 };
 
-// ── G-Labs Request Queue ─────────────────────────────────────────────────────
+// ── G-Labs Request Queue (Concurrent Worker Pool) ───────────────────────────
 class GLabsQueue {
     constructor() {
         this.queue = [];
-        this.isRunning = false;
+        this.runningCount = 0;
+        this.isMultiThread = true; // По умолчанию включен многопоточный режим
+        this.concurrency = 20;     // До 20 одновременных задач для пула из 40 аккаунтов
+    }
+
+    setMultiThread(enabled, concurrency = 20) {
+        this.isMultiThread = Boolean(enabled);
+        if (typeof concurrency === 'number' && concurrency > 0) {
+            this.concurrency = concurrency;
+        }
+        console.log(`[G-Labs Queue] Multi-thread mode set to: ${this.isMultiThread} (max concurrency: ${this.getMaxConcurrency()})`);
+        this._processNext();
+    }
+
+    getMaxConcurrency() {
+        return this.isMultiThread ? this.concurrency : 1;
+    }
+
+    getConfig() {
+        return {
+            isMultiThread: this.isMultiThread,
+            concurrency: this.concurrency,
+            activeRunning: this.runningCount,
+            queueLength: this.queue.length,
+        };
     }
 
     enqueue(type, taskFn) {
@@ -147,9 +171,8 @@ class GLabsQueue {
     }
 
     async _processNext() {
-        if (this.isRunning || this.queue.length === 0) return;
-
-        this.isRunning = true;
+        const maxConcurrent = this.getMaxConcurrency();
+        if (this.runningCount >= maxConcurrent || this.queue.length === 0) return;
 
         // Priority sorting: 'image' tasks first, then order by timestamp
         this.queue.sort((a, b) => {
@@ -158,18 +181,24 @@ class GLabsQueue {
             return a.timestamp - b.timestamp;
         });
 
-        const task = this.queue.shift();
-        console.log(`[G-Labs Queue] Starting ${task.type} task. Remaining in queue: ${this.queue.length}`);
+        // Pick tasks up to maxConcurrent limit
+        while (this.runningCount < maxConcurrent && this.queue.length > 0) {
+            const task = this.queue.shift();
+            this.runningCount++;
+            console.log(`[G-Labs Queue] Starting ${task.type} task. Running: ${this.runningCount}/${maxConcurrent}. Remaining in queue: ${this.queue.length}`);
 
-        try {
-            const result = await task.taskFn();
-            task.resolve(result);
-        } catch (error) {
-            console.error(`[G-Labs Queue] Task failed:`, error);
-            task.reject(error);
-        } finally {
-            this.isRunning = false;
-            this._processNext();
+            (async () => {
+                try {
+                    const result = await task.taskFn();
+                    task.resolve(result);
+                } catch (error) {
+                    console.error(`[G-Labs Queue] Task failed:`, error);
+                    task.reject(error);
+                } finally {
+                    this.runningCount--;
+                    this._processNext();
+                }
+            })();
         }
     }
 }
@@ -200,7 +229,7 @@ const generateImageViaGLabs = async (options = {}) => {
 
         // Helper to execute single G-Labs image generation attempt
         const executeImageAttempt = async (targetModel, attemptNumber, maxAttempts) => {
-            const bodyData = { prompt, model: targetModel, aspect_ratio: aspectRatio, count };
+            const bodyData = { prompt, model: targetModel, aspect_ratio: aspectRatio };
             let requestEndpoint = '/api/image/generate';
 
             if (targetModel === 'grok') {
@@ -209,7 +238,13 @@ const generateImageViaGLabs = async (options = {}) => {
             }
 
             if (referenceImages && referenceImages.length > 0) {
-                bodyData.reference_images = referenceImages;
+                // Normalize reference_images: accept string data URLs, {"path": "..."}, or {"data": "..."} -> string data URL
+                bodyData.reference_images = referenceImages.map(img => {
+                    if (typeof img === 'string') return img;
+                    if (img && img.path) return { path: img.path };
+                    if (img && img.data) return img.data;
+                    return img;
+                });
             }
             if (typeof strength === 'number') {
                 bodyData.strength = strength;
@@ -299,32 +334,25 @@ const generateVideoViaGLabs = async (options = {}) => {
         if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
 
         let requestEndpoint = '/api/video/generate';
-        const bodyData = { prompt, model, aspect_ratio: aspectRatio, resolution, mode: finalMode };
-        
+        const bodyData = { prompt, model, aspect_ratio: aspectRatio, resolution: [resolution], mode: finalMode };
+
         if (model === 'meta') {
             requestEndpoint = '/api/meta/generate';
+            delete bodyData.model;
+            delete bodyData.resolution;
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.start_image = finalRefImages[0].data;
             }
-            // Meta model ignores generate_audio flag for now, but we don't send it to be safe
         } else if (model === 'grok') {
             requestEndpoint = '/api/grok/generate';
+            delete bodyData.resolution;
             bodyData.mode = finalRefImages && finalRefImages.length > 0 ? 'i2v' : 't2v';
             bodyData.video_length = 10;
-            bodyData.resolution = "720p";
+            bodyData.resolution = '720p';
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.reference_images = finalRefImages.map(img => img.data || img);
             }
         } else {
-            if (options.generateAudio) {
-                bodyData.generate_audio = true;
-            }
-            if (options.referenceAudio || options.audio) {
-                const rawAudio = options.referenceAudio || options.audio;
-                const cleanAudio = typeof rawAudio === 'string' ? rawAudio.replace(/^data:audio\/\w+;base64,/, '') : rawAudio;
-                bodyData.reference_audio = cleanAudio;
-                bodyData.audio = cleanAudio;
-            }
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.reference_images = finalRefImages.map(img => img.data || img);
             }
@@ -513,12 +541,9 @@ function registerGLabsHandlers(ipcMain) {
                 prompt,
                 model,
                 aspect_ratio: aspectRatio,
-                resolution: '720p',
+                resolution: ['720p'],
                 mode: finalMode
             };
-            if (generateAudio) {
-                bodyData.generate_audio = true;
-            }
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.reference_images = finalRefImages;
             }
@@ -573,11 +598,22 @@ function registerGLabsHandlers(ipcMain) {
         });
     });
 
+    // 8. Управление многопоточным режимом (Worker Pool)
+    ipcMain.handle('glabs-get-multithread', async () => {
+        return gLabsTaskQueue.getConfig();
+    });
+
+    ipcMain.handle('glabs-set-multithread', async (event, { enabled, concurrency }) => {
+        gLabsTaskQueue.setMultiThread(enabled, concurrency);
+        return gLabsTaskQueue.getConfig();
+    });
+
     console.log('[G-Labs] Handlers registered ✅');
 }
 
-module.exports = { 
+module.exports = {
     registerGLabsHandlers,
     generateImageViaGLabs,
-    generateVideoViaGLabs
+    generateVideoViaGLabs,
+    gLabsTaskQueue
 };

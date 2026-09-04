@@ -104,6 +104,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   glabsTaskStatus: (taskId) => ipcRenderer.invoke('glabs-task-status', { taskId }),
   glabsGenerateImage: (data) => ipcRenderer.invoke('glabs-generate-image', data),
   glabsGenerateVideo: (data) => ipcRenderer.invoke('glabs-generate-video', data),
+  glabsGetMultiThread: () => ipcRenderer.invoke('glabs-get-multithread'),
+  glabsSetMultiThread: (enabled, concurrency) => ipcRenderer.invoke('glabs-set-multithread', { enabled, concurrency }),
   onGLabsTaskProgress: (callback) => ipcRenderer.on('glabs-task-progress', (event, data) => callback(data)),
   removeGLabsProgressListener: () => ipcRenderer.removeAllListeners('glabs-task-progress'),
 

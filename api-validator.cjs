@@ -52,6 +52,7 @@ async function validateCustomAI(apiUrl, apiKey) {
         return result;
     }
     try {
+        const testModel = (process.env.CUSTOM_AI_MODEL || 'claude-sonnet-4-6').split(',')[0].trim();
         const { statusCode, body } = await request(apiUrl, {
             method: 'POST',
             headers: {
@@ -59,7 +60,7 @@ async function validateCustomAI(apiUrl, apiKey) {
                 ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {})
             },
             body: JSON.stringify({
-                model: 'gemini-3.1-pro-high',
+                model: testModel,
                 messages: [{ role: 'user', content: 'ping' }],
                 max_tokens: 5,
             }),

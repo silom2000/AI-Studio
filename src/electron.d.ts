@@ -154,10 +154,10 @@ export interface IElectronAPI {
   timelapseAssemble: (subFolder?: string, projectTitle?: string) => Promise<string>,
 
   // Studio Tabs
-  studioGenerateIdeas: (mode: 'health' | 'objects', language: string, provider?: string) => Promise<string[]>,
+  studioGenerateIdeas: (mode: 'health' | 'objects' | 'psychology', language: string, provider?: string) => Promise<string[]>,
   studioGenerateScript: (
-    modeOrParams: 'health' | 'objects' | {
-      mode: 'health' | 'objects';
+    modeOrParams: 'health' | 'objects' | 'psychology' | {
+      mode: 'health' | 'objects' | 'psychology';
       topic?: string;
       language: string;
       provider?: string;
@@ -256,6 +256,8 @@ export interface IElectronAPI {
     prompt: string; model?: string; aspectRatio?: string; resolution?: string;
     section?: string; subFolder?: string; sceneIndex?: number;
   }) => Promise<string>,
+  glabsGetMultiThread: () => Promise<{ isMultiThread: boolean; concurrency: number; activeRunning: number; queueLength: number }>,
+  glabsSetMultiThread: (enabled: boolean, concurrency?: number) => Promise<{ isMultiThread: boolean; concurrency: number; activeRunning: number; queueLength: number }>,
   onGLabsTaskProgress: (callback: (data: GLabsProgressData) => void) => void,
   removeGLabsProgressListener: () => void,
 
@@ -274,7 +276,7 @@ export interface IElectronAPI {
   frenchtalkSaveAllPrompts: (data: any) => Promise<{ success: boolean }>,
   frenchtalkGenerateLocationRef: (data: { locationName: string, visualPrompt: string, model?: string }) => Promise<{ imagePath: string, base64: string }>,
   frenchtalkGetLocationRefs: () => Promise<Array<{ name: string, path: string, url: string, base64: string }>>,
-  frenchtalkAutoVlogTopic: (data: { language: string, country: string, bloggerName: string, vlogTopic: string, outfit: string, location: string, customInput?: string, useWebSearch?: boolean }) => Promise<{ script: string, scriptRu?: string, metadata?: { title: string, description: string, hashtags: string } }>,
+  frenchtalkAutoVlogTopic: (data: { language: string, country: string, bloggerName: string, vlogTopic: string, outfit: string, location: string, customInput?: string, useWebSearch?: boolean, referenceUrl?: string, screenshotBase64?: string, videoBase64?: string }) => Promise<{ script: string, scriptRu?: string, metadata?: { title: string, description: string, hashtags: string } }>,
   frenchtalkTranslateScript: (data: { script: string, bloggerName: string }) => Promise<{ scriptRu: string }>,
   frenchtalkGetStreamPacks: () => Promise<Record<string, any>>,
   frenchtalkSaveStreamPackDaysInfo: (data: Record<string, any>) => Promise<{ success: boolean, daysInfo: Record<string, any> }>,

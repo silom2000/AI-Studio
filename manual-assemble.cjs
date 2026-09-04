@@ -32,11 +32,14 @@ async function callPollinations(messages, jsonMode = false) {
     const pollKey = process.env.POLLINATIONS_API_KEY?.trim();
     const pollUrl = 'https://gen.pollinations.ai/v1/chat/completions';
 
-    const WORKING_MODELS = ['gemini-3.1-pro-high', 'gemini-3.1-pro', 'gpt-4o'];
-    const modelsToTry = customUrl ? [...WORKING_MODELS, 'openai-large'] : ['openai-large'];
+    const customModels = (process.env.CUSTOM_AI_MODEL || 'claude-sonnet-4-6,gemini-3.1-pro-high,gemini-3.1-pro,gpt-4o')
+        .split(',')
+        .map(m => m.trim())
+        .filter(Boolean);
+    const modelsToTry = customUrl ? [...customModels, 'openai-large'] : ['openai-large'];
 
     for (const model of modelsToTry) {
-        const isCustom = WORKING_MODELS.includes(model);
+        const isCustom = customModels.includes(model);
         const apiUrl = isCustom && customUrl ? customUrl : pollUrl;
         const apiKey = isCustom && customUrl ? customKey : pollKey;
 
