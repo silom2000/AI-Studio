@@ -1539,14 +1539,13 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                 - Scene 8 — CLOSING & CTA (18-22 words): Final clever punchline + subscribe for more smart hacks.
                 `}
 
-                        11. DENSE CONTENT & CHARISMATIC WISDOM:
+            11. DENSE CONTENT & CHARISMATIC WISDOM:
                  * NO filler words, NO non-verbal laughs or sound pauses.
                  * Natural dialogue pacing: aim for 18-22 words per scene to keep the viewer engaged throughout the whole 8 seconds.
                  * The Little Genius speaks directly to the viewer with playful enthusiasm, clarity, and contagious confidence.
-            12. STORYTELLING RULE — THE EMOTIONAL PENDULUM (RETENTION):
-                 To maximize viewer retention, you MUST alternate exactly between creating tension/intrigue (Peaks) and giving solutions/comfort (Valleys) in the dialogue.
-                 * PEAKS (Tension/Conflict): Use phrases like "Но не всё так просто..." (But it's not that simple...), "И вот тут начинаются вопросы..." (And here the questions begin...), "Внимательные зрители могут заметить..." (Attentive viewers might notice...), "Будьте готовы к тому, что..." (Be prepared that...).
-                 * VALLEYS (Relief/Solution): Use phrases like "Как всегда, есть и хорошие новости!" (As always, there is good news!), "Эта проблема легко решается." (This problem is easily solved.), "И тут мы вспоминаем про..." (And here we remember...), "К нашей радости, очевидно, что..." (To our joy, it's obvious...).`;
+            12. EMOTIONAL PENDULUM (RETENTION RULE): To maximize viewer retention, alternate between TENSION and RELIEF across scenes.
+                 * TENSION phrases (use to create intrigue): "Но не всё так просто...", "И вот тут начинаются вопросы...", "Внимательные зрители могут заметить...", "Будьте готовы к тому, что..."
+                 * RELIEF phrases (use to give solution/hope): "Как всегда, есть и хорошие новости!", "Эта проблема легко решается.", "И тут мы вспоминаем про...", "К нашей радости, очевидно, что..."`;
 
             const effectiveTopic = localVideoData
                 ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
@@ -1554,48 +1553,33 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                     ? `Lifehack Rules/Tricks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
                     : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
 
-            userPrompt = `Create a viral short script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
-            ${localVideoData ? `
-UPLOADED VIDEO ANALYSIS — ADAPT THIS CONTENT FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:
-"""
-${localVideoData.combinedSummary}
-"""
-` : ''}
-            ${screenshotData ? `
-SCREENSHOT CONTENT — ADAPT THESE FACTS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:
-"""
-${screenshotData.text}
-"""
-` : ''}
-            ${refData ? `
-REFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):
-"""
-${refData.transcript}
-"""
-` : ''}
-            The narrator is a cute and charismatic little girl genius (маленький вундеркинд) in round glasses and a lab coat. She has an incredibly high IQ and explains complex topics (lifehacks, science, history, psychology) using brilliant logic, but still views the world through a charming, slightly naive childlike lens (using cute metaphors like comparing a black hole to a vacuum cleaner swallowing her Legos).
+            userPrompt = `Create a viral HEALTH & NUTRITION short script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT HEALTH/NUTRITION CONTENT FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT NUTRITION FACTS, DIET TIPS, OR VITAMIN SECRETS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT HEALTH STORY, NUTRITION HOOKS AND DIET CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is a cute and charismatic little girl genius (маленький вундеркинд) in round glasses and lab coat, delivering shocking nutrition facts, calorie secrets, and vitamin revelations.
 
-            ⚠️ MANDATORY EMOTIONAL PENDULUM: You MUST alternate between Tension/Intrigue and Relief/Solutions across the scenes using the required phrases.
+            ⚠️ MANDATORY: Every line MUST contain at least one SPECIFIC and CONCRETE nutritional element — an exact calorie count, a named vitamin/mineral, a specific food with its health property, or a measurable diet result. ZERO vague wellness fluff.
 
             WORD COUNT RULES — HARD LIMIT FOR 8-SECOND VIDEO:
             ${isShort ? `
-            - Scene 1 (THE HOOK): 18-22 words. Start with a bizarre fact or paradox.
-            - Scene 2 (PEAK - TENSION): 18-22 words. Use a Tension phrase to introduce the conflict or complication.
-            - Scene 3 (VALLEY - RELIEF): 18-22 words. Use a Relief phrase to offer the genius solution or comforting fact.
-            - Scene 4 (PEAK - PLOT TWIST): 18-22 words. Another complication or an advanced intellect fact wrapped in a childlike metaphor.
-            - Scene 5 (VALLEY & CTA): 18-22 words. Final simple logical conclusion using a Relief phrase + follow prompt in a smart-kid style.
+            - Scene 1 (MYTH-BUST HOOK): 18-22 words. Include a specific shocking number or food name.
+            - Scene 2 (THE SCIENCE): 18-22 words. Name the vitamin, hormone, or metabolic process.
+            - Scene 3 (THE PRACTICAL SWAP): 18-22 words. Exact food + calorie comparison.
+            - Scene 4 (VISIBLE RESULT): 18-22 words. Concrete timeline — "within 7 days..." or "after 2 weeks..."
+            - Scene 5 (MIC-DROP & CTA): 18-22 words. Final nutrition pro tip + follow prompt.
             ` : `
-            - Scene 1 (THE HOOK): 18-22 words. A scroll-stopping fact or paradox.
-            - Scene 2 (PEAK - TENSION): 18-22 words. Introduce the problem using a Tension phrase ("Но не всё так просто...").
-            - Scene 3 (THE SCIENCE / METAPHOR): 18-22 words. Explain the detail with a cute childlike comparison.
-            - Scene 4 (VALLEY - RELIEF): 18-22 words. Offer a comforting fact or solution using a Relief phrase ("Эта проблема легко решается.").
-            - Scene 5 (PEAK - TENSION): 18-22 words. Unexpected twist or deeper problem using a Tension phrase.
-            - Scene 6 (THE GENIUS FIX): 18-22 words. Hard intellectual fact delivered simply.
-            - Scene 7 (VALLEY - RELIEF): 18-22 words. Simple logical conclusion using a Relief phrase.
-            - Scene 8 (CLOSING & CTA): 18-22 words. Final clever punchline + subscribe prompt in her unique style.
+            - Scene 1 (SCROLL-STOPPING HOOK): 18-22 words. Shocking calorie fact or diet myth.
+            - Scene 2 (THE COMMON MISTAKE): 18-22 words. The eating habit sabotaging health — be specific.
+            - Scene 3 (THE NUTRITION SCIENCE): 18-22 words. Name the vitamin/mineral/macronutrient.
+            - Scene 4 (THE SMART FOOD SWAP): 18-22 words. Exact foods + calorie counts named.
+            - Scene 5 (THE MEAL HACK): 18-22 words. How to apply it today — actionable step.
+            - Scene 6 (BONUS VITAMIN TIP): 18-22 words. Specific micronutrient that supercharges the result.
+            - Scene 7 (BODY TRANSFORMATION): 18-22 words. "After 7 days / 30 days..." with measurable change.
+            - Scene 8 (CLOSING WISDOM & CTA): 18-22 words. Memorable nutrition truth + subscribe prompt.
             `}
 
-            Rotate Variants (A, B, C, D) for each scene.`;
+            Rotate Variants (A, B, C, D) for each scene.
 
             Output JSON:
             {
