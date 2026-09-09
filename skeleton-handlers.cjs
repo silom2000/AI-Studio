@@ -1550,51 +1550,49 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                     ? `Lifehack Rules/Tricks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
                     : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
 
-            userPrompt = `Create a viral HEALTH & NUTRITION short script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
-            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT HEALTH/NUTRITION CONTENT FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
-            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT NUTRITION FACTS, DIET TIPS, OR VITAMIN SECRETS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
-            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT HEALTH STORY, NUTRITION HOOKS AND DIET CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
-            The narrator is a cute and charismatic little girl genius (маленький вундеркинд) in round glasses and lab coat, delivering shocking nutrition facts, calorie secrets, and vitamin revelations.
+            userPrompt = `Create a viral short LIFEHACK & SMART TIPS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT LIFEHACKS, RULES, OR TIPS FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR LA PETITE GÉNIE IN ${langName.toUpperCase()}):\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is a cute and charismatic little girl genius (маленький вундеркинд) in round glasses and lab coat, delivering mind-blowing everyday lifehacks and practical secrets.
 
-            ⚠️ MANDATORY: Every line MUST contain at least one SPECIFIC and CONCRETE nutritional element — an exact calorie count, a named vitamin/mineral, a specific food with its health property, or a measurable diet result. ZERO vague wellness fluff.
-
-            WORD COUNT RULES — HARD LIMIT FOR 8-SECOND VIDEO:
+            DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
             ${isShort ? `
-            - Scene 1 (MYTH-BUST HOOK): 18-22 words. Include a specific shocking number or food name.
-            - Scene 2 (THE SCIENCE): 18-22 words. Name the vitamin, hormone, or metabolic process.
-            - Scene 3 (THE PRACTICAL SWAP): 18-22 words. Exact food + calorie comparison.
-            - Scene 4 (VISIBLE RESULT): 18-22 words. Concrete timeline — "within 7 days..." or "after 2 weeks..."
-            - Scene 5 (MIC-DROP & CTA): 18-22 words. Final nutrition pro tip + follow prompt.
+            - Scene 1 (HOOK & PROBLEM): 18-22 words.
+            - Scene 2 (THE WHY): 18-22 words.
+            - Scene 3 (THE GENIUS HACK): 18-22 words.
+            - Scene 4 (PRO TIP & RESULT): 18-22 words.
+            - Scene 5 (MIC-DROP & CTA): 18-22 words.
             ` : `
-            - Scene 1 (SCROLL-STOPPING HOOK): 18-22 words. Shocking calorie fact or diet myth.
-            - Scene 2 (THE COMMON MISTAKE): 18-22 words. The eating habit sabotaging health — be specific.
-            - Scene 3 (THE NUTRITION SCIENCE): 18-22 words. Name the vitamin/mineral/macronutrient.
-            - Scene 4 (THE SMART FOOD SWAP): 18-22 words. Exact foods + calorie counts named.
-            - Scene 5 (THE MEAL HACK): 18-22 words. How to apply it today — actionable step.
-            - Scene 6 (BONUS VITAMIN TIP): 18-22 words. Specific micronutrient that supercharges the result.
-            - Scene 7 (BODY TRANSFORMATION): 18-22 words. "After 7 days / 30 days..." with measurable change.
-            - Scene 8 (CLOSING WISDOM & CTA): 18-22 words. Memorable nutrition truth + subscribe prompt.
+            - Scene 1 (HOOK & EXPANSION): 18-22 words.
+            - Scene 2 (PROBLEM & TRAP): 18-22 words.
+            - Scene 3 (BUILD-UP): 18-22 words.
+            - Scene 4 (REVELATION): 18-22 words.
+            - Scene 5 (PRACTICAL TIP): 18-22 words.
+            - Scene 6 (CASUAL CTA): 18-22 words.
+            - Scene 7 (PAYOFF): 18-22 words.
+            - Scene 8 (MIC-DROP): 18-22 words.
             `}
 
             Rotate Variants (A, B, C, D) for each scene.
 
             Output JSON:
             {
-              "intro": "[VIRAL HEALTH TITLE with specific food/vitamin/calorie angle]",
+              "intro": "Viral Title",
               "socialPost": {
-                "title": "Title with emoji and specific nutrition hook",
-                "description": "Engaging 1-2 sentence description mentioning the key nutrition fact",
-                "hashtags": "#healthtips #nutrition #calories #vitamins #healthyeating #diet"
+                "title": "Title with emoji",
+                "description": "Engaging description for tiktok/reels",
+                "hashtags": "#tag1 #tag2 #tag3"
               },
               "scenes": [
                 {
                   "id": 1,
                   "character": "La Petite Génie",
-                  "line": "Dialogue in ${langName} with specific calorie/vitamin/food fact [emotion]",
+                  "line": "Dialogue in ${langName} [emotion]",
                   "imageVariant": "A",
                   "videoVariant": "A",
-                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the bright kitchen or nutrition lab setting, with relevant food props (fresh vegetables, vitamin bottle, meal prep station), and her enthusiastic posture.",
-                  "videoPrompt": "(In English) 3D cartoon animation style. Animate from the exact pose in imagePrompt. Gestures: holding up a vegetable or vitamin bottle proudly, pointing at a nutrition label, adjusting glasses while revealing a calorie secret. LIP-SYNC: \"[line]\""
+                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the cozy workshop or kitchen setting with relevant everyday objects, and her enthusiastic posture demonstrating the trick.",
+                  "videoPrompt": "(In English) 3D cartoon animation style. Animate from the exact pose in imagePrompt. Gestures: holding up a household item proudly, pointing with eureka excitement, adjusting glasses while revealing the secret. LIP-SYNC: \"[line]\""
                 }
               ]
             }`;
