@@ -115,20 +115,20 @@ const TALKING_OBJECT_IMAGE_LOCK = ``;
 // —— VEO Video Motion Variants ——————————————————————————————————————
 const PIXAR_VIDEO_VARIANTS = [
     {
-        id: 'A', name: 'The Proud Young Genius',
-        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks enthusiastically with energetic, cute hand gestures, adjusting her round glasses on her cute nose with a mischievous proud smile, explaining the brilliant lifehack directly into the camera. Her face is centered in frame, fully lit, with mouth clearly visible throughout all 8 seconds.`
+        id: 'A', name: 'The Confident Inventor',
+        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands — adjusting her round glasses with one finger, holding up her glowing gadget proudly, explaining the lifehack directly into the camera with a knowing clever smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
     },
     {
         id: 'B', name: 'The Eureka Moment',
-        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her big eyes sparkle with excitement, she playfully taps her temple or points up with a finger as if having a genius idea, looking directly into the camera with an adorable knowing gaze as she shares the secret trick. Her face stays front-facing and fully visible in the center of frame throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her expressive eyes light up with excitement, she taps her temple or raises one finger as if struck by a brilliant idea, then looks directly into the camera with a sharp knowing gaze as she reveals the secret trick. Her face stays front-facing and fully visible in the center of frame throughout all 8 seconds.`
     },
     {
         id: 'C', name: 'The Hands-on Demonstration',
-        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: She holds a handy gadget or household item with cute precision, enthusiastically demonstrating how easy the trick is, then looks straight at the viewer with an encouraging smile. Her face is forward-facing, mouth clearly visible, centered in the upper third of the frame throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: She holds up a household item or gadget with precise confident hands, enthusiastically demonstrating the trick step by step, then looks straight at the viewer with an encouraging assured smile. Her face is forward-facing, mouth clearly visible, centered in the upper third of the frame throughout all 8 seconds.`
     },
     {
         id: 'D', name: 'The Direct Secret Revelation',
-        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if whispering an incredible life secret, gesturing with playful confidence and maintaining delightful eye contact with the viewer throughout. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
+        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if sharing an exclusive discovery, gesturing with calm playful confidence — perhaps tapping her notebook or holding the glowing gadget up — while maintaining steady direct eye contact with the viewer. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
     }
 ];
 
@@ -511,10 +511,10 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
             : '';
 
         const voiceDesc = mode === 'health'
-            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent female child voice — a bright, sweet, melodic little girl genius and young inventor (маленький вундеркинд) with a high-pitched, crystal-clear soprano timbre, girlish breathiness and playful upward inflections. ` +
-              `VOCAL QUALITIES: Warm and honey-sweet tone, confident and articulate pronunciation, enthusiastic pacing with dramatic pauses before revealing the lifehack secret, genuine childlike wonder and excitement in her delivery. ` +
-              `EMOTIONAL RANGE: Cute mischievous energy when teasing the viewer, proud confident tone when explaining the hack, delighted sparkly warmth when the trick works. ` +
-              `REFERENCE: Think young Boo from Monsters Inc meets a TED-talk kid presenter — adorable but surprisingly smart and articulate.`
+            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent young woman's voice — bright, energetic, sharp and articulate, with a warm melodic timbre and playful upward inflections that make every lifehack feel like an exciting discovery. ` +
+              `VOCAL QUALITIES: Clear soprano with natural warmth, confident quick-paced delivery with well-timed dramatic pauses before revealing the key trick, genuine enthusiasm and sparkling wit in every word. ` +
+              `EMOTIONAL RANGE: Mischievous energy when teasing the viewer with a problem, proud confident tone when delivering the solution, warm delighted energy when the trick lands. ` +
+              `REFERENCE: Think a young charismatic female science host — brilliant, fun, and impossible to ignore.`
             : mode === 'psychology'
             ? `VOICE IDENTITY (MUST match exactly every scene): A weathered, gravelly male voice — a man in his late 50s who speaks with the unhurried authority of someone who has seen every human mistake twice. ` +
               `VOCAL QUALITIES: Deep, slightly hoarse timbre, deliberate pacing with meaningful pauses, dry sardonic wit underneath every word, speaks directly like he's calling you out personally. ` +
@@ -1410,14 +1410,14 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
         }
 
         if (event && event.sender) {
-            event.sender.send('studio-progress', { status: mode === 'psychology' ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...' : '✍️ ИИ пишет сценарий вирусных лайфхаков для Девочки-вундеркинда...', progress: 70 });
+            event.sender.send('studio-progress', { status: mode === 'psychology' ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...' : '✍️ ИИ пишет сценарий вирусных лайфхаков для Génie — молодого учёного-изобретателя...', progress: 70 });
         }
 
         let systemInstruction = "";
         let userPrompt = "";
 
-        // Character Bible matching little girl genius & young inventor / маленький вундеркинд (based on genie_reference.jpg)
-        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A cute, expressive and charming little girl genius and young inventor (маленький вундеркинд). Features: oversized round dark glasses resting on her cute button nose, large expressive sparkling hazel-brown eyes with a mischievous knowing gaze and an adorable confident smile, messy voluminous curly brown hair tied with a knotted grey fabric headband bow, rosy flushed cheeks with a clean smooth face and clean hands. Outfit: oversized white inventor lab coat with clean sleeves and pockets, worn over a blue denim pinafore overalls dress, striped dark leggings, mismatched socks, and vintage lace-up canvas sneakers. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
+        // Character Bible — young woman inventor / Génie (based on genie_reference.png)
+        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A charming, expressive young woman inventor and scientist in her mid-twenties (Génie). Features: large round dark-framed glasses on her nose, big warm hazel-brown eyes with a clever knowing gaze and a confident playful smile, voluminous messy curly brown hair loosely piled up with protective goggles resting on top, rosy cheeks. Outfit: long white laboratory coat worn open over an olive green fitted top, dark grey cargo pants with tool-filled pockets, a brown leather belt, white ankle socks and dark canvas high-top sneakers. She holds a glowing spherical gadget in one hand and a spiral notebook in the other, with colorful pens and small tools in her coat pocket. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
 
         if (mode === 'psychology') {
             systemInstruction = `You are a Master Viral Scriptwriter specialized in raw, street-smart psychology and human behavior.
