@@ -1542,7 +1542,19 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             11. DENSE CONTENT & CHARISMATIC WISDOM:
                  * NO filler words, NO non-verbal laughs or sound pauses.
                  * Natural dialogue pacing: aim for 18-22 words per scene to keep the viewer engaged throughout the whole 8 seconds.
-                 * The Little Genius speaks directly to the viewer with playful enthusiasm, clarity, and contagious confidence.`;
+                 * The Little Genius speaks directly to the viewer with playful enthusiasm, clarity, and contagious confidence.
+
+            12. EMOTIONAL PENDULUM (RETENTION TECHNIQUE — MANDATORY):
+                 Alternate scenes between TENSION phrases and RELIEF phrases to maximize viewer retention.
+                 TENSION phrases (raise curiosity/suspense) — use in odd scenes:
+                   "Но не всё так просто...", "Внимательные зрители могут заметить...", "И при всём при этом...",
+                   "Обратите особое внимание на...", "И это ещё не всё...", "Но будьте готовы к тому, что...",
+                   "Почему же?", "Наоборот...", "Согласитесь, что...", "А что делать если?"
+                 RELIEF phrases (resolve tension, give hope) — use in even scenes:
+                   "Не стоит отчаиваться!", "Как всегда, есть и хорошие новости!", "Решив этот вопрос, вы сможете...",
+                   "Эта проблема легко решается.", "К нашей радости...", "Очевидно, что...",
+                   "Конечно, есть и светлая сторона!", "Как же выйти из этой ситуации?", "А вот сейчас самое важное!"
+                 RULE: Each scene's "line" must naturally embed one such phrase or its equivalent in ${langName}.`;
 
             const effectiveTopic = localVideoData
                 ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
