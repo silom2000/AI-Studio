@@ -116,19 +116,19 @@ const TALKING_OBJECT_IMAGE_LOCK = ``;
 const PIXAR_VIDEO_VARIANTS = [
     {
         id: 'A', name: 'The Proud Young Genius',
-        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks enthusiastically with energetic, cute hand gestures, adjusting her round glasses on her cute nose with a mischievous proud smile, explaining the brilliant lifehack directly into the camera. Face remains visible and steady for lip-sync.`
+        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks enthusiastically with energetic, cute hand gestures, adjusting her round glasses on her cute nose with a mischievous proud smile, explaining the brilliant lifehack directly into the camera. Her face is centered in frame, fully lit, with mouth clearly visible throughout all 8 seconds.`
     },
     {
         id: 'B', name: 'The Eureka Moment',
-        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her big eyes sparkle with excitement, she playfully taps her temple or points up with a finger as if having a genius idea, looking directly into the camera with an adorable knowing gaze as she shares the secret trick. Face remains perfectly centered for lip-sync.`
+        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her big eyes sparkle with excitement, she playfully taps her temple or points up with a finger as if having a genius idea, looking directly into the camera with an adorable knowing gaze as she shares the secret trick. Her face stays front-facing and fully visible in the center of frame throughout all 8 seconds.`
     },
     {
         id: 'C', name: 'The Hands-on Demonstration',
-        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: She holds a handy gadget or household item with cute precision, enthusiastically demonstrating how easy the trick is, then looks straight at the viewer with an encouraging smile. Face stays steady for clear lip-sync.`
+        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: She holds a handy gadget or household item with cute precision, enthusiastically demonstrating how easy the trick is, then looks straight at the viewer with an encouraging smile. Her face is forward-facing, mouth clearly visible, centered in the upper third of the frame throughout all 8 seconds.`
     },
     {
         id: 'D', name: 'The Direct Secret Revelation',
-        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if whispering an incredible life secret, gesturing with playful confidence and maintaining delightful eye contact with the viewer throughout. Face remains visible for perfect lip-sync.`
+        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if whispering an incredible life secret, gesturing with playful confidence and maintaining delightful eye contact with the viewer throughout. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
     }
 ];
 
@@ -511,15 +511,12 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
             : '';
 
         const voiceDesc = mode === 'health'
-            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent female child voice — a bright, sweet, melodic little girl genius and young inventor (маленький вундеркинд) with a high-pitched, crystal-clear soprano timbre. ` +
-              `NOT a generic adult voice, NOT a boy, NOT a teenager. ` +
-              `VOCAL QUALITIES: Warm and honey-sweet tone with natural girlish breathiness, playful upward inflections at key moments, confident and articulate pronunciation (she is a little genius prodigy), ` +
-              `enthusiastic pacing with dramatic pauses before revealing the lifehack secret, genuine childlike wonder and excitement in her delivery. ` +
-              `EMOTIONAL RANGE: Cute mischievous energy when teasing the viewer, proud confident tone when explaining the hack, delighted sparkly giggle-adjacent warmth when the trick works. ` +
+            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent female child voice — a bright, sweet, melodic little girl genius and young inventor (маленький вундеркинд) with a high-pitched, crystal-clear soprano timbre, girlish breathiness and playful upward inflections. ` +
+              `VOCAL QUALITIES: Warm and honey-sweet tone, confident and articulate pronunciation, enthusiastic pacing with dramatic pauses before revealing the lifehack secret, genuine childlike wonder and excitement in her delivery. ` +
+              `EMOTIONAL RANGE: Cute mischievous energy when teasing the viewer, proud confident tone when explaining the hack, delighted sparkly warmth when the trick works. ` +
               `REFERENCE: Think young Boo from Monsters Inc meets a TED-talk kid presenter — adorable but surprisingly smart and articulate.`
             : mode === 'psychology'
             ? `VOICE IDENTITY (MUST match exactly every scene): A weathered, gravelly male voice — a man in his late 50s who speaks with the unhurried authority of someone who has seen every human mistake twice. ` +
-              `NOT polished, NOT soft, NOT motivational-speaker cheerful. ` +
               `VOCAL QUALITIES: Deep, slightly hoarse timbre, deliberate pacing with meaningful pauses, dry sardonic wit underneath every word, speaks directly like he's calling you out personally. ` +
               `EMOTIONAL RANGE: Blunt and matter-of-fact when stating hard truths, faintly amused when pointing out human predictability, firm and almost impatient when giving advice — like a man who has no patience for excuses. ` +
               `REFERENCE: Think an older seasoned detective mixed with a street philosopher — someone whose advice you didn't ask for but absolutely needed.`
