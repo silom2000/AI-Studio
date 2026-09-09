@@ -149,9 +149,14 @@ function buildVideoPrompt({ role, isHook, dialogueText, bloggerName, bloggerVisu
     const strangerDesc = strangerDescription || 'a random Parisian person on the street';
 
     // Pinned blogger identity block — repeated in every prompt so model cannot drift
-    const bloggerPin = `CHARACTER: ${bloggerAnchor} — ${baseAppearance}.
+    const bloggerPin = `CHARACTER IDENTITY: ${bloggerAnchor} — ${baseAppearance}.
 ${outfitLine}
-MIC: ${micDetail}`;
+MIC: ${micDetail}
+
+REFERENCE IMAGE & FIRST FRAME DIRECTIVE:
+- The attached image is STRICTLY a 4-angle character design / turnaround sheet for ${bloggerAnchor}'s visual identity (face, hair, body, and outfit).
+- DO NOT use the turnaround sheet or white studio background as the video's start frame.
+- STARTING FRAME (Frame 0): Video MUST begin immediately with ${bloggerAnchor} seamlessly situated inside the actual scene environment (${location || 'the specified location'}), NOT on a white background or multi-pose sheet.`;
 
     const translationRule = (targetLanguage && targetLanguage !== 'English')
         ? `\nTRANSLATION OVERRIDE: The speaker MUST translate and speak the dialogue in fluent natural ${targetLanguage.toUpperCase()}. Ensure perfect lip sync for ${targetLanguage}.`

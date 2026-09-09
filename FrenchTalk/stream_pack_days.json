@@ -1,0 +1,51 @@
+{
+  "Monday": {
+    "labelRu": "Понедельник",
+    "outfit": "Уютный бежевый вязаный оверсайз свитер с глубоким вырезом на груди",
+    "outfitRu": "Уютный бежевый вязаный оверсайз свитер с глубоким вырезом на груди",
+    "location": "cozy living room couch, warm soft ambient home lamp lighting, aesthetic interior",
+    "locationRu": "Уютная гостиная, диван, теплое домашнее освещение"
+  },
+  "Tuesday": {
+    "labelRu": "Вторник",
+    "outfit": "elegant white silk top with delicate shoulder straps",
+    "outfitRu": "Шелковый топ у окна",
+    "location": "modern apartment window with morning natural sun rays, high-rise view in Paris",
+    "locationRu": "У окна с утренним естественным светом"
+  },
+  "Wednesday": {
+    "labelRu": "Среда",
+    "outfit": "stylish linen kitchen apron over a simple casual t-shirt",
+    "outfitRu": "Кухонный фартук",
+    "location": "bright modern Parisian kitchen with coffee maker and aesthetic marble countertop",
+    "locationRu": "Современная светлая кухня"
+  },
+  "Thursday": {
+    "labelRu": "Четверг",
+    "outfit": "sophisticated chic black button-up blouse",
+    "outfitRu": "Черная элегантная блуза",
+    "location": "aesthetic home office study with bookshelves, soft background bokeh lamp",
+    "locationRu": "Домашний кабинет с книжными полками"
+  },
+  "Friday": {
+    "labelRu": "Пятница",
+    "outfit": "glamorous deep-red silk evening dress",
+    "outfitRu": "Вечернее платье на диване с вином",
+    "location": "relaxing on a plush sofa with a crystal glass of red wine on the side table, evening intimate ambient mood lighting",
+    "locationRu": "Уютный диван, вечернее освещение, бокал вина"
+  },
+  "Saturday": {
+    "labelRu": "Суббота",
+    "outfit": "luxurious satin sleepwear pajamas set",
+    "outfitRu": "Шелковая пижама в спальне",
+    "location": "cozy master bedroom, warm bedding, relaxed weekend morning atmosphere",
+    "locationRu": "Уютная спальня, атмосфера выходного дня"
+  },
+  "Sunday": {
+    "labelRu": "Воскресенье",
+    "outfit": "sport-chic activewear outfit, stylish beige fitness zip hoodie",
+    "outfitRu": "Спорт-шик на балконе",
+    "location": "sunny apartment Parisian balcony overlooking rooftops and plants, fresh open-air natural lighting",
+    "locationRu": "Солнечный балкон с растениями и видом на крыши"
+  }
+}
