@@ -1264,18 +1264,18 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
         const outputTemplate = path.join(tempDir, `${tempFilePrefix}.%(ext)s`);
         const targetMp3 = path.join(tempDir, `${tempFilePrefix}.mp3`);
 
+        const tempVideoPath = path.join(tempDir, `${tempFilePrefix}_video.mp4`);
+
         try {
-            // Use yt-dlp to extract best audio as mp3
+            // Download full video (more reliable than audio-only for TikTok)
             const isInstagram = cleanUrl.includes('instagram.com');
             const baseArgs = [
-                '-x',
-                '--audio-format', 'mp3',
-                '--audio-quality', '4',
                 '--no-playlist',
                 '--max-filesize', '100M',
                 '--socket-timeout', '30',
                 '--no-update',
-                '-o', outputTemplate,
+                '-f', 'mp4/best[ext=mp4]/best',
+                '-o', tempVideoPath,
             ];
 
             const runYtDlp = (extraArgs) => new Promise((resolve, reject) => {
@@ -1313,29 +1313,43 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                 await runYtDlp([]);
             }
 
-            // Find generated mp3 or audio file
-            let extractedAudioPath = targetMp3;
-            if (!fs.existsSync(extractedAudioPath)) {
-                const found = fs.readdirSync(tempDir).find(f => f.startsWith(tempFilePrefix) && (f.endsWith('.mp3') || f.endsWith('.m4a') || f.endsWith('.wav') || f.endsWith('.webm')));
-                if (found) {
-                    extractedAudioPath = path.join(tempDir, found);
-                }
+            // Check video was downloaded
+            if (!fs.existsSync(tempVideoPath)) {
+                const found = fs.readdirSync(tempDir).find(f => f.startsWith(tempFilePrefix) && (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mkv')));
+                if (!found) throw new Error('Не удалось скачать референсное видео.');
+                fs.renameSync(path.join(tempDir, found), tempVideoPath);
             }
 
-            if (!fs.existsSync(extractedAudioPath)) {
-                throw new Error('Не удалось извлечь аудиодорожку из референсного видео.');
+            // Extract audio from video via ffmpeg (guarantees we get the correct audio track)
+            if (event && event.sender) {
+                event.sender.send('studio-progress', { status: '🔊 Извлекаю аудиодорожку из видео...', progress: 35 });
             }
+            await new Promise((resolve, reject) => {
+                const proc = spawn('ffmpeg', [
+                    '-i', tempVideoPath,
+                    '-vn', '-acodec', 'libmp3lame', '-b:a', '128k',
+                    '-y', targetMp3
+                ], { windowsHide: true });
+                let stderr = '';
+                proc.stderr.on('data', d => { stderr += d.toString(); });
+                proc.on('close', code => {
+                    if (code === 0 && fs.existsSync(targetMp3)) resolve(true);
+                    else reject(new Error(`ffmpeg audio extraction failed (code ${code}): ${stderr.slice(-200)}`));
+                });
+                proc.on('error', err => reject(new Error(`Failed to start ffmpeg: ${err.message}`)));
+            });
 
             if (event && event.sender) {
                 event.sender.send('studio-progress', { status: '🗣️ Распознаю речь и ключевые хуки...', progress: 45 });
             }
 
-            const sttResult = await ai.transcribe(extractedAudioPath);
+            const sttResult = await ai.transcribe(targetMp3);
             const transcriptText = (sttResult && sttResult.text ? sttResult.text : '').trim();
 
-            // Cleanup temp audio file
+            // Cleanup temp files
             try {
-                if (fs.existsSync(extractedAudioPath)) fs.unlinkSync(extractedAudioPath);
+                if (fs.existsSync(tempVideoPath)) fs.unlinkSync(tempVideoPath);
+                if (fs.existsSync(targetMp3)) fs.unlinkSync(targetMp3);
             } catch (e) {}
 
             if (!transcriptText) {
