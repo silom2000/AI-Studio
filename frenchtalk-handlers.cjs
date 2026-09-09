@@ -239,13 +239,22 @@ Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     }
 
     if (role === 'vlog_action') {
+        const isCooking = /kitchen|cooking|cook|recipe|ingredient|food|meal|prep|cuisine|dish/i.test(location + ' ' + dialogueText);
+        const cookingShot = isCooking
+            ? `SHOT VARIETY (alternate between these within the 8 seconds):
+  - WIDE: Medium shot MS on ${bloggerName} actively cooking — hands moving, natural body language.
+  - CLOSE-UP: Extreme close-up ECU on the ingredients being added, chopped, poured, or mixed — fill the frame with textures, colors, steam, or liquids. Make it cinematic and mouth-watering.
+  - DETAIL: Macro shot of the final dish or key ingredient — sharp focus, shallow depth of field, beautiful food styling.
+CAMERA MOVEMENT: Cut between blogger wide shot → ingredient close-up → food detail. Each cut is motivated by the action. Handheld, organic, cinematic food-vlog style.`
+            : `SHOT: Medium shot MS showing ${bloggerName} performing an activity in ${location}.
+CAMERA: Handheld camera movement, cinematic depth of field. Soft organic camera drift.`;
+
         return `Vertical TikTok aesthetic vlog, 9:16 portrait.
 ${bloggerPin}
 LOCATION: ${location}.
-SHOT: Medium shot MS showing ${bloggerName} performing an activity in ${location}.
-STAGING: Authentic aesthetic vlog moment. ${poseDescription} ${bloggerName} is naturally engaged in her activity (e.g. reading, stretching, preparing food, relaxing). She is focused on the task, looking effortless and beautifully composed.
-CAMERA: Handheld camera movement, cinematic depth of field. Soft organic camera drift.
-LIGHTING: Natural aesthetic lighting matching the environment.
+${cookingShot}
+STAGING: Authentic aesthetic vlog moment. ${poseDescription} ${bloggerName} is naturally engaged in her activity. She is focused on the task, looking effortless and beautifully composed.
+LIGHTING: Natural aesthetic lighting matching the environment. For food close-ups: warm soft top-light to make ingredients look vibrant and appetizing.
 She says: "${dialogueText}"
 Voice: ${bloggerVoice}
 Audio: Ambient sounds of ${location}. ${streetNoiseSuffix}${translationRule}
@@ -1594,6 +1603,16 @@ ${refData ? `\nREFERENCE VIDEO CONTENT — ADAPT THIS HEALTH/NUTRITION STORY FOR
 4. GENERATE EXACTLY 8 TO 9 LINES TOTAL (MINIMUM 8 CLIPS — mandatory).
 5. HARD WORD COUNT LIMIT: EVERY LINE MUST CONTAIN 12 TO 22 WORDS (optimized for 8-second video clip). Count carefully!
 6. NEVER mention city names or "Parisian" — keep location neutral.
+7. EMOTIONAL PENDULUM (MANDATORY — alternating tension & relief each line):
+   TENSION phrases — use in odd lines (1, 3, 5, 7): spark curiosity or suspense:
+     "Mais attendez, ce n'est pas si simple...", "Et pourtant...", "Tu te demandes pourquoi ?",
+     "Et là, attention !", "Mais voilà ce que personne ne te dit...", "Et ce n'est pas tout !",
+     or their natural equivalent in the script language.
+   RELIEF phrases — use in even lines (2, 4, 6, 8): resolve tension, give hope or a positive fact:
+     "Bonne nouvelle !", "Et justement, j'ai la solution !", "C'est plus simple qu'on ne le croit !",
+     "Et le résultat est bluffant !", "La bonne nouvelle, c'est que...",
+     or their natural equivalent in the script language.
+   RULE: Every line must naturally embed one such phrase or its emotional equivalent.
 ══════════════════════════════════════
 
 STRUCTURE (8-9 spoken lines — minimum 8):
