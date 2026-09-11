@@ -400,16 +400,14 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
             }
 
             if (isMultiThread) {
-                // All scenes trigger in parallel across multi-thread pool
+                // All scenes trigger in parallel across multi-thread pool (always regenerate all)
                 await Promise.all(
                     currentScript.scenes.map(async (s, i) => {
                         if (stopAutoGenerationRef.current) return;
-                        if (!s.selectedImage) {
-                            try {
-                                await generateImage(i, s.id);
-                            } catch (err: any) {
-                                console.warn(`[BatchActors] Scene ${i + 1} image failed:`, err.message);
-                            }
+                        try {
+                            await generateImage(i, s.id);
+                        } catch (err: any) {
+                            console.warn(`[BatchActors] Scene ${i + 1} image failed:`, err.message);
                         }
                     })
                 );
@@ -418,7 +416,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                 for (let i = 0; i < currentScript.scenes.length; i++) {
                     if (stopAutoGenerationRef.current) break;
                     const s = currentScript.scenes[i];
-                    if (!s.selectedImage) {
+                    {
                         try {
                             await generateImage(i, s.id);
                         } catch (err: any) {

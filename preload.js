@@ -112,6 +112,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // FrenchTalk
   frenchtalkGenerateStranger: (data) => ipcRenderer.invoke('frenchtalk-generate-stranger', data),
   frenchtalkResetStrangerRef: (data) => ipcRenderer.invoke('frenchtalk-reset-stranger-ref', data),
+  frenchtalkResetOutfitCache: (data) => ipcRenderer.invoke('frenchtalk-reset-outfit-cache', data),
+  frenchtalkGenerateOutfitReference: (data) => ipcRenderer.invoke('frenchtalk-generate-outfit-reference', data),
   frenchtalkGenerateBloggerIdea: (data) => ipcRenderer.invoke('frenchtalk-generate-blogger-idea', data),
   frenchtalkGenerateBaseImage: (data) => ipcRenderer.invoke('frenchtalk-generate-base-image', data),
   frenchtalkSaveBlogger: (data) => ipcRenderer.invoke('frenchtalk-save-blogger', data),

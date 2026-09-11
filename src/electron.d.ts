@@ -264,6 +264,8 @@ export interface IElectronAPI {
   // FrenchTalk
   frenchtalkGenerateStranger: (data?: { language?: string, exclude?: string[] }) => Promise<{ description: string, voice: string, personality: string, nameHint: string, gender: string }>,
   frenchtalkResetStrangerRef: (data: { episodeTitle: string }) => Promise<{ success: boolean }>,
+  frenchtalkResetOutfitCache: (data: { episodeTitle: string; bloggerOutfit: string; aspectRatio: string }) => Promise<{ success: boolean }>,
+  frenchtalkGenerateOutfitReference: (data: { episodeTitle: string; bloggerOutfit: string; aspectRatio: string }) => Promise<{ imagePath: string; base64: string }>,
   frenchtalkGenerateBloggerIdea: (data: { promptText: string, provider: string }) => Promise<any>,
   frenchtalkGenerateBaseImage: (data: { visualPrompt: string, model: string }) => Promise<{ imagePath: string, base64: string }>,
   frenchtalkSaveBlogger: (data: any) => Promise<any>,

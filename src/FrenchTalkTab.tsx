@@ -530,6 +530,8 @@ const FrenchTalkTab: React.FC = () => {
     const isVlog = subTab === 'vlog';
     updateSegment(seg.index, { status: 'generating', errorMsg: undefined });
     try {
+      const activeSegments = isVlog ? vlogSegments : segments;
+      const fullScript = activeSegments.map(s => `${s.speakerLabel}: ${s.text}`).join('\n');
       const result = await window.electronAPI.frenchtalkGenerateSegment({
         segmentIndex: seg.index,
         role: seg.role,
@@ -543,7 +545,8 @@ const FrenchTalkTab: React.FC = () => {
         videoModel,
         strangerDescription,
         strangerVoiceDescription,
-        strangerRefBase64: strangerRefBase64 || undefined
+        strangerRefBase64: strangerRefBase64 || undefined,
+        fullScript
       });
       updateSegment(seg.index, { status: 'done', videoBase64: result.videoBase64, videoPath: result.videoPath });
     } catch (e: any) {
@@ -556,13 +559,33 @@ const FrenchTalkTab: React.FC = () => {
     stopAutoRef.current = false;
     setIsAutoRunning(true);
     const targetSegments = subTab === 'vlog' ? vlogSegments : segments;
-    for (const seg of targetSegments) {
-      if (stopAutoRef.current) break;
-      if (seg.status === 'done') continue;
-      await handleGenerateSegment(seg);
-      await new Promise(r => setTimeout(r, 300));
+    const effectiveOutfit = subTab === 'vlog'
+      ? (vlogOutfit === 'custom' ? customVlogOutfit : vlogOutfit)
+      : (bloggerOutfit === 'custom' ? customBloggerOutfit : bloggerOutfit);
+    try {
+      // Step 1: сбрасываем старый кэш outfit
+      if (window.electronAPI?.frenchtalkResetOutfitCache) {
+        await window.electronAPI.frenchtalkResetOutfitCache({ episodeTitle, bloggerOutfit: effectiveOutfit, aspectRatio });
+      }
+      if (stopAutoRef.current) return;
+
+      // Step 2: генерируем НОВУЮ картинку блогера в новой одежде как отдельный шаг
+      // Эта картинка сохраняется в кэш и станет референсом для ВСЕХ видео
+      if (window.electronAPI?.frenchtalkGenerateOutfitReference) {
+        await window.electronAPI.frenchtalkGenerateOutfitReference({ episodeTitle, bloggerOutfit: effectiveOutfit, aspectRatio });
+      }
+      if (stopAutoRef.current) return;
+
+      // Step 3: все видео-сегменты запускаем параллельно — кэш образа блогера уже готов
+      await Promise.all(
+        targetSegments.map(async (seg) => {
+          if (stopAutoRef.current) return;
+          await handleGenerateSegment(seg);
+        })
+      );
+    } finally {
+      setIsAutoRunning(false);
     }
-    setIsAutoRunning(false);
   };
 
   const handleGenerateStreamScript = async (day: string) => {

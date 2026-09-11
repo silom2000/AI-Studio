@@ -128,30 +128,32 @@ function getEmotionFromText(text) {
 //   stranger — stranger responds to blogger (2-shot, 45°, camera on stranger)
 //   aside    — blogger steps away and reacts to camera (ECU, cheeky smirk)
 //
-function buildVideoPrompt({ role, isHook, dialogueText, bloggerName, bloggerVisual, bloggerVoice,
-    bloggerOutfit, strangerDescription, strangerVoice, location, emotion, streetNoiseSuffix, targetLanguage }) {
+
+function buildVideoPrompt({ role, isHook, dialogueText, bloggerName, bloggerVoice,
+    bloggerOutfit, strangerDescription, strangerVoice, location, emotion, streetNoiseSuffix, targetLanguage, fullScript = '' }) {
 
     // @anchor tag helps Omni Flash keep blogger identity consistent across all clips
     const bloggerAnchor = `@${bloggerName.replace(/\s+/g, '')}`;
 
-    // Split visual prompt from outfit so model gets them as separate pinned attributes
-    const baseAppearance = bloggerVisual || `young beautiful French woman blogger, ${bloggerName}`;
-    const outfitLine = bloggerOutfit
-        ? `OUTFIT (must stay exactly the same in every shot): ${bloggerOutfit}.`
-        : `OUTFIT: match exactly what she wears in the reference photo — do not invent, add, or change any clothing item.`;
-
-    // For vlog roles (including vlog outro), NO microphone should be present in hands
     const isVlogRole = role === 'vlog_action' || role === 'vlog_comment' || (role === 'outro' && location && location.toLowerCase() !== 'paris street');
+
+    // For vlog roles: reference image carries all appearance/outfit info — do NOT repeat it in text.
+    // For street roles: keep the identity pin so the model knows who the blogger is without a ref image.
+    const bloggerPin = isVlogRole
+        ? `CHARACTER: ${bloggerAnchor} — match the reference image exactly. Do NOT invent or change appearance, outfit, or hair.`
+        : `CHARACTER: ${bloggerAnchor} — ${bloggerName}, young beautiful French woman blogger.
+OUTFIT: ${bloggerOutfit ? `${bloggerOutfit} — must stay exactly the same in every shot.` : 'match exactly what she wears in the reference photo.'}`;
+
     const micDetail = isVlogRole
         ? `NO MICROPHONE IN HANDS. Her hands are completely free, natural vlogging posture.`
         : `Holding a small, square, matte-black wireless microphone (Rode Wireless GO II) with a black foam windshield on top, mounted on a 15cm long cylindrical black handle grip (Interview GO). The entire microphone setup is strictly black and grey, no bright colors.`;
 
-    const strangerDesc = strangerDescription || 'a random Parisian person on the street';
+    // Full episode context — helps the video model stay consistent with what is actually being shown
+    const episodeContext = fullScript
+        ? `\nEPISODE CONTEXT (the full script — use this to know exactly what dish/recipe/topic is being made, what ingredients exist, what was done in previous scenes, and what comes next. NEVER invent objects or actions that contradict this):\n"""\n${fullScript}\n"""\nCURRENT LINE: "${dialogueText}"\n`
+        : '';
 
-    // Pinned blogger identity block — repeated in every prompt so model cannot drift
-    const bloggerPin = `CHARACTER: ${bloggerAnchor} — ${baseAppearance}.
-${outfitLine}
-MIC: ${micDetail}`;
+    const strangerDesc = strangerDescription || 'a random Parisian person on the street';
 
     const translationRule = (targetLanguage && targetLanguage !== 'English')
         ? `\nTRANSLATION OVERRIDE: The speaker MUST translate and speak the dialogue in fluent natural ${targetLanguage.toUpperCase()}. Ensure perfect lip sync for ${targetLanguage}.`
@@ -213,12 +215,13 @@ MIC: ${micDetail}`;
 
         return `Vertical TikTok ${videoType}, 9:16 portrait.
 ${bloggerPin}
+MIC: ${micDetail}
 LOCATION: ${location || 'Paris street'}
 SHOT: ${style.shot}
 STAGING: ${style.staging}
 ${style.camera}
 LIGHTING: ${style.lighting}
-She says: "${dialogueText}"
+${episodeContext}She says: "${dialogueText}"
 Voice: ${bloggerVoice}
 MOOD: ${style.mood} Playful call-to-action energy.
 ${streetNoiseSuffix}${translationRule}
@@ -240,22 +243,89 @@ Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
 
     if (role === 'vlog_action') {
         const isCooking = /kitchen|cooking|cook|recipe|ingredient|food|meal|prep|cuisine|dish/i.test(location + ' ' + dialogueText);
+        const isGym = /gym|squat|lunge|deadlift|hip thrust|curl|press|plank|burpee|crunch|pull.up|push.up|halter|kettlebell|barbell|dumbbell|machine|bench|tapis|vélo|elliptique|poids|répétition|série|soulev/i.test(location + ' ' + dialogueText);
+        const isStretching = /étirement|stretch|yoga|pose|flex|mobilité|souplesse|relax|respir/i.test(dialogueText);
+        const isTasting = /goût|saveur|délicieux|incroyable|hmm|mmmm|essai|taste|tast/i.test(dialogueText);
+
+        // ── Dynamic STAGING derived from the actual dialogue content ──────────
+        // Extract concrete objects/actions mentioned in the line so the video
+        // generator knows EXACTLY what to show on screen, not a generic fallback.
+        const actionStaging = (() => {
+            // Cooking: find ingredient names and verbs from the dialogue
+            if (isCooking) {
+                // Extract quantity+ingredient patterns (e.g. "80g de quinoa", "deux kiwis", "une cuillère")
+                const ingredientMatch = dialogueText.match(/(\d+\s*g|\d+\s*ml|une?\s+\w+|deux\s+\w+|trois\s+\w+|\d+\s+\w+)\s+(de\s+\w+|\w+)/i);
+                const ingredient = ingredientMatch ? ingredientMatch[0] : null;
+
+                // Extract cooking verbs
+                const verbMatch = dialogueText.match(/\b(coupe|couper|rincer|laver|mélanger|verser|ajouter|presser|écraser|faire bouillir|cuire|poêler|mixer|blender|éplucher|trancher|râper|peser|mesurer|disposer|dresser|goûter|assaisonner|saupoudrer|arroser)\b/i);
+                const verb = verbMatch ? verbMatch[0] : null;
+
+                if (isTasting) {
+                    return `${bloggerName} lifts the dish or spoon to her lips and tastes it on camera — eyes wide with genuine delight, a slow satisfied smile. Her hands hold the dish/utensil naturally. This is the payoff moment — make it mouth-watering.`;
+                }
+                if (verb && ingredient) {
+                    return `${bloggerName} is actively ${verb}-ing ${ingredient} with both hands — movement is purposeful and confident. Camera catches the action close up: her hands, the ingredient, the texture. She glances at the camera mid-action with a cheeky knowing smile.`;
+                }
+                if (ingredient) {
+                    return `${bloggerName} holds up or handles ${ingredient} clearly visible in frame. She demonstrates it to the camera — showing the texture, color, or quantity. Natural kitchen movement, hands fully engaged.`;
+                }
+                return `${bloggerName} is actively preparing ingredients at the counter — hands moving with purpose, picking up, chopping, or mixing something directly relevant to what she says. Camera catches the action in detail.`;
+            }
+
+            // Gym / fitness exercises
+            if (isGym) {
+                // Extract exercise name and weight/reps from dialogue
+                const exerciseMatch = dialogueText.match(/\b(hip thrust|squat|fente|lunge|soulevé de terre|deadlift|curl|press|plank|crunch|pull.up|push.up|burpee|extension)\b/i);
+                const weightMatch = dialogueText.match(/(\d+\s*kg|\d+\s*kilo|\d+\s*répétition|\d+\s*série|\d+\s*reps?)/i);
+                const exercise = exerciseMatch ? exerciseMatch[0] : null;
+                const weight = weightMatch ? weightMatch[0] : null;
+
+                if (exercise) {
+                    const weightDetail = weight ? ` with ${weight}` : '';
+                    return `${bloggerName} is actively performing ${exercise}${weightDetail} — body in correct form, movement fluid and deliberate. Full body visible in frame showing the exercise technique clearly. Expression focused but effortlessly athletic.`;
+                }
+                return `${bloggerName} is actively exercising in the gym — performing the movement she describes with correct form. Full body visible, movement is the focus of the shot. She glances at camera between reps with a confident energetic smile.`;
+            }
+
+            // Stretching / yoga / recovery
+            if (isStretching) {
+                return `${bloggerName} is holding a stretching or yoga pose matching what she describes — body fully extended or relaxed into the position. Calm, graceful, controlled movement. She speaks directly to camera while maintaining the pose.`;
+            }
+
+            // Generic vlog action — derive from dialogue keywords
+            const holdMatch = dialogueText.match(/\b(bouteille|verre|tasse|bol|assiette|sac|paquet|livre|téléphone|produit|crème|flacon|pot)\b/i);
+            if (holdMatch) {
+                return `${bloggerName} holds up ${holdMatch[0]} clearly toward the camera — object fully visible in frame. She handles it naturally, turning it, showing it, interacting with it. Her engagement with the object is the visual focus of the shot.`;
+            }
+
+            // Final fallback — still better than the old generic text
+            return `${bloggerName} performs the specific action she describes — her hands and body are actively engaged in the task, not idle. The physical activity directly mirrors the spoken content. She is focused, purposeful, and looks effortlessly natural in the environment.`;
+        })();
+
         const cookingShot = isCooking
             ? `SHOT VARIETY (alternate between these within the 8 seconds):
   - WIDE: Medium shot MS on ${bloggerName} actively cooking — hands moving, natural body language.
   - CLOSE-UP: Extreme close-up ECU on the ingredients being added, chopped, poured, or mixed — fill the frame with textures, colors, steam, or liquids. Make it cinematic and mouth-watering.
   - DETAIL: Macro shot of the final dish or key ingredient — sharp focus, shallow depth of field, beautiful food styling.
 CAMERA MOVEMENT: Cut between blogger wide shot → ingredient close-up → food detail. Each cut is motivated by the action. Handheld, organic, cinematic food-vlog style.`
-            : `SHOT: Medium shot MS showing ${bloggerName} performing an activity in ${location}.
+            : isGym
+            ? `SHOT VARIETY (alternate between these within the 8 seconds):
+  - WIDE: Full body medium shot MS showing the complete exercise movement — form and technique visible.
+  - CLOSE-UP: Close-up on the working muscle group or the weight/equipment being used.
+  - FACE: Brief MCU on ${bloggerName}'s determined, energetic expression mid-exercise.
+CAMERA MOVEMENT: Motivated by the exercise rhythm. Handheld, dynamic, athletic vlog style.`
+            : `SHOT: Medium shot MS showing ${bloggerName} performing the activity she describes in ${location}.
 CAMERA: Handheld camera movement, cinematic depth of field. Soft organic camera drift.`;
 
         return `Vertical TikTok aesthetic vlog, 9:16 portrait.
 ${bloggerPin}
+MIC: ${micDetail}
 LOCATION: ${location}.
 ${cookingShot}
-STAGING: Authentic aesthetic vlog moment. ${poseDescription} ${bloggerName} is naturally engaged in her activity. She is focused on the task, looking effortless and beautifully composed.
-LIGHTING: Natural aesthetic lighting matching the environment. For food close-ups: warm soft top-light to make ingredients look vibrant and appetizing.
-She says: "${dialogueText}"
+STAGING: ${actionStaging}
+LIGHTING: Natural aesthetic lighting matching the environment.${isCooking ? ' For food close-ups: warm soft top-light to make ingredients look vibrant and appetizing.' : ''}
+${episodeContext}She says: "${dialogueText}"
 Voice: ${bloggerVoice}
 Audio: Ambient sounds of ${location}. ${streetNoiseSuffix}${translationRule}
 ${CINEMATIC_MODIFIERS}
@@ -265,12 +335,13 @@ Clean edge-to-edge full-screen photographic framing, pure digital video feed.`;
     if (role === 'vlog_comment') {
         return `Vertical TikTok aesthetic vlog, 9:16 portrait.
 ${bloggerPin}
+MIC: ${micDetail}
 LOCATION: ${location}.
 SHOT: Medium close-up MCU on ${bloggerName}.
-STAGING: ${poseDescription} ${bloggerName} turns directly to face the camera lens, intimate conspiratorial eye contact. She shares a tip or secret with the viewer. Friendly, cheeky, aesthetic girl-vlog vibe.
+STAGING: ${bloggerName} turns directly to face the camera lens, intimate conspiratorial eye contact. She shares a tip or secret with the viewer. Friendly, cheeky, aesthetic girl-vlog vibe.
 CAMERA: Handheld, slight push-in, face-level framing.
 LIGHTING: Flattering warm indoor/outdoor natural light.
-She says: "${dialogueText}"
+${episodeContext}She says: "${dialogueText}"
 Voice: ${bloggerVoice}
 MOOD: Intimate, witty, playful, sharing a girl secret.
 ${streetNoiseSuffix}${translationRule}
@@ -582,6 +653,85 @@ Output ONLY valid JSON (no markdown, no commentary):
         }
         console.log(`[FrenchTalk] Stranger ref reset for episode: ${folderName}`);
         return { success: true };
+    });
+
+    // 6в. Reset blogger outfit cache for an episode (force re-generation with new outfit/location)
+    ipcMain.handle('frenchtalk-reset-outfit-cache', async (event, { episodeTitle, bloggerOutfit, aspectRatio }) => {
+        const folderName = episodeTitle ? episodeTitle.replace(/[^a-z0-9]/gi, '_') : null;
+        if (!folderName) return { success: true };
+        const imagesDir = path.join(FRENCHTALK_DIR, folderName, 'images');
+        if (!fs.existsSync(imagesDir)) return { success: true };
+        const outfitSlug = (bloggerOutfit || 'default').replace(/[^a-z0-9]/gi, '_');
+        const cacheSuffix = `${outfitSlug}_${(aspectRatio || '9:16').replace(':', '_')}`;
+        const cachedImgPath = path.join(imagesDir, `blogger_${cacheSuffix}.jpg`);
+        try {
+            if (fs.existsSync(cachedImgPath)) {
+                fs.unlinkSync(cachedImgPath);
+                console.log(`[FrenchTalk] Outfit cache cleared: ${cachedImgPath}`);
+            }
+        } catch (e) { /* ignore */ }
+        return { success: true };
+    });
+
+    // 6г. Generate outfit reference image — базовая картинка блогера в новой одежде как референс для видео
+    ipcMain.handle('frenchtalk-generate-outfit-reference', async (event, { episodeTitle, bloggerOutfit, aspectRatio }) => {
+        const blogger = getBlogger();
+        if (!blogger) throw new Error('Блогер не настроен.');
+
+        const folderName = episodeTitle ? episodeTitle.replace(/[^a-z0-9]/gi, '_') : `Episode_${Date.now()}`;
+        const imagesDir = path.join(FRENCHTALK_DIR, folderName, 'images');
+        if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+
+        const outfitSlug = (bloggerOutfit || 'default').replace(/[^a-z0-9]/gi, '_');
+        const cacheSuffix = `${outfitSlug}_${(aspectRatio || '9:16').replace(':', '_')}`;
+        const cachedImgPath = path.join(imagesDir, `blogger_${cacheSuffix}.jpg`);
+
+        // Найти базовую картинку блогера
+        let validBloggerImg = null;
+        if (blogger.imagePath && fs.existsSync(blogger.imagePath)) {
+            validBloggerImg = blogger.imagePath;
+        } else {
+            const bloggerImgDir = path.join(FRENCHTALK_DIR, 'BloggerImages');
+            if (fs.existsSync(bloggerImgDir)) {
+                let files = fs.readdirSync(bloggerImgDir).filter(f => f.match(/\.(jpg|jpeg|png)$/i) && !f.startsWith('stranger'));
+                if (files.length > 0) {
+                    const manualFiles = files.filter(f => !f.startsWith('scene_blogger_base_') && !f.startsWith('blogger_'));
+                    if (manualFiles.length > 0) files = manualFiles;
+                    files.sort((a, b) => fs.statSync(path.join(bloggerImgDir, b)).mtimeMs - fs.statSync(path.join(bloggerImgDir, a)).mtimeMs);
+                    validBloggerImg = path.join(bloggerImgDir, files[0]);
+                }
+            }
+        }
+        if (!validBloggerImg) throw new Error('Базовая картинка блогера не найдена. Сначала создайте блогера в Blogger Setup.');
+
+        // Генерируем новый образ в outfit, используя базовую картинку как референс
+        const characterSheetPrompt = `A highly detailed, photorealistic 4-angle character design sheet (front view, side profile view, back view, three-quarter view) of a young beautiful French woman blogger, ${blogger.name}. ${blogger.visualPrompt || ''}.
+IMPORTANT: She must be wearing exactly this outfit: ${bloggerOutfit}. Do not use her old clothes. White studio background, full body shots, clean layout.
+
+${CINEMATIC_MODIFIERS}`;
+
+        const refBase64 = fs.readFileSync(validBloggerImg, 'base64');
+        const ext = validBloggerImg.endsWith('.png') ? 'image/png' : 'image/jpeg';
+
+        const imagePaths = await ai.generateImage({
+            prompt: characterSheetPrompt,
+            model: 'nano_banana_2',
+            aspectRatio: aspectRatio || '9:16',
+            sectionDir: imagesDir,
+            subFolder: '',
+            sceneIndex: `blogger_outfit_${Date.now()}`,
+            referenceImages: [{ data: `data:${ext};base64,${refBase64}` }]
+        });
+
+        if (!imagePaths || imagePaths.length === 0 || !fs.existsSync(imagePaths[0])) {
+            throw new Error('Не удалось сгенерировать образ блогера в новой одежде.');
+        }
+
+        fs.copyFileSync(imagePaths[0], cachedImgPath);
+        console.log(`[FrenchTalk] Outfit reference generated: ${cachedImgPath}`);
+
+        const base64 = fs.readFileSync(cachedImgPath, 'base64');
+        return { imagePath: cachedImgPath, base64: `data:image/jpeg;base64,${base64}` };
     });
 
 
@@ -936,7 +1086,7 @@ Script:\n${topicData.script}`;
         bloggerOutfit, location, episodeTitle,
         aspectRatio = '9:16', language = null, videoModel = 'omni_flash',
         strangerDescription = '', strangerVoiceDescription = '',
-        strangerRefBase64 = ''
+        strangerRefBase64 = '', fullScript = ''
     }) => {
         const blogger = getBlogger();
         if (!blogger) throw new Error('Блогер не настроен. Сначала создайте персонаж блогера.');
@@ -1045,15 +1195,15 @@ ${CINEMATIC_MODIFIERS}`;
                 isHook,
                 dialogueText,
                 bloggerName: blogger.name,
-                bloggerVisual: blogger.visualPrompt || null,
-                bloggerOutfit: bloggerOutfit || blogger.outfitBase || '',
                 bloggerVoice: blogger.voiceDescription || BLOGGER_VOICE_DESCRIPTION,
+                bloggerOutfit: bloggerOutfit || blogger.outfitBase || '',
                 strangerDescription,
                 strangerVoice: effectiveStrangerVoice,
                 location,
                 emotion,
                 streetNoiseSuffix,
-                targetLanguage: lang
+                targetLanguage: lang,
+                fullScript
             });
 
             // Gather location reference images (if available) for Vlog / Interior consistency
@@ -1573,6 +1723,9 @@ Identify in detail:
                 ? `Rules/Recipe/Tips from Screenshot: "${screenshotData.text.slice(0, 500)}..."`
                 : (refData ? `Transcript from Reference Video (${refData.url}): "${refData.transcript.slice(0, 500)}..."` : (customInput || vlogTopic)));
 
+        // Detect if topic is cooking/recipe-oriented → use extended 12-14 scene structure
+        const isCookingTopic = /kitchen|cook|recipe|ingredient|food|meal|prep|cuisine|dish|bowl|salad|smoothie|juice|breakfast|lunch|dinner|snack|detox|сupe|bake|fry|boil|mix|blend|chop|slice/i.test(effectiveTopic + ' ' + location);
+
         const prompt = `You are a master viral scriptwriter for health, nutrition and girl secrets TikTok vlogs featuring ${bloggerName}, a chic, charming lifestyle blogger who is passionate about healthy eating, calories, diet, and vitamins.
 
 CHANNEL NICHE: Health, healthy eating, calories, diet, vitamins, weight management, clean eating, wellness.
@@ -1580,6 +1733,7 @@ VLOG THEME / TOPIC: "${effectiveTopic}"
 OUTFIT: "${outfit}"
 LOCATION: "${location}"
 LANGUAGE: ${language || 'French'}
+CONTENT TYPE: ${isCookingTopic ? 'RECIPE / COOKING VLOG — use extended 12-14 scene structure below' : 'WELLNESS / TIPS VLOG — use standard 9-line structure below'}
 
 IMPORTANT — LOCATION RULE: Do NOT mention city names (Paris, Warsaw, London, etc.) or phrases like "my Parisian home / apartment / kitchen" in ANY line. Keep location references universal — just "my kitchen", "my room", "here at home", etc.
 
@@ -1588,9 +1742,9 @@ ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT NUT
 ${refData ? `\nREFERENCE VIDEO CONTENT — ADAPT THIS HEALTH/NUTRITION STORY FOR ${bloggerName.toUpperCase()} IN ${language.toUpperCase()}:\n"""\n${refData.transcript}\n"""\n` : ''}
 
 ══════════════════════════════════════
-⚠️ CRITICAL RULES:
+⚠️ CRITICAL RULES (apply to ALL content types):
 1. THIS IS A SPOKEN VLOG SCRIPT. EVERY LINE IS REAL FIRST-PERSON SPOKEN DIALOGUE by ${bloggerName}. NO 3rd-person descriptions.
-2. HEALTH & NUTRITION CONTENT IS MANDATORY: Every vlog must naturally weave in at least 3-4 of these concrete elements:
+2. HEALTH & NUTRITION CONTENT IS MANDATORY: Every vlog must naturally weave in at least 4-5 of these concrete elements:
    - Exact calorie counts (e.g. "this has only 90 calories per serving")
    - Named vitamins or minerals and their benefits (e.g. "rich in Vitamin C and iron")
    - Specific foods with their health properties (e.g. "avocado's healthy fats keep you full longer")
@@ -1599,32 +1753,64 @@ ${refData ? `\nREFERENCE VIDEO CONTENT — ADAPT THIS HEALTH/NUTRITION STORY FOR
    - Smart food swaps with calorie comparisons (e.g. "instead of cream, I use Greek yogurt — saves 120 calories")
    - Gut health, antioxidants, omega-3, or micronutrient facts
    - Practical diet hacks or meal prep secrets with real measurable results
-3. NO empty aesthetic fluff. Every line must carry real, actionable value — a specific food name, calorie number, vitamin, or health benefit.
-4. GENERATE EXACTLY 8 TO 9 LINES TOTAL (MINIMUM 8 CLIPS — mandatory).
-5. HARD WORD COUNT LIMIT: EVERY LINE MUST CONTAIN 12 TO 22 WORDS (optimized for 8-second video clip). Count carefully!
-6. NEVER mention city names or "Parisian" — keep location neutral.
-7. EMOTIONAL PENDULUM (MANDATORY — alternating tension & relief each line):
-   TENSION phrases — use in odd lines (1, 3, 5, 7): spark curiosity or suspense:
+3. NO empty aesthetic fluff. Every line must carry real, actionable value — a specific food name, calorie number, vitamin, health benefit, or preparation step.
+4. HARD WORD COUNT LIMIT: EVERY LINE MUST CONTAIN 12 TO 22 WORDS (optimized for 8-second video clip). Count carefully!
+5. NEVER mention city names or "Parisian" — keep location neutral.
+6. EMOTIONAL PENDULUM (MANDATORY — alternating tension & relief each line):
+   TENSION phrases — use in odd lines (1, 3, 5, 7, 9, 11): spark curiosity or suspense:
      "Mais attendez, ce n'est pas si simple...", "Et pourtant...", "Tu te demandes pourquoi ?",
      "Et là, attention !", "Mais voilà ce que personne ne te dit...", "Et ce n'est pas tout !",
      or their natural equivalent in the script language.
-   RELIEF phrases — use in even lines (2, 4, 6, 8): resolve tension, give hope or a positive fact:
+   RELIEF phrases — use in even lines (2, 4, 6, 8, 10, 12): resolve tension, give hope or a positive fact:
      "Bonne nouvelle !", "Et justement, j'ai la solution !", "C'est plus simple qu'on ne le croit !",
      "Et le résultat est bluffant !", "La bonne nouvelle, c'est que...",
      or their natural equivalent in the script language.
    RULE: Every line must naturally embed one such phrase or its emotional equivalent.
-══════════════════════════════════════
 
-STRUCTURE (8-9 spoken lines — minimum 8):
-▶ LINE 1 — Vlog Action: ${bloggerName} introduces today's health/nutrition topic or recipe with an intriguing hook. 12-20 words. Include a specific food or health angle.
-▶ LINE 2 — Blogger Comment: First concrete health tip, calorie fact, or vitamin secret shared directly to camera. 12-22 words.
-▶ LINE 3 — Vlog Action: ${bloggerName} speaks while preparing/demonstrating — mentions a specific ingredient and its benefit. 12-20 words.
-▶ LINE 4 — Blogger Comment: Second nutrition insight — a smart food swap, calorie count, or named vitamin/mineral. 12-22 words.
-▶ LINE 5 — Vlog Action: ${bloggerName} continues with the next step, revealing a diet hack or health trick. 12-20 words.
-▶ LINE 6 — Blogger Comment: Third specific health fact — something surprising about calories, digestion, or a superfood. 12-22 words.
-▶ LINE 7 — Vlog Action: ${bloggerName} shows the final result — tastes it or demonstrates the outcome with enthusiasm. 12-20 words.
-▶ LINE 8 — Blogger Comment: Final punchy health summary — a memorable nutrition truth or diet secret to remember. 12-22 words.
-▶ LINE 9 (optional but preferred) — Outro: Flirty, witty call-to-action referencing health/wellness + asking for likes & subscribe. 10-18 words.
+${isCookingTopic ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🍳 RECIPE / COOKING VLOG — EXTRA MANDATORY RULES:
+R1. INGREDIENTS WITH EXACT QUANTITIES: At least 2 lines must name ingredients with precise amounts (e.g. "80g of quinoa", "one tablespoon of olive oil", "half an avocado"). Viewer must be able to shop from what they hear.
+R2. PREPARATION STEPS WITH TIMING: At least 3 lines must describe a concrete hands-on action with specific timing or technique (e.g. "rinse twice then boil exactly 12 minutes", "chop into small cubes and squeeze lemon immediately so it stays green", "let it rest 5 minutes off the heat").
+R3. SECRET TRICKS: At least 1 line must reveal a non-obvious cooking trick or hack that makes the recipe better (e.g. "I add lemon BEFORE avocado so it never turns brown", "I toast the seeds dry first — doubles the flavour").
+R4. GENERATE EXACTLY 12 TO 14 LINES TOTAL (minimum 12, maximum 14).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE FOR RECIPE VLOG (12-14 lines):
+▶ LINE 1  — Vlog Action: ${bloggerName} delivers a powerful hook — names the dish and its key benefit or calorie count. 12-20 words.
+▶ LINE 2  — Blogger Comment: Shares the most surprising nutrition fact about this dish to trigger curiosity. 12-22 words.
+▶ LINE 3  — Vlog Action: ${bloggerName} lists the main ingredients OUT LOUD with exact quantities (grams, tablespoons, pieces). 12-20 words.
+▶ LINE 4  — Blogger Comment: Explains WHY these ingredients work together — vitamins, synergy, calorie math. 12-22 words.
+▶ LINE 5  — Vlog Action: ${bloggerName} demonstrates STEP 1 of preparation — specific action + timing (e.g. "rinse and boil 12 min"). 12-20 words.
+▶ LINE 6  — Blogger Comment: Drops a nutrition insight about the ingredient being handled right now. 12-22 words.
+▶ LINE 7  — Vlog Action: ${bloggerName} demonstrates STEP 2 — chopping, mixing, layering, seasoning — with exact detail. 12-20 words.
+▶ LINE 8  — Blogger Comment: Reveals a secret trick or non-obvious technique that makes the recipe better or healthier. 12-22 words.
+▶ LINE 9  — Vlog Action: ${bloggerName} demonstrates STEP 3 or adds the finishing touch — names it precisely. 12-20 words.
+▶ LINE 10 — Blogger Comment: Shares calorie total or macros of the finished dish — specific numbers. 12-22 words.
+▶ LINE 11 — Vlog Action: ${bloggerName} tastes the dish on camera — reacts authentically, names a flavor note. 12-20 words.
+▶ LINE 12 — Blogger Comment: Final punchy health summary — a memorable nutrition truth, metabolism benefit, or diet tip. 12-22 words.
+▶ LINE 13 (optional) — Vlog Action: ${bloggerName} shows the plated result beautifully — describes texture, color, or aroma. 12-20 words.
+▶ LINE 14 (optional) — Outro: Flirty, witty call-to-action — save the recipe, subscribe, send a photo of their version. 10-18 words.
+` : `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 WELLNESS / TIPS VLOG — EXTRA MANDATORY RULES:
+W1. SPECIFICITY: Every tip must include at least one concrete number — a calorie amount, gram weight, duration in minutes, vitamin dose, or percentage.
+W2. ACTIONABILITY: Every line must describe something the viewer can do TODAY — not vague advice like "eat healthy", but "swap 200g of white rice for cauliflower rice and cut 180 calories tonight".
+W3. GENERATE EXACTLY 9 LINES TOTAL (minimum 9).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE FOR WELLNESS VLOG (9 lines):
+▶ LINE 1 — Vlog Action: ${bloggerName} introduces today's wellness topic with an intriguing hook + specific number or fact. 12-20 words.
+▶ LINE 2 — Blogger Comment: First concrete health tip with exact number — calorie, gram, minute, or vitamin dose. 12-22 words.
+▶ LINE 3 — Vlog Action: ${bloggerName} demonstrates or explains tip #2 — names a specific food/product/supplement. 12-20 words.
+▶ LINE 4 — Blogger Comment: Nutrition insight with a smart food swap and calorie comparison. 12-22 words.
+▶ LINE 5 — Vlog Action: ${bloggerName} reveals tip #3 — a metabolism or digestion hack with a concrete result. 12-20 words.
+▶ LINE 6 — Blogger Comment: Third specific health fact — something surprising about a superfood, vitamin, or gut health. 12-22 words.
+▶ LINE 7 — Vlog Action: ${bloggerName} shows or demonstrates the final tip — makes it visual and actionable. 12-20 words.
+▶ LINE 8 — Blogger Comment: Final punchy health summary — one memorable truth the viewer will remember and share. 12-22 words.
+▶ LINE 9 — Outro: Flirty, witty call-to-action referencing health/wellness + asking for likes & subscribe. 10-18 words.
+`}
+══════════════════════════════════════
 
 Format EXACTLY as:
 Speaker: [direct spoken text]

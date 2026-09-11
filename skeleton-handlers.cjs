@@ -116,7 +116,7 @@ const TALKING_OBJECT_IMAGE_LOCK = ``;
 const PIXAR_VIDEO_VARIANTS = [
     {
         id: 'A', name: 'The Confident Inventor',
-        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands — adjusting her round glasses with one finger, holding up her glowing gadget proudly, explaining the lifehack directly into the camera with a knowing clever smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands — adjusting her round glasses with one finger, holding up a small tool or notebook proudly, explaining the lifehack directly into the camera with a knowing clever smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
     },
     {
         id: 'B', name: 'The Eureka Moment',
@@ -128,7 +128,7 @@ const PIXAR_VIDEO_VARIANTS = [
     },
     {
         id: 'D', name: 'The Direct Secret Revelation',
-        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if sharing an exclusive discovery, gesturing with calm playful confidence — perhaps tapping her notebook or holding the glowing gadget up — while maintaining steady direct eye contact with the viewer. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
+        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if sharing an exclusive discovery, gesturing with calm playful confidence — perhaps tapping her notebook or pointing at something with curiosity — while maintaining steady direct eye contact with the viewer. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
     }
 ];
 
@@ -1417,7 +1417,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
         let userPrompt = "";
 
         // Character Bible — young woman inventor / Génie (based on genie_reference.png)
-        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A charming, expressive young woman inventor and scientist in her mid-twenties (Génie). Features: large round dark-framed glasses on her nose, big warm hazel-brown eyes with a clever knowing gaze and a confident playful smile, voluminous messy curly brown hair loosely piled up with protective goggles resting on top, rosy cheeks. Outfit: long white laboratory coat worn open over an olive green fitted top, dark grey cargo pants with tool-filled pockets, a brown leather belt, white ankle socks and dark canvas high-top sneakers. She holds a glowing spherical gadget in one hand and a spiral notebook in the other, with colorful pens and small tools in her coat pocket. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
+        const CHARACTER_BIBLE_GENIE = `"3D cartoon animation style, Pixar style. A charming, expressive young woman inventor and scientist in her mid-twenties (Génie). Features: large round dark-framed glasses on her nose, big warm hazel-brown eyes with a clever knowing gaze and a confident playful smile, voluminous messy curly brown hair loosely piled up with protective goggles resting on top, rosy cheeks. Outfit: long white laboratory coat worn open over an olive green fitted top, dark grey cargo pants with tool-filled pockets, a brown leather belt, white ankle socks and dark canvas high-top sneakers. She holds a spiral notebook in one hand and a colorful pen in the other, with small tools and pens in her coat pocket. High-end 3D CGI render, warm studio lighting, 9:16 vertical portrait aspect ratio."`;
 
         if (mode === 'psychology') {
             systemInstruction = `You are a Master Viral Scriptwriter specialized in raw, street-smart psychology and human behavior.
