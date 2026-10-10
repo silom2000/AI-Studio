@@ -761,6 +761,7 @@ function registerDocuCraftHandlers(ipcMain) {
     const handleGenerateScript = async (event, params) => {
         const {
             topic,
+            projectFolder,
             targetDurationMinutes = 10,
             stylePreset = 'vintage_botanical',
             customStyleDesc = '',
@@ -925,11 +926,18 @@ OUTPUT FORMAT (STRICT JSON ONLY):
         const scriptData = cleanAndParseJSON(raw);
 
         // Sanitize and ensure IDs & timestamps
-        const timestamp = Date.now();
-        const safeTopic = (topic || 'documentary').replace(/[^a-z0-9_-]/gi, '_').substring(0, 24);
-        const folderName = `DocuCraft_${safeTopic}_${timestamp}`;
-        const projectDir = path.join(DOCUCRAFT_DIRS.projects, folderName);
-        fs.mkdirSync(projectDir, { recursive: true });
+        let folderName = projectFolder;
+        let projectDir;
+        if (folderName) {
+            projectDir = path.join(DOCUCRAFT_DIRS.projects, folderName);
+            if (!fs.existsSync(projectDir)) fs.mkdirSync(projectDir, { recursive: true });
+        } else {
+            const timestamp = Date.now();
+            const safeTopic = (topic || 'documentary').replace(/[^a-z0-9_-]/gi, '_').substring(0, 24);
+            folderName = \`DocuCraft_${safeTopic}_${timestamp}\`;
+            projectDir = path.join(DOCUCRAFT_DIRS.projects, folderName);
+            fs.mkdirSync(projectDir, { recursive: true });
+        }
 
         // Calculate cumulative YouTube chapters
         let cumulativeSeconds = 0;
@@ -961,6 +969,8 @@ OUTPUT FORMAT (STRICT JSON ONLY):
         }
 
         scriptData.projectFolder = folderName;
+        scriptData.createdAt = scriptData.createdAt || Date.now();
+        scriptData.createdAt = scriptData.createdAt || Date.now();
         scriptData.youtubeChapters = ytChaptersLines.join('\n');
 
         // Save manifest to project folder
@@ -2673,7 +2683,7 @@ ${aiNotice}
                             language: data.language || 'English',
                             chaptersCount: data.chapters?.length || 0,
                             finalVideoUrl: data.finalVideoUrl || null,
-                            createdAt: fs.statSync(mPath).mtimeMs,
+                            createdAt: data.createdAt || fs.statSync(mPath).mtimeMs,
                             manifest: data
                         });
                     } catch (_) {}

@@ -287,6 +287,7 @@ export function DocuCraftTab() {
     try {
       const res = await window.electronAPI.docucraftGenerateScript({
         topic,
+        projectFolder: script?.projectFolder,
         targetDurationMinutes,
         stylePreset,
         customStyleDesc,
