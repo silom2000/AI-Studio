@@ -558,6 +558,7 @@ export interface IElectronAPI {
     projectFolder?: string;
     thumbIndex: number;
     prompt: string;
+    overlayText?: string;
     imageModel?: string;
   }) => Promise<{ thumbIndex: number; imageUrl: string; fileName: string }>;
   onDocuCraftShotUpdated: (callback: (data: { sceneId: string; shotIndex: number; shot: DocuCraftShot }) => void) => void;
@@ -600,6 +601,7 @@ export interface DocuCraftShot {
   prompt: string;
   sourceImage?: string;
   videoUrl?: string;
+  imageUrl?: string;
   status?: 'idle' | 'generating' | 'ready' | 'error';
   error?: string;
   brollMeta?: {

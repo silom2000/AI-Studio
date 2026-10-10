@@ -709,7 +709,7 @@ async function downloadAndNormalizeStockMedia({ downloadUrl, mediaType, sceneId,
             hasAudio = probeOut.length > 0;
         } catch (_) {}
 
-        const filter = "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30";
+        const filter = "scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30";
         let ffmpegCmd = '';
         if (hasAudio) {
             ffmpegCmd = `ffmpeg -y -i "${tempFile}" -t 60 -vf "${filter}" -c:v h264_nvenc -preset p4 -cq 20 -c:a aac -b:a 192k -ar 44100 -ac 2 -movflags +faststart "${finalPath}"`;
@@ -728,7 +728,7 @@ async function downloadAndNormalizeStockMedia({ downloadUrl, mediaType, sceneId,
         finalUrl = `media:///${finalPath.replace(/\\/g, '/')}?t=${Date.now()}`;
     } else {
         finalPath = path.join(targetDir, `scene_${sceneId}_stock.jpg`);
-        const filter = "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2";
+        const filter = "scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2";
         try {
             execSync(`ffmpeg -y -i "${tempFile}" -vf "${filter}" -q:v 2 "${finalPath}"`, { timeout: 25000 });
         } catch (_) {
@@ -1422,7 +1422,7 @@ OUTPUT FORMAT (STRICT JSON ONLY):
         const duration = getMediaDuration(videoPath);
         const seekTime = Math.max(0, duration - 0.2);
         execSync(
-            `ffmpeg -ss ${seekTime.toFixed(2)} -i "${videoPath}" -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1" -frames:v 1 -update 1 -q:v 2 -y "${outputPath}"`,
+            `ffmpeg -ss ${seekTime.toFixed(2)} -i "${videoPath}" -vf "scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1" -frames:v 1 -update 1 -q:v 2 -y "${outputPath}"`,
             { timeout: 15000 }
         );
     };
@@ -1975,7 +1975,7 @@ OUTPUT STRICT JSON ONLY (array of objects):
 
                     let vFilterParts = [];
                     for (let sIdx = 0; sIdx < readyVideoShots.length; sIdx++) {
-                        vFilterParts.push(`[${sIdx}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p[sv${sIdx}]`);
+                        vFilterParts.push(`[${sIdx}:v]scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p[sv${sIdx}]`);
                     }
                     let concatInputs = readyVideoShots.map((_, sIdx) => `[sv${sIdx}]`).join('');
                     vFilterParts.push(`${concatInputs}concat=n=${readyVideoShots.length}:v=1:a=0,setpts=${speedFactor.toFixed(4)}*PTS,tpad=stop_mode=clone:stop=-1[v_base]`);
@@ -2054,7 +2054,7 @@ OUTPUT STRICT JSON ONLY (array of objects):
                         args.push('-stream_loop', '-1', '-i', videoPath);
                         if (audioPath) args.push('-i', audioPath);
                         else args.push('-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo');
-                        let vFilter = '[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p[v_base]';
+                        let vFilter = '[0:v]scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p[v_base]';
                         if (drawtextFilters.length > 0) vFilter += `;[v_base]${drawtextFilters.join(',')}[v]`;
                         else vFilter = vFilter.replace('[v_base]', '[v]');
                         args.push(
@@ -2077,7 +2077,7 @@ OUTPUT STRICT JSON ONLY (array of objects):
                         if (audioPath) args.push('-i', audioPath);
                         else args.push('-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo');
                         
-                        let vFilter = `[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p,setpts=${speedFactor.toFixed(4)}*PTS,tpad=stop_mode=clone:stop=-1[v_base]`;
+                        let vFilter = `[0:v]scale=1920:1080:flags=lanczos:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p,setpts=${speedFactor.toFixed(4)}*PTS,tpad=stop_mode=clone:stop=-1[v_base]`;
                         if (drawtextFilters.length > 0) vFilter += `;[v_base]${drawtextFilters.join(',')}[v]`;
                         else vFilter = vFilter.replace('[v_base]', '[v]');
 
@@ -2978,6 +2978,44 @@ ${aiNotice}
     // ─────────────────────────────────────────────────────────────────────────
     // YouTube Thumbnail / Cover Generation (4 variants)
     // ─────────────────────────────────────────────────────────────────────────
+
+    const addYoutubeTextToImage = (inputPath, outputPath, text) => {
+        return new Promise((resolve, reject) => {
+            if (!text || text.trim() === '') {
+                fs.copyFileSync(inputPath, outputPath);
+                return resolve();
+            }
+            const tempTextPath = outputPath + '.txt';
+            // Clean text and convert to uppercase for impact
+            const cleanText = String(text).trim().toUpperCase();
+            fs.writeFileSync(tempTextPath, cleanText, 'utf-8');
+
+            const escapedTextFile = tempTextPath.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, '$1\\:');
+
+            // Highly clickable YouTube styling: Massive Impact font, Yellow/White text, thick black border, black drop shadow
+            const drawtext = `drawtext=fontfile='C\\:/Windows/Fonts/impact.ttf':textfile='${escapedTextFile}':fontcolor=yellow:fontsize=180:x='(w-tw)/2':y='h-th-80':bordercolor=black:borderw=12:shadowcolor=black@0.9:shadowx=8:shadowy=8`;
+
+            const proc = spawn('ffmpeg', [
+                '-y',
+                '-i', inputPath,
+                '-vf', drawtext,
+                '-frames:v', '1',
+                '-q:v', '2',
+                outputPath
+            ]);
+
+            proc.on('close', code => {
+                try { if (fs.existsSync(tempTextPath)) fs.unlinkSync(tempTextPath); } catch (_) {}
+                if (code === 0 && fs.existsSync(outputPath)) resolve();
+                else reject(new Error('ffmpeg text overlay failed'));
+            });
+            proc.on('error', err => {
+                try { if (fs.existsSync(tempTextPath)) fs.unlinkSync(tempTextPath); } catch (_) {}
+                reject(err);
+            });
+        });
+    };
+
     const handleGenerateThumbnails = async (event, params) => {
         const {
             projectFolder,
@@ -3008,23 +3046,24 @@ ${aiNotice}
 
 Each thumbnail MUST be visually striking and designed to maximize click-through rate (CTR). Include bold, dramatic compositions.
 
-IMPORTANT: Each thumbnail prompt must include embedded text overlay instructions — a short catchy phrase (2-5 words maximum) in ${isFr ? 'French' : lang} that will appear on the thumbnail as big bold stylized text. This text should create curiosity and urgency.
+CRITICAL: The image generator must NOT generate any text. The 'prompt' field should describe ONLY the visual scene (e.g. "dark moody shot, extreme close-up of an ancient artifact, cinematic lighting, negative space at the bottom for text").
+The 'overlayText' field will be used by a separate graphics engine to draw massive bold 3D text. Make 'overlayText' a highly clickable, intriguing phrase (2-4 words maximum) in ${isFr ? 'French' : lang}. Use ALL CAPS.
 
 Output STRICT JSON only — an array of 4 objects:
 [
   {
     "style": "dramatic_reveal",
     "styleTitle": "Dramatic Reveal",
-    "overlayText": "short catchy text in ${isFr ? 'French' : lang}",
-    "prompt": "detailed image generation prompt in English, 16:9 aspect, bold cinematic composition..."
+    "overlayText": "SHORT CATCHY TEXT",
+    "prompt": "detailed image generation prompt in English, 16:9 aspect, bold cinematic composition, no text..."
   }
 ]
 
 Styles to cover:
-1. dramatic_reveal — Dark moody shot with dramatic lighting, mysterious atmosphere, overlaid bold text
-2. curiosity_hook — Extreme close-up or unusual perspective that makes viewers curious, with question-style text
-3. epic_scale — Wide panoramic or grand establishing shot showing scale and wonder, with bold title overlay
-4. vintage_archive — Aged document, antique map, or historical artifact closeup with scholarly intrigue text`;
+1. dramatic_reveal — Dark moody shot with dramatic lighting, mysterious atmosphere, negative space
+2. curiosity_hook — Extreme close-up or unusual perspective that makes viewers curious
+3. epic_scale — Wide panoramic or grand establishing shot showing scale and wonder
+4. vintage_archive — Aged document, antique map, or historical artifact closeup`;
 
         const thumbUserPrompt = `Create 4 YouTube thumbnail concepts for this documentary:
 Title: "${title}"
@@ -3090,8 +3129,14 @@ Remember: output strict JSON array only.`;
                 });
 
                 if (savedPaths && savedPaths.length > 0 && fs.existsSync(savedPaths[0])) {
+                    const rawFile = savedPaths[0];
                     const targetFile = path.join(thumbsDir, `thumb_${i + 1}.jpg`);
-                    fs.copyFileSync(savedPaths[0], targetFile);
+
+                    if (resultItem.overlayText) {
+                        await addYoutubeTextToImage(rawFile, targetFile, resultItem.overlayText);
+                    } else {
+                        fs.copyFileSync(rawFile, targetFile);
+                    }
                     resultItem.imageUrl = `media:///${targetFile.replace(/\\/g, '/')}?t=${Date.now()}`;
                 } else {
                     resultItem.error = 'Image generation returned empty';
@@ -3130,7 +3175,7 @@ Remember: output strict JSON array only.`;
 
     // Regenerate single thumbnail
     const handleRegenerateThumbnail = async (event, params) => {
-        const { projectFolder, thumbIndex, prompt, imageModel = 'nano_banana_2' } = params;
+        const { projectFolder, thumbIndex, prompt, overlayText, imageModel = 'nano_banana_2' } = params;
 
         const projectDir = projectFolder
             ? path.join(DOCUCRAFT_DIRS.projects, projectFolder)
@@ -3151,8 +3196,15 @@ Remember: output strict JSON array only.`;
 
         if (!savedPaths || savedPaths.length === 0) throw new Error('Image generation failed');
 
+        const rawFile = savedPaths[0];
         const targetFile = path.join(thumbsDir, `thumb_${thumbIndex + 1}.jpg`);
-        fs.copyFileSync(savedPaths[0], targetFile);
+
+        if (overlayText) {
+            await addYoutubeTextToImage(rawFile, targetFile, overlayText);
+        } else {
+            fs.copyFileSync(rawFile, targetFile);
+        }
+
         const imgUrl = `media:///${targetFile.replace(/\\/g, '/')}?t=${Date.now()}`;
 
         return { thumbIndex, imageUrl: imgUrl, fileName: `thumb_${thumbIndex + 1}.jpg` };

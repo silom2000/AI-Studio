@@ -348,6 +348,18 @@ const generateVideoViaGLabs = async (options = {}) => {
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.start_image = finalRefImages[0].data;
             }
+        } else if (model === 'omni_flash') {
+            bodyData.resolution = ['720p'];
+            if (finalRefImages && finalRefImages.length > 0) {
+                if (finalMode === 'components') {
+                    bodyData.reference_images = finalRefImages.map((img, idx) => {
+                        const data = img.data || img;
+                        return { data, name: img.name || `ref_${idx + 1}` };
+                    });
+                } else {
+                    bodyData.reference_images = finalRefImages.map(img => img.data || img);
+                }
+            }
         } else if (model === 'omni_vids') {
             // Google Vids — uses /api/video/generate, configurable duration 3-10s, 1080p
             const numLength = Number(videoLength);

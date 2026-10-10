@@ -10,6 +10,7 @@ export interface DocuCraftShot {
   prompt: string;
   sourceImage?: string;
   videoUrl?: string;
+  imageUrl?: string;
   status?: 'idle' | 'generating' | 'ready' | 'error';
   error?: string;
   brollMeta?: {
@@ -585,6 +586,7 @@ export function DocuCraftTab() {
         projectFolder: script.projectFolder,
         thumbIndex: idx,
         prompt: thumbnails[idx].prompt,
+        overlayText: thumbnails[idx].overlayText,
         imageModel,
       });
       setThumbnails(prev => prev.map((t, i) => i === idx ? { ...t, imageUrl: result.imageUrl, fileName: result.fileName, error: undefined } : t));
@@ -1194,108 +1196,154 @@ export function DocuCraftTab() {
                                 </div>
                               )}
 
-                              {/* Multi-Shot Narrative Chaining Storyboard */}
+                              {/* Multi-Shot Narrative Chaining Storyboard OR Static Multi-Image Gallery */}
                               {scene.shots && scene.shots.length > 0 ? (
-                                <div className="docucraft-shots-container">
-                                  <div className="docucraft-shots-header">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#f3f4f6' }}>
-                                        🎬 Multi-Shot Sequence ({scene.shots.length} cuts)
-                                      </span>
-                                      <span style={{ fontSize: '0.68rem', color: '#9ca3af' }}>
-                                        ~{scene.shots.reduce((acc, s) => acc + (s.duration || 4), 0)}s
-                                      </span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      <button
-                                        type="button"
-                                        className="docucraft-btn-secondary docucraft-btn-sm"
-                                        style={{ fontSize: '0.66rem', padding: '2px 7px' }}
-                                        onClick={() => handleDecomposeShots(cIdx, sIdx)}
-                                        disabled={decomposingScenes[scene.id]}
-                                        title="Re-analyze voiceover and regenerate shot narrative chain"
-                                      >
-                                        {decomposingScenes[scene.id] ? '⏳ Analyzing...' : '🔄 Re-decompose'}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="docucraft-btn-sm"
-                                        style={{
-                                          background: 'linear-gradient(135deg, #d97706, #b45309)',
-                                          border: 'none',
-                                          color: '#fff',
-                                          fontWeight: 700,
-                                          fontSize: '0.66rem',
-                                          padding: '3px 9px',
-                                          borderRadius: '4px',
-                                          cursor: chainingScenes[scene.id] ? 'wait' : 'pointer'
-                                        }}
-                                        onClick={() => handleGenerateShotChain(cIdx, sIdx)}
-                                        disabled={chainingScenes[scene.id]}
-                                        title="Sequential Last-to-First Frame Chained Video Generation"
-                                      >
-                                        {chainingScenes[scene.id] ? '⚡ Chaining Videos...' : '🔗 Auto-Chain All'}
-                                      </button>
-                                    </div>
-                                  </div>
+                                (() => {
+                                  // Determine if these are video decomposition shots or static multiple images
+                                  const isStaticSequence = scene.shots.some(s => s.imageUrl && !s.role);
 
-                                  <div className="docucraft-shots-timeline">
-                                    {scene.shots.map((shot, shotIdx) => {
-                                      const isThisShotGenerating = generatingShots[`${scene.id}_${shot.index}`] || shot.status === 'generating';
-                                      const roleClass = `role-${shot.role || 'cause'}`;
-                                      return (
-                                        <div
-                                          key={shot.id || shotIdx}
-                                          className={`docucraft-shot-card ${shot.status || 'idle'} ${isThisShotGenerating ? 'generating' : ''}`}
-                                        >
-                                          <div className="docucraft-shot-badge-row">
-                                            <span className={`docucraft-shot-role-badge ${roleClass}`}>
-                                              #{shot.index + 1} {shot.role}
+                                  if (isStaticSequence) {
+                                    return (
+                                      <div className="docucraft-shots-container">
+                                        <div className="docucraft-shots-header">
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#f3f4f6' }}>
+                                              🖼️ Multi-Image Sequence ({scene.shots.length} angles)
                                             </span>
-                                            <span className="docucraft-shot-dur">{shot.duration || 4}s</span>
-                                          </div>
-
-                                          <div
-                                            className="docucraft-shot-preview"
-                                            onClick={() => {
-                                              if (shot.videoUrl) setEnlargedMedia({ url: shot.videoUrl, type: 'video' });
-                                              else if (shot.sourceImage) setEnlargedMedia({ url: shot.sourceImage, type: 'image' });
-                                            }}
-                                            title={shot.prompt}
-                                          >
-                                            {shot.videoUrl ? (
-                                              <video src={shot.videoUrl} preload="metadata" />
-                                            ) : shot.sourceImage ? (
-                                              <img src={shot.sourceImage} alt={`Shot ${shot.index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            ) : (
-                                              <div className="docucraft-shot-placeholder">
-                                                <span>{isThisShotGenerating ? '⏳' : '🎬'}</span>
-                                                <span>{isThisShotGenerating ? 'Rendering' : 'Pending'}</span>
-                                              </div>
-                                            )}
-                                          </div>
-
-                                          <div className="docucraft-shot-prompt-tooltip" title={shot.prompt}>
-                                            {shot.prompt}
-                                          </div>
-
-                                          <div className="docucraft-shot-actions">
-                                            <button
-                                              type="button"
-                                              className="docucraft-btn-secondary"
-                                              style={{ fontSize: '0.62rem', padding: '1px 5px', minWidth: 'auto' }}
-                                              onClick={() => handleRegenerateSingleShot(cIdx, sIdx, shot.index)}
-                                              disabled={isThisShotGenerating || chainingScenes[scene.id]}
-                                              title="Render / Regenerate this single shot"
-                                            >
-                                              {isThisShotGenerating ? '⏳' : '▶ Render'}
-                                            </button>
                                           </div>
                                         </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
+                                        <div className="docucraft-shots-timeline" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))' }}>
+                                          {scene.shots.map((shot, shotIdx) => (
+                                            <div key={shot.id || shotIdx} className="docucraft-shot-card idle">
+                                              <div className="docucraft-shot-badge-row">
+                                                <span className="docucraft-shot-dur">#{shotIdx + 1}</span>
+                                              </div>
+                                              <div
+                                                className="docucraft-shot-preview"
+                                                onClick={() => {
+                                                  if (shot.imageUrl) setEnlargedMedia({ url: shot.imageUrl, type: 'image' });
+                                                }}
+                                              >
+                                                {shot.imageUrl ? (
+                                                  <img src={shot.imageUrl} alt={`Angle ${shotIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                  <div className="docucraft-shot-placeholder">
+                                                    <span>⏳</span>
+                                                    <span>Loading</span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+
+                                  // Original Video Decomposition UI
+                                  return (
+                                    <div className="docucraft-shots-container">
+                                      <div className="docucraft-shots-header">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                          <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#f3f4f6' }}>
+                                            🎬 Multi-Shot Sequence ({scene.shots.length} cuts)
+                                          </span>
+                                          <span style={{ fontSize: '0.68rem', color: '#9ca3af' }}>
+                                            ~{scene.shots.reduce((acc, s) => acc + (s.duration || 4), 0)}s
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                          <button
+                                            type="button"
+                                            className="docucraft-btn-secondary docucraft-btn-sm"
+                                            style={{ fontSize: '0.66rem', padding: '2px 7px' }}
+                                            onClick={() => handleDecomposeShots(cIdx, sIdx)}
+                                            disabled={decomposingScenes[scene.id]}
+                                            title="Re-analyze voiceover and regenerate shot narrative chain"
+                                          >
+                                            {decomposingScenes[scene.id] ? '⏳ Analyzing...' : '🔄 Re-decompose'}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="docucraft-btn-sm"
+                                            style={{
+                                              background: 'linear-gradient(135deg, #d97706, #b45309)',
+                                              border: 'none',
+                                              color: '#fff',
+                                              fontWeight: 700,
+                                              fontSize: '0.66rem',
+                                              padding: '3px 9px',
+                                              borderRadius: '4px',
+                                              cursor: chainingScenes[scene.id] ? 'wait' : 'pointer'
+                                            }}
+                                            onClick={() => handleGenerateShotChain(cIdx, sIdx)}
+                                            disabled={chainingScenes[scene.id]}
+                                            title="Sequential Last-to-First Frame Chained Video Generation"
+                                          >
+                                            {chainingScenes[scene.id] ? '⚡ Chaining Videos...' : '🔗 Auto-Chain All'}
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      <div className="docucraft-shots-timeline">
+                                        {scene.shots.map((shot, shotIdx) => {
+                                          const isThisShotGenerating = generatingShots[`${scene.id}_${shot.index}`] || shot.status === 'generating';
+                                          const roleClass = `role-${shot.role || 'cause'}`;
+                                          return (
+                                            <div
+                                              key={shot.id || shotIdx}
+                                              className={`docucraft-shot-card ${shot.status || 'idle'} ${isThisShotGenerating ? 'generating' : ''}`}
+                                            >
+                                              <div className="docucraft-shot-badge-row">
+                                                <span className={`docucraft-shot-role-badge ${roleClass}`}>
+                                                  #{shot.index + 1} {shot.role}
+                                                </span>
+                                                <span className="docucraft-shot-dur">{shot.duration || 4}s</span>
+                                              </div>
+
+                                              <div
+                                                className="docucraft-shot-preview"
+                                                onClick={() => {
+                                                  if (shot.videoUrl) setEnlargedMedia({ url: shot.videoUrl, type: 'video' });
+                                                  else if (shot.sourceImage) setEnlargedMedia({ url: shot.sourceImage, type: 'image' });
+                                                }}
+                                                title={shot.prompt}
+                                              >
+                                                {shot.videoUrl ? (
+                                                  <video src={shot.videoUrl} preload="metadata" />
+                                                ) : shot.sourceImage ? (
+                                                  <img src={shot.sourceImage} alt={`Shot ${shot.index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                  <div className="docucraft-shot-placeholder">
+                                                    <span>{isThisShotGenerating ? '⏳' : '🎬'}</span>
+                                                    <span>{isThisShotGenerating ? 'Rendering' : 'Pending'}</span>
+                                                  </div>
+                                                )}
+                                              </div>
+
+                                              <div className="docucraft-shot-prompt-tooltip" title={shot.prompt}>
+                                                {shot.prompt}
+                                              </div>
+
+                                              <div className="docucraft-shot-actions">
+                                                <button
+                                                  type="button"
+                                                  className="docucraft-btn-secondary"
+                                                  style={{ fontSize: '0.62rem', padding: '1px 5px', minWidth: 'auto' }}
+                                                  onClick={() => handleRegenerateSingleShot(cIdx, sIdx, shot.index)}
+                                                  disabled={isThisShotGenerating || chainingScenes[scene.id]}
+                                                  title="Render / Regenerate this single shot"
+                                                >
+                                                  {isThisShotGenerating ? '⏳' : '▶ Render'}
+                                                </button>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  );
+                                })()
                               ) : (
                                 <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'flex-end' }}>
                                   <button
