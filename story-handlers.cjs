@@ -841,7 +841,7 @@ ${ideaContext}
     });
 
     // 5. Generate Video with cinematic prompts
-    ipcMain.handle('story-generate-video', async (event, { sceneIndex, videoPrompt, sourceImageUrl, narrationLine, projectFolder, videoModel }) => {
+    ipcMain.handle('story-generate-video', async (event, { sceneIndex, videoPrompt, sourceImageUrl, narrationLine, projectFolder, videoModel, videoLength }) => {
         console.log(`[Stories] Generate video: scene=${sceneIndex} folder=${projectFolder || 'default'} hasSourceImage=${!!sourceImageUrl}`);
 
         // Build enhanced prompt — cinematic visual direction only, no audio instructions
@@ -875,6 +875,7 @@ ${ideaContext}
             sceneIndex,
             mode: referenceImages.length > 0 ? 'start_image' : 'text_to_video',
             referenceImages: referenceImages,
+            videoLength: videoLength || null,
             onProgress: (p) => {
                 event.sender.send('story-video-progress', { sceneIndex, status: p.status, attempt: p.attempt });
             }

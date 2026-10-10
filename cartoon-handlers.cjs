@@ -555,7 +555,7 @@ ${ideaContext}
     // ─────────────────────────────────────────────────────────────────────────
     ipcMain.handle('cartoon-generate-video', async (event, {
         sceneIndex, videoPrompt, sourceImageUrl, narrationLine,
-        projectFolder, videoModel, voiceType, voiceProfile, narratorTone, dialogueParts
+        projectFolder, videoModel, voiceType, voiceProfile, narratorTone, dialogueParts, videoLength
     }) => {
         console.log(`[Cartoon] Generate video (VEO3): scene=${sceneIndex} voiceType=${voiceType || 'narrator'} folder=${projectFolder || 'default'} hasSourceImage=${!!sourceImageUrl}`);
 
@@ -657,6 +657,7 @@ AMBIENT SOUND: subtle background work sounds layered under dialogue.`;
             sceneIndex,
             mode: referenceImages.length > 0 ? 'start_image' : 'text_to_video',
             referenceImages,
+            videoLength: videoLength || null,
             onProgress: (p) => {
                 event.sender.send('cartoon-video-progress', { sceneIndex, status: p.status, attempt: p.attempt });
             }

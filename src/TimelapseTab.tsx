@@ -22,7 +22,7 @@ export interface CinematicPromptData {
     engineerNotes?: string;
 }
 
-type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'grok';
+type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'omni_vids';
 
 const LLM_PROVIDERS = [
     { value: 'custom', label: 'Custom Proxy' },
@@ -55,6 +55,7 @@ const TimelapseTab: React.FC = () => {
 
     const [selectedImageModel, setSelectedImageModel] = useState('nano_banana_2');
     const [selectedVideoModel, setSelectedVideoModel] = useState<VideoModel>('veo_31_lite');
+    const [videoDuration, setVideoDuration] = useState<number>(9);
     const [llmProvider, setLlmProvider] = useState('custom');
     const [timelapseID, setTimelapseID] = useState('');
     const [customIdea, setCustomIdea] = useState('');
@@ -66,14 +67,14 @@ const TimelapseTab: React.FC = () => {
     const IMAGE_MODELS = [
         { value: 'nano_banana_2', label: 'Nano Banana 2', desc: 'Versatile' },
         { value: 'nano_banana_pro', label: 'Nano Banana Pro', desc: 'Pro Output' },
-        { value: 'grok', label: 'Grok Generation', desc: 'Grok Image Model' },
+        { value: 'nano_pics', label: 'Google Pics', desc: 'Google Gemini Image' },
     ];
 
     const VIDEO_MODELS: { value: VideoModel; label: string; desc: string }[] = [
         { value: 'veo_31_lite', label: 'Veo 3.1 Lite', desc: 'Balanced video generation' },
         { value: 'veo_31_fast', label: 'Veo 3.1 Fast', desc: 'Fast video generation' },
         { value: 'omni_flash', label: 'Omni Flash', desc: 'Omni Flash video generation' },
-        { value: 'grok', label: 'Grok Generation', desc: '10s 720p Video' },
+        { value: 'omni_vids', label: 'Google Vids', desc: '3-10s 1080p Video' },
     ];
 
     const handleStart = async () => {
@@ -236,11 +237,12 @@ const TimelapseTab: React.FC = () => {
         try {
             const refImgs = referenceImages.filter(img => !!img);
             const url = await window.electronAPI.timelapseGenerateVideo(
-                videoIndex, 
-                promptData.videos[videoIndex].prompt, 
+                videoIndex,
+                promptData.videos[videoIndex].prompt,
                 timelapseID,
                 refImgs,
-                selectedVideoModel
+                selectedVideoModel,
+                selectedVideoModel === 'omni_vids' ? videoDuration : undefined
             );
             setGeneratedVideos(prev => { const n = [...prev]; n[videoIndex] = url; return n; });
         } catch (e: any) {
@@ -307,10 +309,11 @@ const TimelapseTab: React.FC = () => {
                     const refImgs = referenceImages.filter(img => !!img);
                     const url = await window.electronAPI.timelapseGenerateVideo(
                         idx,
-                        promptData.videos[idx].prompt, 
+                        promptData.videos[idx].prompt,
                         timelapseID,
                         refImgs,
-                        selectedVideoModel
+                        selectedVideoModel,
+                        selectedVideoModel === 'omni_vids' ? videoDuration : undefined
                     );
                     
                     currentVideos[idx] = url;
@@ -416,6 +419,32 @@ const TimelapseTab: React.FC = () => {
                             </button>
                         ))}
                     </div>
+                    {selectedVideoModel === 'omni_vids' && (
+                        <div className="sidebar-section">
+                            <h3 className="sidebar-title">⏱️ VIDEO DURATION</h3>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                {[3, 4, 5, 6, 7, 8, 9, 10].map(d => (
+                                    <button
+                                        key={d}
+                                        onClick={() => setVideoDuration(d)}
+                                        style={{
+                                            padding: '6px 12px',
+                                            borderRadius: '8px',
+                                            border: videoDuration === d ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,0.1)',
+                                            background: videoDuration === d ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.03)',
+                                            color: videoDuration === d ? '#c4b5fd' : '#999',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            fontWeight: videoDuration === d ? 700 : 400,
+                                            transition: 'all 0.15s ease'
+                                        }}
+                                    >
+                                        {d}s
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <div style={{ display: 'flex', background: '#1e293b', padding: '0.25rem', borderRadius: '0.5rem', border: '1px solid #334155' }}>
                         {LLM_PROVIDERS.map(p => (
                             <button

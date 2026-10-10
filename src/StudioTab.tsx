@@ -50,13 +50,13 @@ const LLM_PROVIDERS = [
     { value: 'pollinations', label: 'Pollinations', desc: 'Free, openai-large model' },
 ];
 
-type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'grok';
+type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'omni_vids';
 
 const VIDEO_MODELS: { value: VideoModel; label: string; desc: string }[] = [
     { value: 'veo_31_lite', label: 'Veo 3.1 Lite', desc: 'Balanced video generation' },
     { value: 'veo_31_fast', label: 'Veo 3.1 Fast', desc: 'Fast video generation' },
     { value: 'omni_flash', label: 'Omni Flash', desc: 'Omni Flash video generation' },
-    { value: 'grok', label: 'Grok Generation', desc: '10s 720p Video' },
+    { value: 'omni_vids', label: 'Google Vids', desc: '3-10s 1080p Video (Default 9s)' },
 ];
 
 const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
@@ -71,6 +71,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const [llmProvider, setLlmProvider] = useState<string>('custom');
     const [imageModel, setImageModel] = useState<string>('freepik-mystic');
     const [videoModel, setVideoModel] = useState<VideoModel>('veo_31_lite');
+    const [videoDuration, setVideoDuration] = useState<number>(9);
     const [script, setScript] = useState<StudioScript | null>(null);
     const scriptRef = React.useRef(script);
     scriptRef.current = script;
@@ -642,7 +643,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const IMAGE_MODELS = [
         { value: 'nano_banana_2', label: 'Nano Banana 2', desc: 'Improved Versatility' },
         { value: 'nano_banana_pro', label: 'Nano Banana Pro', desc: 'Professional High Output' },
-        { value: 'grok', label: 'Grok Generation', desc: 'Grok Image Model' },
+        { value: 'nano_pics', label: 'Google Pics', desc: 'Google Gemini Image' },
     ];
 
 
@@ -792,7 +793,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
             return;
         }
 
-        updateScene(sceneId, { status: 'generating_video' });
+        updateScene(sceneId, { status: 'generating_video', generatedVideoUrl: undefined });
         try {
             const videoUrl = await window.electronAPI.skeletonGenerateVideo({
                 sceneIndex: sceneIndex,
@@ -800,7 +801,8 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                 scriptLine: scene?.line || '',
                 language: lang,
                 videoModel: videoModel as any,
-                projectFolder
+                projectFolder,
+                videoLength: videoModel === 'omni_vids' ? videoDuration : undefined
             });
             updateScene(sceneId, { status: 'ready', generatedVideoUrl: videoUrl });
         } catch (err: any) {
@@ -1107,6 +1109,33 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                         ))}
                     </div>
                 </div>
+
+                {videoModel === 'omni_vids' && (
+                    <div className="sidebar-section">
+                        <h3 className="sidebar-title">⏱️ VIDEO DURATION</h3>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {[3, 4, 5, 6, 7, 8, 9, 10].map(d => (
+                                <button
+                                    key={d}
+                                    onClick={() => setVideoDuration(d)}
+                                    style={{
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        border: videoDuration === d ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,0.1)',
+                                        background: videoDuration === d ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.03)',
+                                        color: videoDuration === d ? '#c4b5fd' : '#999',
+                                        cursor: 'pointer',
+                                        fontSize: '13px',
+                                        fontWeight: videoDuration === d ? 700 : 400,
+                                        transition: 'all 0.15s ease'
+                                    }}
+                                >
+                                    {d}s
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="sidebar-section" style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -2197,11 +2226,11 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                             </div>
 
                                             <div className="scene-actions">
-                                                <button onClick={() => generateImage(idx, scene.id)} disabled={scene.status !== 'idle'} className="action-btn secondary">
-                                                    {scene.status === 'generating_images' ? <RefreshCw className="spin" /> : <ImageIcon size={16} />} GENERATE ACTOR
+                                                <button onClick={() => generateImage(idx, scene.id)} disabled={scene.status === 'generating_images' || scene.status === 'generating_video'} className="action-btn secondary">
+                                                    {scene.status === 'generating_images' ? <RefreshCw className="spin" /> : <ImageIcon size={16} />} {scene.generatedImages?.length ? 'RE-GENERATE ACTOR' : 'GENERATE ACTOR'}
                                                 </button>
-                                                <button onClick={() => animateScene(idx, scene.id)} disabled={scene.status !== 'idle'} className="action-btn primary">
-                                                    {scene.status === 'generating_video' ? <RefreshCw className="spin" /> : <Zap size={16} />} ANIMATE SCENE
+                                                <button onClick={() => animateScene(idx, scene.id)} disabled={scene.status === 'generating_images' || scene.status === 'generating_video'} className="action-btn primary">
+                                                    {scene.status === 'generating_video' ? <RefreshCw className="spin" /> : <Zap size={16} />} {scene.generatedVideoUrl ? 'RE-ANIMATE' : 'ANIMATE SCENE'}
                                                 </button>
                                             </div>
                                         </div>
@@ -2213,11 +2242,14 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                                     <p className="loading-text">Rendering...</p>
                                                 </div>
                                             ) : scene.generatedVideoUrl ? (
-                                                <div className="preview-container">
+                                                <div className="preview-container group">
                                                     <video src={scene.generatedVideoUrl} controls loop className="preview-9-16" />
                                                     <a href={scene.generatedVideoUrl} download className="download-floating-btn">
                                                         <Download size={20} />
                                                     </a>
+                                                    <button onClick={() => animateScene(idx, scene.id)} className="overlay-animate-btn">
+                                                        RE-ANIMATE
+                                                    </button>
                                                 </div>
                                             ) : scene.selectedImage ? (
                                                 <div className="preview-container group">

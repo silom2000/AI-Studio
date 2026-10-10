@@ -111,6 +111,7 @@ Audio/test_*.mp3
 Cartoons/
 
 # Generated project directories and test videos
+DocuCraft/
 PrimateCast/
 TikTokLocalizer/
 Survive/
@@ -120,6 +121,7 @@ FrenchTalk/Vlog_*/
 FrenchTalk/StreamPack_*/
 FrenchTalk/TempReference/
 FrenchTalk/Locations/
+FrenchTalk/_recipe_cache.json
 _temp_claude_video/
 .codegraph/
 instagram_cookies.txt
@@ -129,3 +131,11 @@ Le_Secret_Mill_naire_des_*.txt
 Le_secret_du_*.txt
 test_stt.js
 test_stt.cjs
+_.png
+genie_reference_.jpg
+genie_reference1.jpg
+
+# External cloned skill repositories & heavy video assets
+.claude/skills/mengto-skills/
+.claude/skills/video-use/
+.claude/skills/tiktok-analysis/

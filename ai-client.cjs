@@ -15,6 +15,54 @@ class AntigravityClient {
     // =========================================================================
     // 1. CHAT / TEXT GENERATION
     // =========================================================================
+    _cleanGatewayError(rawText) {
+        if (!rawText || typeof rawText !== 'string') return '';
+        let message = rawText.trim();
+        try {
+            const parsed = JSON.parse(rawText);
+            if (parsed?.error?.message) {
+                message = parsed.error.message;
+            } else if (parsed?.message) {
+                message = parsed.message;
+            }
+        } catch (_) {
+            // Not JSON
+        }
+
+        // 1. Detect account pool limits / cooldown on custom gateway (OneAPI / NewAPI / Antigravity)
+        if (message.includes('网关调度受限') || message.includes('暂无可用账号') || message.includes('限流冷却') || message.includes('All accounts limited')) {
+            const waitMatch = message.match(/Wait\s*\d+\s*(?:s|seconds)?/i);
+            const waitStr = waitMatch ? ` [${waitMatch[0]}]` : '';
+            return `Лимит аккаунтов на AI-шлюзе: все аккаунты модели временно заняты/на кулдауне (All accounts limited${waitStr})`;
+        }
+
+        // 2. Insufficient balance / quota
+        if (message.includes('余额不足') || message.includes('额度不足')) {
+            return 'Недостаточно средств/квоты на балансе AI-шлюза (Insufficient balance)';
+        }
+
+        // 3. No available channel / upstream
+        if (message.includes('无可用渠道') || message.includes('渠道不可用')) {
+            return 'Нет доступного канала для модели на AI-шлюзе (No available channel)';
+        }
+
+        // 4. Proxy service disabled
+        if (message.includes('Proxy service is currently disabled')) {
+            return 'Локальный AI-прокси выключен (Proxy service is currently disabled)';
+        }
+
+        // 5. If message contains any other Chinese characters, sanitize to avoid console glyph errors
+        if (/[一-龥]/.test(message)) {
+            const asciiOnly = message.replace(/[一-龥]/g, '').replace(/[【】]/g, ' ').replace(/\s+/g, ' ').trim();
+            if (asciiOnly.length > 5) {
+                return `Сообщение шлюза: ${asciiOnly}`;
+            }
+            return `Ошибка AI-шлюза (Gateway error): ${message.replace(/[一-龥]/g, '').trim() || 'API error'}`;
+        }
+
+        return message.length > 180 ? message.substring(0, 180) + '...' : message;
+    }
+
     _extractChatContent(data) {
         const content = data?.choices?.[0]?.message?.content;
 
@@ -191,14 +239,19 @@ class AntigravityClient {
                     }
                     
                     const statusCode = res.status;
-                    console.warn(`[AiClient:Chat] provider=${p.id} model=${p.model} failed with ${statusCode}: ${text.substring(0, 100)}`);
-                    
+                    const cleanMsg = this._cleanGatewayError(text);
+                    console.warn(`[AiClient:Chat] provider=${p.id} model=${p.model} failed with ${statusCode}: ${cleanMsg}`);
+
                     if (statusCode === 503 && text.includes('Proxy service is currently disabled')) {
                          console.warn(`[AiClient:Chat] Local Proxy is disabled, skipping remaining local models!`);
                          proxyDisabled = true;
                          break;
                     }
-                    if (statusCode === 402) {
+                    if (statusCode === 503 && (text.includes('All accounts limited') || text.includes('暂无可用账号') || text.includes('网关调度受限'))) {
+                         console.warn(`[AiClient:Chat] Model ${p.model} accounts are limited/cooling down on gateway, moving to next model...`);
+                         break;
+                    }
+                    if (statusCode === 402 || text.includes('余额不足') || text.includes('额度不足')) {
                          console.warn(`[AiClient:Chat] Insufficient balance for ${p.id}, skipping remaining attempts.`);
                          break;
                     }
@@ -413,7 +466,7 @@ class AntigravityClient {
 
         const rawText = await resBody.text();
         if (statusCode !== 200) {
-            throw new Error(`Groq Whisper failed (${statusCode}): ${rawText.substring(0, 200)}`);
+            throw new Error(`Groq Whisper failed (${statusCode}): ${this._cleanGatewayError(rawText)}`);
         }
 
         let data;
@@ -457,7 +510,7 @@ class AntigravityClient {
 
         const rawText = await resBody.text();
         if (statusCode !== 200) {
-            throw new Error(`Custom Transcription failed (${statusCode}): ${rawText.substring(0, 200)}`);
+            throw new Error(`Custom Transcription failed (${statusCode}): ${this._cleanGatewayError(rawText)}`);
         }
 
         let data;
@@ -500,7 +553,7 @@ class AntigravityClient {
 
         const rawText = await resBody.text();
         if (statusCode !== 200) {
-            throw new Error(`Pollinations Transcription failed (${statusCode}): ${rawText.substring(0, 200)}`);
+            throw new Error(`Pollinations Transcription failed (${statusCode}): ${this._cleanGatewayError(rawText)}`);
         }
 
         let data;

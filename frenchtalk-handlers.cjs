@@ -1105,7 +1105,7 @@ Script:\n${topicData.script}`;
         bloggerOutfit, location, episodeTitle,
         aspectRatio = '9:16', language = null, videoModel = 'omni_flash',
         strangerDescription = '', strangerVoiceDescription = '',
-        strangerRefBase64 = '', fullScript = ''
+        strangerRefBase64 = '', fullScript = '', videoLength = null
     }) => {
         const blogger = getBlogger();
         if (!blogger) throw new Error('Блогер не настроен. Сначала создайте персонаж блогера.');
@@ -1354,6 +1354,7 @@ ${CINEMATIC_MODIFIERS}`;
             subFolder: '',
             sceneIndex: `clip_${String(segmentIndex + 1).padStart(3, '0')}_${role}`,
             referenceImages,
+            videoLength: videoLength || null,
             generateAudio: true
         });
 
@@ -2529,6 +2530,7 @@ LIGHTING & DEPTH OF FIELD: Lit by soft window light and warm ambient room lamps,
             subFolder: '',
             sceneIndex: `${prefix}temp_${clipIndex}_${Date.now()}`,
             referenceImages,
+            videoLength: null,
             generateAudio: true
         });
 

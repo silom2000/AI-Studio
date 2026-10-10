@@ -16,9 +16,10 @@ const MARKETS = [
 const PrimateCastTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'characters' | 'episode'>('characters');
   const [llmProvider, setLlmProvider] = useState<string>('custom');
-  const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
-  const [videoModel, setVideoModel] = useState<'omni_flash' | 'veo_31_lite' | 'grok'>('omni_flash');
-  
+  const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'nano_pics'>('nano_banana_2');
+  const [videoModel, setVideoModel] = useState<'omni_flash' | 'veo_31_lite' | 'omni_vids'>('omni_flash');
+  const [videoDuration, setVideoDuration] = useState<number>(9);
+
   // Characters State
   const [characters, setCharacters] = useState<any[]>([]);
   const [charPrompt, setCharPrompt] = useState('');
@@ -381,7 +382,8 @@ const PrimateCastTab: React.FC = () => {
         clothes1, clothes2, location, episodeTitle,
         aspectRatio,
         language: market.language,
-        videoModel
+        videoModel,
+        videoLength: videoModel === 'omni_vids' ? videoDuration : undefined
       });
       updateSegment(seg.index, {
         status: 'done',
@@ -444,7 +446,7 @@ const PrimateCastTab: React.FC = () => {
                 {([
                   { value: 'nano_banana_2', label: 'Nano Banana 2' },
                   { value: 'nano_banana_pro', label: 'Nano Banana Pro' },
-                  { value: 'grok', label: 'Grok Generation' }
+                  { value: 'nano_pics', label: 'Google Pics' }
                 ] as const).map(p => (
                     <button
                         key={p.value}
@@ -1019,8 +1021,19 @@ const PrimateCastTab: React.FC = () => {
           >
             <option value="omni_flash">Omni Flash</option>
             <option value="veo_31_lite">Veo 3.1 Lite</option>
-            <option value="grok">Grok Generation</option>
+            <option value="omni_vids">Google Vids</option>
           </select>
+          {videoModel === 'omni_vids' && (
+            <select
+              value={videoDuration}
+              onChange={e => setVideoDuration(Number(e.target.value))}
+              style={{ width: '100%', padding: '8px', backgroundColor: '#333', color: '#fff', border: '1px solid #555', cursor: 'pointer', marginTop: '8px' }}
+            >
+              {[3, 4, 5, 6, 7, 8, 9, 10].map(d => (
+                <option key={d} value={d}>{d}s</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 

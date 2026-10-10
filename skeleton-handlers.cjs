@@ -51,7 +51,7 @@ const OBJECT_CATEGORIES = [
 const PIXAR_IMAGE_VARIANTS = [
     {
         id: 'A', name: "Cozy Inventor's Workshop",
-        template: (character) => `${character}, medium shot, standing proudly in a cozy warmly-lit inventor's workshop filled with wooden workbenches, blueprints on walls, glowing Edison bulbs, whimsical science gadgets, warm atmospheric lighting, shallow depth of field, cinematic 9:16 portrait composition`
+        template: (character) => `${character}, medium shot, standing proudly in a cozy warmly-lit inventor's workshop filled with wooden workbenches, blueprints on walls, glowing Edison bulbs, creative science gadgets, warm atmospheric lighting, shallow depth of field, cinematic 9:16 portrait composition`
     },
     {
         id: 'B', name: 'Smart Lifehack Kitchen',
@@ -59,7 +59,7 @@ const PIXAR_IMAGE_VARIANTS = [
     },
     {
         id: 'C', name: 'Creative Tech Lab & Desk',
-        template: (character) => `${character}, sitting or standing at a creative colorful study desk with colorful notebooks, craft tools, warm desk lamp glow, soft bokeh background, curious and proud expression, high-end 3D animated look`
+        template: (character) => `${character}, sitting or standing at a creative colorful study desk with colorful notebooks, craft tools, warm desk lamp glow, soft bokeh background, curious and proud expression, high-end 3D CGI render`
     },
     {
         id: 'D', name: 'Direct Discovery Studio',
@@ -71,18 +71,18 @@ const PIXAR_IMAGE_VARIANTS = [
             const problem = problemDetail && problemDetail.trim().length > 10
                 ? problemDetail.trim()
                 : 'the physical problem or damaged area examined in sharp close-up detail';
-            return `Extreme high-detail inspection shot, cinematic 9:16 vertical framing. In the sharp macro foreground: ${problem}. Just behind, standing at eye level with dramatic soft-bokeh focus: ${character} leaning forward closely, inspecting the damage with an attentive, shocked or analytical expression. Cinematic dramatic lighting, rich textures, photorealistic 3D Pixar render style.`;
+            return `Extreme high-detail inspection shot, cinematic 9:16 vertical framing. In the sharp macro foreground: ${problem}. Just behind, standing at eye level with dramatic soft-bokeh focus: ${character} leaning forward closely, inspecting the damage with an attentive, shocked or analytical expression. Cinematic dramatic lighting, rich textures, photorealistic 3D CGI render style.`;
         }
     },
     {
         id: 'F', name: 'Cinematic Hero Close-Up',
         // ECU + Dutch tilt + venetian blind shadow drama — from 100K_PromptGuide shadow storytelling technique
-        template: (character) => `${character}, extreme close-up ECU, Dutch tilt 5 degrees, face filling 70% of the 9:16 frame, dramatic shadow pattern from narrow venetian blind slats cast across her face and upper body, single hard sidelight at 90 degrees creating 2:1 light-to-shadow ratio, background completely soft black bokeh, sharp focus on eyes and expression, ultra-cinematic 3D Pixar render, high contrast mood`
+        template: (character) => `${character}, extreme close-up ECU, Dutch tilt 5 degrees, face filling 70% of the 9:16 frame, dramatic shadow pattern from narrow venetian blind slats cast across her face and upper body, single hard sidelight at 90 degrees creating 2:1 light-to-shadow ratio, background completely soft black bokeh, sharp focus on eyes and expression, ultra-cinematic 3D CGI render, high contrast mood`
     },
     {
         id: 'G', name: 'Atmospheric Wide — Inventor Lab',
         // Wide shot with atmospheric depth (secret #1 from guide) + volumetric light rays
-        template: (character) => `${character}, wide shot showing full environment, standing at center of a spacious warmly-lit inventor's laboratory, atmospheric haze between camera and subject adding cinematic depth, volumetric light rays streaming through a side window hitting lab surfaces, dust particles visible in the light beam, background equipment and shelves softened by aerial perspective, foreground slightly defocused glass or tube element creating depth layers, 9:16 vertical portrait, ultra-detailed 3D Pixar cinematic render`
+        template: (character) => `${character}, wide shot showing full environment, standing at center of a spacious warmly-lit inventor's laboratory, atmospheric haze between camera and subject adding cinematic depth, volumetric light rays streaming through a side window hitting lab surfaces, dust particles visible in the light beam, background equipment and shelves softened by aerial perspective, foreground slightly defocused glass or tube element creating depth layers, 9:16 vertical portrait, ultra-detailed 3D CGI cinematic render`
     },
     {
         id: 'H', name: 'Split Diopter — Product Focus',
@@ -91,18 +91,18 @@ const PIXAR_IMAGE_VARIANTS = [
             const product = productDetail && productDetail.trim().length > 5
                 ? productDetail.trim()
                 : 'a household item or cleaning product';
-            return `Split focus composition, 9:16 vertical portrait: in the sharp macro foreground at bottom-left of frame — ${product}, extreme close-up revealing texture and detail. In the sharp background center-right — ${character} standing at full height, equally sharp, looking directly at the camera with a proud knowing smile. Soft out-of-focus middle zone between them creates visual depth. Warm ambient lab lighting. 3D Pixar render, high-end cinematic quality.`;
+            return `Split focus composition, 9:16 vertical portrait: in the sharp macro foreground at bottom-left of frame — ${product}, extreme close-up revealing texture and detail. In the sharp background center-right — ${character} standing at full height, equally sharp, looking directly at the camera with a proud knowing smile. Soft out-of-focus middle zone between them creates visual depth. Warm ambient lab lighting. 3D CGI render, high-end cinematic quality.`;
         }
     },
     {
         id: 'I', name: 'Golden Hour Window — Warm Lifestyle',
         // Golden hour SSS + bokeh color theory (warm tungsten balls + cool background) from guide
-        template: (character) => `${character}, medium close-up MCU, positioned near a large bright window, golden hour backlight creating warm amber subsurface scattering glow through her hair and ears, soft wrap-around fill from the left, warm tungsten bokeh balls from background practicals (Edison string lights), one subtle cool-tinted window pane reflection creating warm-subject/cool-background color contrast, catchlight is a window reflection — NOT a ring flash, atmospheric cinematic feel, 9:16 vertical portrait, 3D Pixar high-end render`
+        template: (character) => `${character}, medium close-up MCU, positioned near a large bright window, golden hour backlight creating warm amber subsurface scattering glow through her hair and ears, soft wrap-around fill from the left, warm tungsten bokeh balls from background practicals (Edison string lights), one subtle cool-tinted window pane reflection creating warm-subject/cool-background color contrast, catchlight is a window reflection — NOT a ring flash, atmospheric cinematic feel, 9:16 vertical portrait, 3D CGI high-end render`
     }
 ];
 
 // —— Psychology Character Bible (Pixar-style, видавший жизнь мужик-советчик) ——
-const CHARACTER_BIBLE_PSYCHOLOGIST = `"3D cartoon animation style, Pixar style. A weathered, street-smart man in his late 50s who has seen everything life has to offer. Features: deep-set eyes with a penetrating, knowing gaze that misses nothing, a broad slightly crooked nose that's been broken at least once, prominent laugh lines and stubble that suggest decades of hard-won experience, salt-and-pepper unkempt hair, a wry half-smirk that says he already knows what you're going to say. Build: stocky and solid, the kind of man you don't argue with twice. Outfit: worn leather jacket over a simple dark shirt, no tie, sleeves sometimes rolled up — looks like someone who never needed to impress anyone. He gestures directly, speaks without sugarcoating, points at the camera like he's talking to an old friend who's making the same mistake for the third time. High-end 3D CGI render, moody dramatic side-lighting, 9:16 vertical portrait aspect ratio."`;
+const CHARACTER_BIBLE_PSYCHOLOGIST = `"High-end 3D CGI animation style. A weathered, street-smart man in his late 50s who has seen everything life has to offer. Features: deep-set eyes with a penetrating, knowing gaze that misses nothing, a broad slightly crooked nose that's been broken at least once, prominent laugh lines and stubble that suggest decades of hard-won experience, salt-and-pepper unkempt hair, a wry half-smirk that says he already knows what you're going to say. Build: stocky and solid, the kind of man you don't argue with twice. Outfit: worn leather jacket over a simple dark shirt, no tie, sleeves sometimes rolled up — looks like someone who never needed to impress anyone. He gestures directly, speaks without sugarcoating, points at the camera like he's talking to an old friend who's making the same mistake for the third time. High-end 3D CGI render, moody dramatic side-lighting, 9:16 vertical portrait aspect ratio."`;
 
 // —— Psychology Image Variants ————————————————————————————————————
 const PSYCH_IMAGE_VARIANTS = [
@@ -125,7 +125,7 @@ const PSYCH_IMAGE_VARIANTS = [
 ];
 
 const PSYCH_IMAGE_BASE = `ultra-cinematic lighting, rich moody tones, dramatic shadows, sharp focus, photorealistic 3D render quality`;
-const PIXAR_IMAGE_BASE = `3D cartoon animation style, Pixar style, high-end 3D CGI render, warm studio lighting, vibrant colors, expressive characters, clean smooth surfaces`;
+const PIXAR_IMAGE_BASE = `high-end 3D CGI render, photorealistic lighting and materials, warm studio lighting, vibrant colors, expressive character, detailed textures`;
 
 // —— Psychology Video Motion Variants ————————————————————————————————
 const PSYCH_VIDEO_VARIANTS = [
@@ -153,7 +153,7 @@ const TALKING_OBJECT_IMAGE_LOCK = ``;
 const PIXAR_VIDEO_VARIANTS = [
     {
         id: 'A', name: 'The Confident Inventor',
-        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands — adjusting her round glasses with one finger, holding up a small tool or notebook proudly, explaining the lifehack directly into the camera with a knowing clever smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands — holding up a small tool or notebook proudly, explaining the lifehack directly into the camera with a knowing clever smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
     },
     {
         id: 'B', name: 'The Eureka Moment',
@@ -177,9 +177,9 @@ const PIXAR_VIDEO_VARIANTS = [
         template: `CAMERA MOVEMENT: Rapid crash zoom in at the very start of the clip (0–1 second), then hold tight close-up for the remaining 7 seconds. The snap-zoom creates an immediate visual jolt of energy. CHARACTER ACTION: She reacts to the sudden closeness with wide expressive eyes and a sharp knowing look, then settles into a direct confident address to the camera, gesturing firmly with one hand as she delivers the key revelation. Face fills the upper half of the frame, mouth clearly visible for lip-sync throughout.`
     },
     {
-        id: 'G', name: 'Orbit Arc — Triumphant Result',
-        // 90° slow orbit arc — from camera movement glossary, music video / transition energy
-        template: `CAMERA MOVEMENT: Smooth slow arc orbit of 60–90 degrees around the character over 8 seconds, camera staying at face level, subject remains centered in frame throughout the arc. The environment dramatically changes in the background as the camera moves, creating a cinematic music-video feel. CHARACTER ACTION: She holds up the finished result or product with both hands, turning slightly to follow the camera arc naturally, wearing a wide triumphant smile and radiating proud inventor energy. Face visible and lit at all times for clear lip-sync.`
+        id: 'G', name: 'Subtle Arc — Triumphant Result',
+        // Gentle 20-30° arc — keeps cinematic feel without causing visual artifacts in video generation
+        template: `CAMERA MOVEMENT: Gentle slow arc of 20–30 degrees around the character over 8 seconds, camera staying at face level, subject remains centered in frame throughout the subtle arc. The background shifts slightly creating cinematic depth without extreme perspective changes. CHARACTER ACTION: She holds up the finished result or product with both hands, staying mostly front-facing to camera, wearing a wide triumphant smile and radiating proud inventor energy. Face visible and lit at all times for clear lip-sync.`
     },
     {
         id: 'H', name: 'Parallax Depth — Editorial',
@@ -212,12 +212,15 @@ async function synthesizeDirectElevenLabs(text, voiceId, outputPath, options = {
     const apiKey = process.env.ElevenLabs_API;
     if (!apiKey) throw new Error('[Voice] ElevenLabs_API key not set');
 
-    console.log(`[Voice] Direct ElevenLabs TTS: voice=${voiceId} text=${text.length}chars`);
-    
+    // Strip bracketed emotion tags (e.g. [direct], [excited]) so voice model doesn't speak them
+    const cleanText = (text || '').replace(/\[[^\]]+\]/g, '').replace(/\s{2,}/g, ' ').trim();
+
+    console.log(`[Voice] Direct ElevenLabs TTS: voice=${voiceId} text=${cleanText.length}chars`);
+
     const response = await axios.post(
         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
         {
-            text: text,
+            text: cleanText,
             model_id: options.model_id || 'eleven_multilingual_v2',
             voice_settings: {
                 stability: options.stability ?? 0.85,
@@ -329,7 +332,7 @@ const synthesizeUnifiedSpeech = async (input, language = 'en', voice = 'aeb88254
     return await synthesizeCsv666Speech(input, activeVoice, language, customDir);
 };
 
-const CHARACTER_ANCHOR = `A full-body Pixar-style animated humanoid figure rendered in a crystal-clear glass material, fully transparent outer shell revealing an ivory-white internal structural framework inside. The character's face area: two large round glowing yellow eyes with dark pupils, a friendly neutral expression, smooth rounded cranium with no surface detail. The body framework inside the glass silhouette is composed of smooth, polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all anatomically proportioned but stylized for animation. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. Style: Pixar 3D CGI, physically-based rendering, 8K, cinematic quality. NOT horror, NOT scary, NOT damaged, NOT dark. ABSOLUTE RULES: NO MUSIC. STERNLY FOLLOW text for lip-sync. NO independent translations.`;
+const CHARACTER_ANCHOR = `A full-body high-end CGI animated humanoid figure rendered in a crystal-clear glass material, fully transparent outer shell revealing an ivory-white internal structural framework inside. The character's face area: two large round glowing yellow eyes with dark pupils, a friendly neutral expression, smooth rounded cranium with no surface detail. The body framework inside the glass silhouette is composed of smooth, polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all anatomically proportioned but stylized for animation. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. Style: high-end 3D CGI, physically-based rendering, 8K, cinematic quality. NOT horror, NOT scary, NOT damaged, NOT dark. ABSOLUTE RULES: NO MUSIC. STERNLY FOLLOW text for lip-sync. NO independent translations.`;
 
 // ── TikTok Content Safety Directive ───────────────────────────────────────────
 const TIKTOK_SAFETY_DIRECTIVE = `
@@ -541,13 +544,18 @@ function sanitizePromptForImageSafety(prompt) {
     let p = prompt;
 
     // 1. Sanitize domestic private/intimate spaces to safe laboratory / workshop / studio spaces
+    //    NOTE: bare nouns (bathroom, shower, etc.) replace WITHOUT "in a" prefix to avoid double "in a ... in a ..." glitch
     p = p
-        .replace(/\b(in a warmly lit, bright bathroom|in a warmly lit bright bathroom|in a bright bathroom|in the bathroom|in a bathroom|bathroom)\b/gi, 'in a modern bright kitchen laboratory')
+        .replace(/\bin a warmly lit,? bright bathroom\b/gi, 'in a modern bright kitchen laboratory')
+        .replace(/\bin (a|the) bathroom\b/gi, 'in a modern bright kitchen laboratory')
+        .replace(/\bbathroom\b/gi, 'kitchen laboratory')
         .replace(/\b(restroom|washroom)\b/gi, 'clean science workshop')
         .replace(/\b(vanity counter|vanity table|vanity)\b/gi, 'clean laboratory counter')
         .replace(/\b(dressing room|powder room)\b/gi, 'creative discovery room')
+        .replace(/\bin (a|the) (shower stall|shower cabin|shower)\b/gi, 'in a tiled test basin')
         .replace(/\b(shower stall|shower cabin|shower)\b/gi, 'tiled test basin')
         .replace(/\b(bathtub|tub)\b/gi, 'water testing basin')
+        .replace(/\bin (a|the) (bedroom)\b/gi, 'in a studio workspace')
         .replace(/\b(bedroom|bed)\b/gi, 'studio workspace');
 
     // 2. Sanitize intimate / cosmetic / body trigger words that trigger automated NSFW/sexual filters
@@ -579,6 +587,49 @@ function sanitizePromptForImageSafety(prompt) {
         .replace(/\bgirl\b/gi, 'woman')
         .replace(/\bkid\b/gi, 'person')
         .replace(/\bkids\b/gi, 'people');
+
+    // 4. Strip Pixar/cartoon style terms (triggers CHILD_SAFETY classifiers)
+    p = p
+        .replace(/\bPixar 3D animation style\b/gi, 'high-end 3D CGI render')
+        .replace(/\bPixar style\b/gi, 'high-end 3D CGI')
+        .replace(/\bPixar\b/gi, 'high-end CGI')
+        .replace(/\b3D cartoon animation style\b/gi, 'high-end 3D CGI render')
+        .replace(/\bcartoon animation style\b/gi, 'CGI render style')
+        .replace(/\bcartoon animation\b/gi, 'CGI render')
+        .replace(/\bcartoon\b/gi, 'photorealistic CGI')
+        .replace(/\bbright-eyed\b/gi, 'confident')
+        .replace(/\bwhimsical\b/gi, 'creative')
+        .replace(/\b3D animated\b/gi, '3D CGI')
+        .replace(/\banimation style\b/gi, 'CGI render style');
+
+    // 5. Anti-miniaturization: character must NEVER stand on a surface (table, desk, counter, tray, shelf)
+    const furnitureRx = 'table|desk|counter|shelf|tray|surface|platform|workbench|countertop|glass surface|glass table|sink|stove|oven|appliance|washing machine|dryer';
+    const furnitureRe = new RegExp(furnitureRx, 'i');
+
+    // 5a. "standing/stands/positioned ON furniture" → "on the floor behind"
+    p = p
+        .replace(new RegExp(`\\bstanding on (a |the )?(${furnitureRx})\\b`, 'gi'), 'standing on the floor behind a $2')
+        .replace(new RegExp(`\\bstands on (a |the )?(${furnitureRx})\\b`, 'gi'), 'stands on the floor behind a $2')
+        .replace(new RegExp(`\\bpositioned on (a |the )?(${furnitureRx})\\b`, 'gi'), 'standing on the floor behind a $2')
+        .replace(new RegExp(`\\bon top of (a |the )?(${furnitureRx})\\b`, 'gi'), 'standing on the floor behind a $2')
+        .replace(new RegExp(`\\batop (a |the )?(${furnitureRx})\\b`, 'gi'), 'standing on the floor behind a $2');
+
+    // 5b. "beside/next to/near/by/in front of furniture" → inject "on the floor" for spatial anchoring
+    p = p
+        .replace(new RegExp(`\\b(stands|standing) (beside|next to|near|by|in front of|alongside|at) (a |the )?(kitchen )?(${furnitureRx})\\b`, 'gi'),
+            '$1 on the floor $2 $3$4$5 (the $5 reaches her waist level)')
+        .replace(new RegExp(`\\bbeside (a |the )?(kitchen )?(${furnitureRx})\\b`, 'gi'),
+            'on the floor beside $1$2$3 (the $3 reaches her waist level)');
+
+    // 5c. Append strict anti-miniaturization footer with explicit scale anchors
+    if (!p.includes('NEVER miniaturized') && !p.includes('FULL HUMAN HEIGHT')) {
+        p += ` CRITICAL SCALE: The character is a real-size adult woman (170 cm tall) with her FEET PLANTED ON THE FLOOR. The kitchen counter or table reaches her WAIST level. She is NEVER miniaturized, NEVER toy-sized, NEVER placed ON TOP of any furniture or appliance. Camera is at her EYE LEVEL.`;
+    }
+
+    // 6. Ensure adult-affirming preamble if not already present
+    if (!p.includes('ADULT PERSON') && !p.includes('mature adult') && !p.includes('adult woman')) {
+        p = `[Character: mature adult professional woman in her late 20s, fully adult facial features, confident professional demeanor]. ` + p;
+    }
 
     return p;
 }
@@ -639,32 +690,39 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
             }
         }
 
-        // Programmatic safety limit: Word count validation for 8-second video (optimal: 18-22 words, soft cap 24 words)
+        // Programmatic safety limit: Word count validation for 8-second video (optimal: 18-22 words, soft cap 28 words)
         if (line) {
             const cleanTextNoTags = line.replace(/\[[^\]]+\]/g, '').trim();
             const words = cleanTextNoTags.split(/\s+/).filter(Boolean);
-            const MAX_ALLOWED_WORDS = 24;
+            const MAX_ALLOWED_WORDS = 28;
             if (words.length > MAX_ALLOWED_WORDS) {
                 console.warn(`[Studio Scene ${idx + 1}] Line exceeded 8s limit (${words.length} words > ${MAX_ALLOWED_WORDS}). Trimming to fit 8s.`);
-                // Extract emotion tag if present
-                const emotionMatch = line.match(/^(\[[^\]]+\]\s*)/) || line.match(/(\s*\[[^\]]+\])$/);
+                // Extract emotion tag if present at start
+                const emotionMatch = line.match(/^(\[[^\]]+\]\s*)/);
                 const emotionTag = emotionMatch ? emotionMatch[0].trim() : '';
 
-                // Smart truncation at sentence/clause boundary or word limit
-                const trimmedWords = words.slice(0, MAX_ALLOWED_WORDS);
+                // Avoid ending on dangling prepositions/conjunctions
+                let trimCount = MAX_ALLOWED_WORDS;
+                const danglingRegex = /^(pour|de|du|des|à|dans|sur|avec|sans|et|ou|mais|car|en|par|for|to|of|in|on|at|with|and|or|but)$/i;
+                while (trimCount > 15 && danglingRegex.test(words[trimCount - 1])) {
+                    trimCount--;
+                }
+
+                const trimmedWords = words.slice(0, trimCount);
                 let trimmedLine = trimmedWords.join(' ');
                 // Ensure proper punctuation at the end
                 if (!/[.!?—]$/.test(trimmedLine)) {
                     trimmedLine += ' !';
                 }
-                line = emotionTag ? (line.startsWith('[') ? `${emotionTag} ${trimmedLine}` : `${trimmedLine} ${emotionTag}`) : trimmedLine;
+                // Never append emotion tag to the end of the line
+                line = emotionTag ? `${emotionTag} ${trimmedLine}` : trimmedLine;
             }
         }
 
         let character = (scene && (scene.character || scene.speaker || scene.character_name)) || (mode === 'objects' ? `Talking Object ${idx + 1}` : 'Presenter');
         let imageVariant = (scene && scene.imageVariant) || pickVariant(PIXAR_IMAGE_VARIANTS, idx).id;
         let videoVariant = (scene && scene.videoVariant) || pickVariant(PIXAR_VIDEO_VARIANTS, idx).id;
-        
+
         let rawImagePrompt = (scene && (scene.imagePrompt || scene.image_prompt || scene.description || scene.setting || scene.visual)) || `${character} in its natural environment`;
         let rawVideoPrompt = (scene && (scene.videoPrompt || scene.video_prompt || scene.motion || scene.animation)) || '';
 
@@ -709,13 +767,13 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
         let basePromptForVariant;
         if (isMacroInspection) {
             if (rawImagePrompt && rawImagePrompt.length > 25) {
-                basePromptForVariant = `${rawImagePrompt}, cinematic 9:16 vertical macro inspection shot, dramatic atmospheric lighting, sharp focus on the problem, high-end 3D animated look`;
+                basePromptForVariant = `${rawImagePrompt}, cinematic 9:16 vertical macro inspection shot, dramatic atmospheric lighting, sharp focus on the problem, high-end 3D CGI render`;
             } else {
                 basePromptForVariant = imgVar.template(character, rawImagePrompt);
             }
         } else if (rawImagePrompt && rawImagePrompt.length > 40 && (rawImagePrompt.includes('standing') || rawImagePrompt.includes('sitting') || rawImagePrompt.includes('holding') || rawImagePrompt.includes('in ') || rawImagePrompt.includes('at '))) {
             // rawImagePrompt is already a rich scene description from the LLM; keep its action/subject and add framing/lighting without room clashes
-            basePromptForVariant = `${rawImagePrompt}, cinematic 9:16 vertical portrait composition, atmospheric lighting, sharp focus, high-end 3D animated look`;
+            basePromptForVariant = `${rawImagePrompt}, cinematic 9:16 vertical portrait composition, atmospheric lighting, sharp focus, high-end 3D CGI render`;
         } else {
             basePromptForVariant = imgVar.template(rawImagePrompt || character);
         }
@@ -725,7 +783,28 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
             : `${basePromptForVariant}.${objectLock}${referenceDirective}${characterScaleDirective}`;
 
         finalImagePrompt = sanitizePromptForImageSafety(finalImagePrompt);
-        const finalVideoPrompt = `${mode === 'psychology' ? 'Mood: raw, direct, street-wise, unflinching.' : PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${vidVar.template} ${rawVideoPrompt} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${line}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
+        // Clean bracketed emotion tags from spoken dialogue for video and speech synthesis
+        const spokenLine = line.replace(/\[[^\]]+\]/g, '').replace(/\s{2,}/g, ' ').trim();
+        const cleanRawVideoPrompt = rawVideoPrompt.replace(/\[(excited|knowing|proudly|whispering|curious|direct|encouraging|playful|blunt|dry|sardonic|firm|impatient|wry|matter-of-fact)\]\s*/gi, '');
+
+        const isOutro = idx === scenesArray.length - 1;
+        let templateToUse = vidVar.template;
+        let processedRawVideoPrompt = cleanRawVideoPrompt;
+
+        if (isOutro && mode !== 'psychology') {
+            // Dedicated stable camera/action template for Outro scene (no eureka temple-tapping)
+            templateToUse = `CAMERA MOVEMENT: Steady eye-level mid-shot with a subtle slow push-in. CHARACTER ACTION: She looks directly into the camera with a warm engaging smile, holding the product steadily at chest height or making an encouraging forward gesture toward the viewer with a friendly nod («link in bio»), guiding them with clear confidence. Her face stays centered and fully visible throughout all 8 seconds.`;
+
+            // Sanitize finger counting in video prompts (causes severe AI hand deformities in diffusion video models)
+            processedRawVideoPrompt = processedRawVideoPrompt
+                .replace(/\bcounting (?:the )?(?:three )?(?:simple )?steps on (?:her )?fingers[^.]*\./gi, 'pointing warmly forward toward the viewer with an encouraging smile.')
+                .replace(/\bone finger raised[^.]*\./gi, '')
+                .replace(/\btwo fingers for[^.]*\./gi, '')
+                .replace(/\bthree fingers for[^.]*\./gi, '')
+                .replace(/\banimation\b/gi, '3D CGI render');
+        }
+
+        const finalVideoPrompt = `${mode === 'psychology' ? 'Mood: raw, direct, street-wise, unflinching.' : PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${templateToUse} ${processedRawVideoPrompt} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${spokenLine}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
 
         return {
             id: idx + 1,
@@ -914,7 +993,7 @@ function buildCoverPromptsFromGuide({ topic, amazonProduct, script }) {
         if (match) productCode = `#${match[1]}`;
     }
 
-    const baseQuality = 'professional 8K character render, 3D Pixar animated film style, cinematic 9:16 vertical framing, character appearance strictly from the provided reference image';
+    const baseQuality = 'professional 8K character render, high-end photorealistic 3D CGI, cinematic 9:16 vertical framing, character appearance strictly from the provided reference image';
     const baseNegative = 'NOT: plastic skin, mannequin, oversaturated, deformed fingers, extra limbs, blurry, dark murky, 2d cartoon';
     const productFidelity = amazonProduct ? ' (exact physical match to the product reference image, authentic design and real-world proportions)' : '';
 
@@ -1049,7 +1128,7 @@ For EACH scene (exactly 6), generate following JSON:
             ...s,
             id: idx + 1,
             // TASK 2: IMAGE PROMPTS (Full character description repeated verbatim per prompt.md)
-            image_prompt: `A full-body Pixar-style animated humanoid figure with a crystal-clear glass outer shell revealing a smooth ivory-white internal structural framework. Face: two large glowing yellow eyes with dark pupils, friendly neutral expression, rounded smooth head. Body framework: polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all proportioned and stylized. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. Pixar 3D CGI, physically-based rendering, 8K cinematic quality. NOT horror, NOT scary. Environment: ${s.environment || 'studio'}. Pose: ${s.pose_action || 'standing'}. ${s.visual_detail || ''} Vibrant saturated colors, high contrast, BOLD LARGE OBJECTS in the background to ground the scene, masterpiece quality.`,
+            image_prompt: `A full-body high-end CGI animated humanoid figure with a crystal-clear glass outer shell revealing a smooth ivory-white internal structural framework. Face: two large glowing yellow eyes with dark pupils, friendly neutral expression, rounded smooth head. Body framework: polished ivory-colored rigid structural elements — arms, legs, torso core, joints — all proportioned and stylized. Medical-illustration aesthetic: clean, modern, clinical, bright studio lighting. High-end 3D CGI, physically-based rendering, 8K cinematic quality. NOT horror, NOT scary. Environment: ${s.environment || 'studio'}. Pose: ${s.pose_action || 'standing'}. ${s.visual_detail || ''} Vibrant saturated colors, high contrast, BOLD LARGE OBJECTS in the background to ground the scene, masterpiece quality.`,
 
             // TASK 3: IMAGE-TO-VIDEO PROMPTS
             video_prompt: `Cinematic motion: ${s.motion_detail || 'subtle motion'}. Action: character ${s.pose_action || 'acting'}. Cinematic camera move (smooth dolly or slow-motion zoom), vibrant saturated colors, high resolution, masterpiece quality, fluid movement.`,
@@ -1212,9 +1291,10 @@ For EACH scene (exactly 6), generate following JSON:
         return `data:${imgMime};base64,${imgBuffer.toString('base64')}`;
     });
 
-    ipcMain.handle('skeleton-generate-video', async (event, { sceneIndex, videoPrompt, ltxVideoPrompt, scriptLine, fullScript, language, videoModel, audioUrl, projectFolder }) => {
+    ipcMain.handle('skeleton-generate-video', async (event, { sceneIndex, videoPrompt, ltxVideoPrompt, scriptLine, fullScript, language, videoModel, audioUrl, projectFolder, videoLength }) => {
         const audioPath = audioUrl ? audioUrl.replace('media:///', '').split('?')[0] : null;
         let videoFile;
+        console.log(`[Skeleton Video] Request received: sceneIndex=${sceneIndex}, videoModel=${videoModel}, videoLength=${videoLength}, projectFolder=${projectFolder}`);
 
         try {
             // We use G-Labs for video generation
@@ -1244,7 +1324,7 @@ For EACH scene (exactly 6), generate following JSON:
             // Otherwise (Skeleton mode), append the default intense voice.
             let promptToUse = videoPrompt;
             if (!promptToUse.toLowerCase().includes('cgi') && !promptToUse.toLowerCase().includes('animation')) {
-                promptToUse = `High-end 3D CGI animation. ` + promptToUse;
+                promptToUse = `High-end 3D CGI. ` + promptToUse;
             }
             if (!videoPrompt.includes('CHARACTER:') && !videoPrompt.includes('NEGATIVE PROMPT:')) {
                 promptToUse = `${promptToUse} AUDIO TRACK: A highly emotional, panicked, and intense adult male voice ALMOST SCREAMING in ${langStr}. STRICTLY NO BACKGROUND NOISE, NO MUSIC, NO SOUND EFFECTS, JUST PURE RAW SHOUTING VOICE. Spoken text: "${scriptLine}"`;
@@ -1272,13 +1352,50 @@ For EACH scene (exactly 6), generate following JSON:
                 .replace(/\bgirl\b/gi, 'woman')
                 .replace(/\bkid\b/gi, 'person')
                 .replace(/\bkids\b/gi, 'people')
-                .replace(/\bPixar 3D animation style\b/gi, 'high-end 3D CGI animation')
+                .replace(/\bPixar 3D animation style\b/gi, 'high-end 3D CGI render')
                 .replace(/\bPixar style\b/gi, 'high-end 3D CGI')
                 .replace(/\bPixar\b/gi, 'high-end CGI')
-                .replace(/\b3D cartoon animation style\b/gi, 'high-end 3D CGI animation')
-                .replace(/\bcartoon animation style\b/gi, 'CGI animation style')
-                .replace(/\bcartoon animation\b/gi, 'CGI animation')
-                .replace(/\bcartoon\b/gi, 'animated CGI');
+                .replace(/\b3D cartoon animation style\b/gi, 'high-end 3D CGI render')
+                .replace(/\bcartoon animation style\b/gi, 'CGI render style')
+                .replace(/\bcartoon animation\b/gi, 'CGI render')
+                .replace(/\bcartoon\b/gi, 'photorealistic CGI')
+                .replace(/\b3D animated\b/gi, '3D CGI')
+                .replace(/\banimation style\b/gi, 'CGI render style');
+
+            // Sanitize intimate/private spaces in video prompts (same as image sanitizer)
+            promptToUse = promptToUse
+                .replace(/\bin a warmly lit,? bright bathroom\b/gi, 'in a modern bright kitchen laboratory')
+                .replace(/\bin (a|the) bathroom\b/gi, 'in a modern bright kitchen laboratory')
+                .replace(/\bbathroom\b/gi, 'kitchen laboratory')
+                .replace(/\b(restroom|washroom)\b/gi, 'clean science workshop')
+                .replace(/\b(vanity counter|vanity table|vanity)\b/gi, 'clean laboratory counter')
+                .replace(/\b(dressing room|powder room)\b/gi, 'creative discovery room')
+                .replace(/\bin (a|the) (shower stall|shower cabin|shower)\b/gi, 'in a tiled test basin')
+                .replace(/\b(shower stall|shower cabin|shower)\b/gi, 'tiled test basin')
+                .replace(/\b(bathtub|tub)\b/gi, 'water testing basin')
+                .replace(/\bin (a|the) (bedroom)\b/gi, 'in a studio workspace')
+                .replace(/\b(bedroom|bed)\b/gi, 'studio workspace');
+
+            // Anti-miniaturization for video prompts
+            const vidFurniture = 'table|desk|counter|shelf|tray|surface|platform|workbench|countertop|sink|stove|oven|appliance';
+            promptToUse = promptToUse
+                .replace(new RegExp(`\\bstanding on (a |the )?(${vidFurniture})\\b`, 'gi'), 'standing on the floor behind a $2')
+                .replace(new RegExp(`\\bstands on (a |the )?(${vidFurniture})\\b`, 'gi'), 'stands on the floor behind a $2')
+                .replace(new RegExp(`\\bon top of (a |the )?(${vidFurniture})\\b`, 'gi'), 'standing on the floor behind a $2')
+                .replace(new RegExp(`\\b(stands|standing) (beside|next to|near|by|in front of|alongside|at) (a |the )?(kitchen )?(${vidFurniture})\\b`, 'gi'),
+                    '$1 on the floor $2 $3$4$5 (the $5 reaches her waist level)');
+
+            // Strip bracketed emotion tags from spoken dialogue and lip-sync instructions (so models don't speak them aloud)
+            promptToUse = promptToUse
+                .replace(/\[(excited|knowing|proudly|whispering|curious|direct|encouraging|playful|blunt|dry|sardonic|firm|impatient|wry|matter-of-fact)\]\s*/gi, '')
+                .replace(/\s{2,}/g, ' ');
+
+            // Sanitize finger counting in video prompts (causes severe AI hand deformities in diffusion video models)
+            promptToUse = promptToUse
+                .replace(/\bcounting (?:the )?(?:three )?(?:simple )?steps on (?:her )?fingers[^.]*\./gi, 'pointing warmly forward toward the viewer with an encouraging smile.')
+                .replace(/\bone finger raised[^.]*\./gi, '')
+                .replace(/\btwo fingers for[^.]*\./gi, '')
+                .replace(/\bthree fingers for[^.]*\./gi, '');
 
             // Prepend explicit adult framing for Omni Flash safety classifiers
             if (!promptToUse.includes('ADULT PERSON') && !promptToUse.includes('mature adult')) {
@@ -1304,6 +1421,7 @@ For EACH scene (exactly 6), generate following JSON:
                 subFolder: projectFolder,
                 sceneIndex: sceneIndex,
                 referenceImages: referenceImages,
+                videoLength: videoLength || null,
                 onProgress: (p) => {
                     event.sender.send('skeleton-video-progress', { sceneIndex, attempt: p.attempt, state: p.status, taskAttempt: 1 });
                 }
@@ -1951,13 +2069,13 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
         }
 
         if (event && event.sender) {
-            event.sender.send('studio-progress', { status: mode === 'psychology' ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...' : '✍️ ИИ пишет сценарий вирусных лайфхаков для Génie — молодого учёного-изобретателя...', progress: 70 });
+            event.sender.send('studio-progress', { status: mode === 'psychology' ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...' : '✍️ ИИ пишет сценарий вирусных лайфхаков для Génie — учёной-изобретательницы...', progress: 70 });
         }
 
         let systemInstruction = "";
         let userPrompt = "";
 
-        const CHARACTER_BIBLE_GENIE = `"Génie — an adult woman scientist in her late 20s, Pixar 3D animation style. Appearance: round circular glasses, warm olive skin, dark wavy hair pulled back loosely, white lab coat over a colorful top. Expression: clever, enthusiastic, bright-eyed inventor energy. The image in reference_images shows her exact face and design — match it precisely."`;
+        const CHARACTER_BIBLE_GENIE = `"Génie — a mature adult woman scientist in her late 20s, high-end photorealistic 3D CGI render. The character's face, hair, outfit, and all visual appearance details are defined 100% by the provided reference image — do NOT describe or invent any physical features. Expression: confident, enthusiastic, professional inventor energy. The image in reference_images shows her exact face and design — match it precisely."`;
 
         if (mode === 'psychology') {
             systemInstruction = `You are a Master Viral Scriptwriter specialized in raw, street-smart psychology and human behavior.
@@ -2040,7 +2158,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                   "imageVariant": "A",
                   "videoVariant": "A",
                   "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the moody urban location, dramatic lighting, and his confident body posture.",
-                  "videoPrompt": "(In English) High-end 3D CGI animation. Describe the animation starting from the exact pose in imagePrompt. Deliberate gestures: pointed finger, arms crossed, wry shrug. LIP-SYNC: \"[line]\""
+                  "videoPrompt": "(In English) High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Deliberate gestures: pointed finger, arms crossed, wry shrug. LIP-SYNC: \"[line]\""
                 }
               ]
             }`;
@@ -2124,19 +2242,24 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                  RULE: Each scene's "line" must naturally embed one such phrase or its equivalent in ${langName}.
             ${effectiveAmazonProduct ? `
             13. 🛒 MANDATORY OUTRO & CTA FOR AMAZON SHOWCASE PRODUCT #${effectiveAmazonProduct.code} ("${effectiveAmazonProduct.title}"):
-                 - The FINAL SCENE (Scene ${isShort ? '5' : '8'}) is the Outro.
-                 - Génie MUST deliver a clear, friendly, step-by-step call to action that ANY viewer of any age can follow WITHOUT confusion.
-                 - MANDATORY SKELETON — generate the line using exactly these 3 parts in ${langName}, in this order:
-                   PART 1 [bio link]:   Imperative verb → tell the viewer to click/open the link in your profile/bio.
-                   PART 2 [code + OK]:  Imperative verb → enter number ${effectiveAmazonProduct.code} on the keypad AND press OK (both in one clause, never separated).
-                   PART 3 [Amazon]:     Result → they arrive on Amazon to order/buy the product.
-                 - In ${langName} (especially French for @bertranna), all 3 parts MUST be present, explicit, and simple enough for any viewer of any age.
-                   ✅ GOOD: "Clique sur le lien en bio ! Entre le ${effectiveAmazonProduct.code} sur le clavier et appuie sur OK — tu arrives sur Amazon pour commander !"
-                   ✅ GOOD: "Va sur le lien dans mon profil, tape le ${effectiveAmazonProduct.code} sur le clavier, appuie sur OK et commande-le direct sur Amazon !"
-                   ❌ FORBIDDEN: "sur le site" or "sur mon labo" instead of "sur le clavier" — the word "clavier" MUST appear explicitly.
-                   ❌ FORBIDDEN: splitting PART 2 across two sentences (enter code in one sentence, OK in another).
-                 - Dialogue length: STRICTLY 18-22 words, natural conversational pace filling the 8-second video clip.
+                 - The FINAL SCENE (Scene ${isShort ? '5' : '8'}) is the Outro Call-To-Action.
+                 - Génie MUST deliver a crystal-clear, friendly, high-converting 3-step action funnel that any viewer can immediately follow:
+                   PART 1 [bio link]:   Direct imperative verb → click the link in bio or profile.
+                   PART 2 [code + OK]:  Enter the code ${effectiveAmazonProduct.code} and press OK (clear, intuitive and frictionless).
+                   PART 3 [Amazon]:     Direct arrival on Amazon to order the product.
+                 - In ${langName} (especially French for @bertranna), use this proven viral formula:
+                   ✅ "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
+                   ✅ "Va sur le lien dans mon profil, tape le code ${effectiveAmazonProduct.code} et appuie sur OK — ça t'emmène direct sur Amazon !"
+                   ✅ "Ouvre le lien en bio, tape le code ${effectiveAmazonProduct.code} sur le clavier et clique sur OK pour aller direct sur Amazon !"
+                   ✅ "Le lien est dans ma bio : tape le code ${effectiveAmazonProduct.code}, appuie sur OK et retrouve-le directement sur Amazon !"
+                   ❌ STRICTLY FORBIDDEN: Any bracketed emotion tags like [direct], [excited], etc. in the line or dialogue!
+                   ❌ STRICTLY FORBIDDEN: Splitting PART 2 across two sentences.
+                 - Dialogue length: STRICTLY 18-22 words, natural conversational pace filling the 8-second video clip without rushing or truncating.
                  - Example French Outro line: "${amazonManager.getRandomCta(effectiveAmazonProduct.code)}"
+                 - OUTRO VIDEO PROMPT & VISUAL ACTING RULES (CRITICAL FOR STABILITY):
+                   * Camera: Steady eye-level mid-shot with a subtle slow push-in or slow arc (Variant C, A, or G).
+                   * Character Action: Génie holds the featured product (${effectiveAmazonProduct.title}) steadily at chest height in one hand, presenting it clearly. With her other hand, she points directly and warmly forward at the camera with an encouraging smile and nod («lien en bio»), directly endorsing the product and guiding the viewer clearly.
+                   * STRICTLY FORBIDDEN IN VIDEO PROMPT: NO counting on fingers 1, 2, 3 (causes severe AI hand/finger deformities!), NO tapping temple, NO rapid changing hand poses. Use "High-end 3D CGI render", NEVER "animation".
             14. 🎯 STRICT 50/50 NARRATIVE FORMULA (MANDATORY WHEN AN AMAZON PRODUCT IS PRESENT):
                  - 🛑 BLOCK 1: SCENES 1 TO 4 — 100% PURE LIFEHACK (ABSOLUTELY ZERO PRODUCT MENTION!):
                    * Scenes 1, 2, 3, and 4 MUST focus EXCLUSIVELY on the lifehack itself: the common daily struggle, the mistake people make, the exact concrete DIY recipe / ingredients / method / biological principle, and how the reaction/trick works in real time.
@@ -2145,7 +2268,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                    * Scene 5 is THE TURNING POINT: The DIY trick works, but doing the physical scrubbing/watching by hand is exhausting. Bertranna pivots with empathy: "Pour vous épargner cet effort et vous faciliter la vie, je vous recommande d'utiliser..." and introduces the Amazon tool (${effectiveAmazonProduct.title}).
                    * Scene 6 explains why this tool solves the manual exhaustion (ergonomics, high speed, telescopic handle, convenience).
                    * Scene 7 highlights the triumphant synergy: the smart lifehack + this physical tool = flawless result in minutes without back pain or fatigue.
-                 - 🏁 BLOCK 3: SCENE 8 — OUTRO CTA: Génie guides the viewer through 3 simple steps: (1) click the link in bio → (2) type number #${effectiveAmazonProduct.code} on the site → (3) arrive directly on Amazon to purchase.` : ''}`;
+                 - 🏁 BLOCK 3: SCENE 8 — OUTRO CTA: Génie guides the viewer through 3 simple steps: (1) click the link in bio → (2) enter code #${effectiveAmazonProduct.code} and press OK → (3) arrive directly on Amazon to order.` : ''}`;
 
             const effectiveTopic = localVideoData
                 ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
@@ -2161,14 +2284,14 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
 - Scientific Principle: ${effectiveAmazonProduct.verdict}
 - Key Highlights: ${Array.isArray(effectiveAmazonProduct.features) ? effectiveAmazonProduct.features.join('; ') : ''}
 - Role of the Product: Smart physical amplifier introduced in Scene 5 to ease manual effort (ABSOLUTELY ZERO MENTION in Scenes 1-4!).
-- MANDATORY OUTRO REQUIREMENT: Scene ${isShort ? '5' : '8'} MUST guide the viewer through 3 clear steps in ${langName}: (1) click the link in bio → (2) type the number ${effectiveAmazonProduct.code} on the website → (3) you arrive directly on Amazon to purchase the product.\n` : '';
+- MANDATORY OUTRO REQUIREMENT: Scene ${isShort ? '5' : '8'} MUST guide the viewer through 3 clear steps in ${langName}: (1) click the link in bio → (2) enter code #${effectiveAmazonProduct.code} and press OK → (3) you arrive directly on Amazon to purchase the product.\n` : '';
 
             userPrompt = `Create a viral short LIFEHACK & SMART TIPS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
                         ${amazonProductContext}
                         ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR THE INVENTOR IN ${langName.toUpperCase()}:\n""" \n${localVideoData.combinedSummary}\n"""\n` : ''}
                         ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT LIFEHACKS, RULES, OR TIPS FOR THE INVENTOR IN ${langName.toUpperCase()}:\n""" \n${screenshotData.text}\n"""\n` : ''}
                         ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR THE INVENTOR IN ${langName.toUpperCase()}):\n""" \n${refData.transcript}\n"""\n` : ''}
-                        The narrator is a brilliant adult woman inventor and scientist in her late twenties, wearing round glasses and a lab coat, delivering mind-blowing everyday lifehacks and practical secrets.
+                        The narrator is a brilliant mature adult woman inventor and scientist in her late twenties, whose appearance is defined entirely by the provided reference image, delivering mind-blowing everyday lifehacks and practical secrets.
 
             DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
             ${effectiveAmazonProduct ? `
@@ -2176,18 +2299,40 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             ${isShort ? `
             - Scene 1 (HOOK & PAIN — 18-22 words): The daily struggle. ZERO product mention!
             - Scene 2 (CONCRETE DIY TRICK — 18-22 words): Specific recipe/ingredients/method. ZERO product mention!
-            - Scene 3 (THE PIVOT: TO EASE YOUR EFFORTS — 18-22 words): "Pour vous épargner cet effort, je vous recommande..." (introducing ${effectiveAmazonProduct.title}).
+            - Scene 3 (THE PIVOT — 18-22 words): Natural transition to the product. IMPORTANT: Do NOT always use the same bridge phrase. Randomly pick ONE unique approach from this list and adapt it naturally to the topic:
+              • "J'ai testé des dizaines de solutions — celle-ci est de loin la meilleure..."
+              • "Le hack marche, mais pour un résultat pro sans effort, il te faut..."
+              • "Personnellement, après avoir tout essayé, voici mon arme secrète..."
+              • "Les pros utilisent exactement cet outil — et maintenant toi aussi..."
+              • "Si tu veux le résultat parfait en 10 secondes chrono, c'est simple..."
+              • "La vraie astuce que personne ne te dit ? C'est cet outil qui change tout..."
+              (introducing ${effectiveAmazonProduct.title}).
             - Scene 4 (RESULT & RELIEF — 18-22 words): Flawless result without fatigue.
-            - Scene 5 (OUTRO CTA — 18-22 words): 3 clear steps — (1) click link in bio, (2) type number ${effectiveAmazonProduct.code} on the site, (3) arrive on Amazon to buy!
+            - Scene 5 (OUTRO CTA — 18-22 words): Crystal-clear 3-step action funnel:
+              "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
+              (or "Va sur le lien dans mon profil, tape le code ${effectiveAmazonProduct.code} et appuie sur OK — ça t'emmène direct sur Amazon !").
+              Strictly 18-22 words. NO bracketed emotion tags.
             ` : `
             - Scene 1 (HOOK & EVERYDAY PAIN — 18-22 words): Sharp callout of everyday pain/frustration. ZERO product mention!
             - Scene 2 (THE MISTAKE / WRONG WAY — 18-22 words): Why ordinary ways fail, waste money or damage health/materials. ZERO product mention!
             - Scene 3 (CONCRETE DIY INGREDIENTS / METHOD — 18-22 words): The exact, concrete ingredients, recipe, or physical setup (name specific items/proportions). ZERO product mention!
             - Scene 4 (THE LIFEHACK IN ACTION — 18-22 words): The scientific/practical reaction working in real time. 100% pure lifehack demonstration. ZERO product mention!
-            - Scene 5 (THE PIVOT: "TO EASE YOUR EFFORTS..." — 18-22 words): Turning point! The hack works, but doing it manually is exhausting. Bertranna introduces the Amazon tool: "Pour vous épargner cet effort et vous faciliter la vie, je vous recommande..." (introducing ${effectiveAmazonProduct.title}).
+            - Scene 5 (THE PIVOT — 18-22 words): Natural transition to the product. IMPORTANT: Do NOT use the same bridge phrase every time. Randomly pick ONE unique approach from this list and adapt it naturally to the topic:
+              • "Le hack marche, mais frotter à la main, c'est épuisant — voici ce qui change tout..."
+              • "J'ai testé des dizaines de produits pour ça — un seul m'a vraiment convaincue..."
+              • "Les pros ne font jamais ça à la main — leur secret, c'est exactement cet outil..."
+              • "Si tu veux le même résultat en 10 secondes sans effort, voici mon arme secrète..."
+              • "Personnellement, depuis que j'ai découvert ça, je ne reviens plus en arrière..."
+              • "La version simple et rapide de cette astuce ? Elle tient en un seul outil..."
+              (introducing ${effectiveAmazonProduct.title}).
             - Scene 6 (ERGONOMICS & HOW THE TOOL AMPLIFIES THE HACK — 18-22 words): Specific features solving manual fatigue (telescopic handle, high-speed motor, self-adhesive strip, etc.).
             - Scene 7 (TRIUMPHANT SYNERGY — 18-22 words): The combined victory: cheap clever trick + smart tool = perfect result in minutes with zero back pain or tiredness!
-            - Scene 8 (OUTRO CTA — 18-22 words): 3 clear steps — (1) click link in bio, (2) type number ${effectiveAmazonProduct.code} on the site, (3) arrive on Amazon to buy!
+            - Scene 8 (OUTRO CTA — 18-22 words): Crystal-clear 3-step call-to-action. VARY the phrasing — pick one style:
+              • "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
+              • "Va sur le lien dans mon profil, tape le code ${effectiveAmazonProduct.code} et appuie sur OK — ça t'emmène direct sur Amazon !"
+              • "Ouvre le lien en bio, tape le code ${effectiveAmazonProduct.code} sur le clavier et clique sur OK pour aller direct sur Amazon !"
+              • "Le lien est dans ma bio : tape le code ${effectiveAmazonProduct.code}, appuie sur OK et retrouve-le directement sur Amazon !"
+              Strictly 18-22 words. NO bracketed emotion tags.
             `}
             ` : `
             ${isShort ? `
@@ -2195,7 +2340,10 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             - Scene 2 (THE WHY): 18-22 words.
             - Scene 3 (THE GENIUS HACK): 18-22 words.
             - Scene 4 (PRO TIP & RESULT): 18-22 words.
-            - Scene 5 (MIC-DROP & CTA): 18-22 words.
+            - Scene 5 (MIC-DROP & CTA): 18-22 words. End with a punchy mic-drop AND a soft storefront CTA. Vary phrasing — pick one style:
+              • "Sauvegarde, abonne-toi — et retrouve tous mes outils testés sur mon labo en bio !"
+              • "Partage à quelqu'un qui galère avec ça — et découvre mes outils préférés en bio !"
+              • "Abonne-toi pour une astuce par jour — mes outils favoris sont en bio, jette un œil !"
             ` : `
             - Scene 1 (HOOK & PROBLEM): 18-22 words.
             - Scene 2 (THE COMMON MISTAKE): 18-22 words.
@@ -2204,11 +2352,14 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             - Scene 5 (THE MAGIC RESULT): 18-22 words.
             - Scene 6 (EXTRA PRO TIP): 18-22 words.
             - Scene 7 (TIME & MONEY SAVED): 18-22 words.
-            - Scene 8 (CLOSING & CTA): 18-22 words.
+            - Scene 8 (CLOSING & CTA): 18-22 words. End with a memorable closing AND a soft storefront CTA. Vary phrasing — pick one style:
+              • "Sauvegarde cette astuce — et retrouve tous mes outils testés et approuvés sur mon labo en bio !"
+              • "Abonne-toi pour d'autres secrets de génie — mes outils préférés t'attendent en bio !"
+              • "Partage cette vidéo et dis-moi en commentaire si ça a marché — plus d'astuces et d'outils en bio !"
             `}
             `}
 
-            Rotate Variants (A, B, C, D, E, F, G, H) for each scene. Prefer F, G, H for climax/reveal/result scenes (Scenes 5-8) for cinematic impact. VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable demonstration, D=gentle dolly, E=macro rack-focus (problem reveal), F=crash zoom for impact, G=90° orbit arc (triumphant result), H=parallax lateral slide (editorial).
+            Rotate Variants (A, B, C, D, E, F, G, H) for each scene. Prefer F, G, H for climax/reveal/result scenes (Scenes 5-8) for cinematic impact. VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable demonstration, D=gentle dolly, E=macro rack-focus (problem reveal), F=crash zoom for impact, G=subtle arc (triumphant result), H=parallax lateral slide (editorial).
             IMPORTANT: For Scene 1 or Scene 2, actively use imageVariant "E" and videoVariant "E" to highlight the physical problem, pests, or stains up-close!
 
             Output JSON:
@@ -2227,7 +2378,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                   "imageVariant": "E",
                   "videoVariant": "E",
                   "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. In the sharp foreground macro focus: vivid physical problem (e.g. slimy garden slugs chewing leaves, cracked textures, or dark stubborn fabric stains). In soft bokeh behind it, Génie leans in at adult height inspecting it with shock/intrigue. Describe the detailed scene.",
-                  "videoPrompt": "(In English) High-end 3D CGI animation. Describe the animation starting from the exact pose in imagePrompt. Slow rack-focus from foreground problem to Génie pointing and addressing the camera. LIP-SYNC: \"[line]\""
+                  "videoPrompt": "(In English) High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Slow rack-focus from foreground problem to Génie pointing and addressing the camera. LIP-SYNC: \"[line]\""
                 }
               ]
             }`;
@@ -2248,7 +2399,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             6. PRACTICAL CLEVERNESS:
                - She sees through everyday household struggles, clutter, kitchen issues, and daily inefficiencies.
             7. IMAGE STYLE, ENVIRONMENT VARIETY & COHERENCE:
-               - Every "imagePrompt" MUST start with: "The character from the reference image, Pixar 3D animation style, cinematic 9:16 vertical framing", followed by the specific location and the physical interaction.
+               - Every "imagePrompt" MUST start with: "The character from the reference image, high-end 3D CGI render, photorealistic lighting, cinematic 9:16 vertical framing", followed by the specific location and the physical interaction.
                - **SMART LOCATION SELECTION (match location to lifehack topic)**:
                  * 🏠 INDOOR — kitchen hacks, cleaning, organizing, cooking → modern kitchen, pantry, living room, organized closet
                  * 🔬 LAB / WORKSHOP — DIY, science tricks → inventor's workshop, craft desk
@@ -2309,7 +2460,10 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             - Scene 2 (PROBLEM & MISTAKE): 18-22 words.
             - Scene 3 (REVELATION): 18-22 words.
             - Scene 4 (PRACTICAL TIP): 18-22 words.
-            - Scene 5 (MIC-DROP & CTA): 18-22 words.
+            - Scene 5 (MIC-DROP & CTA): 18-22 words. End with a punchy mic-drop AND a soft storefront CTA. Vary phrasing — pick one style:
+              • "Sauvegarde, abonne-toi — et retrouve tous mes outils testés sur mon labo en bio !"
+              • "Partage à quelqu'un qui galère avec ça — et découvre mes outils préférés en bio !"
+              • "Abonne-toi pour une astuce par jour — mes outils favoris sont en bio, jette un œil !"
             ` : `
             - Scene 1 (HOOK & PROBLEM): 18-22 words.
             - Scene 2 (THE COMMON MISTAKE): 18-22 words.
@@ -2318,10 +2472,13 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             - Scene 5 (THE MAGIC RESULT): 18-22 words.
             - Scene 6 (EXTRA PRO TIP): 18-22 words.
             - Scene 7 (TIME & MONEY SAVED): 18-22 words.
-            - Scene 8 (CLOSING & CTA): 18-22 words.
+            - Scene 8 (CLOSING & CTA): 18-22 words. End with a memorable closing AND a soft storefront CTA. Vary phrasing — pick one style:
+              • "Sauvegarde cette astuce — et retrouve tous mes outils testés et approuvés sur mon labo en bio !"
+              • "Abonne-toi pour d'autres secrets de génie — mes outils préférés t'attendent en bio !"
+              • "Partage cette vidéo et dis-moi en commentaire si ça a marché — plus d'astuces et d'outils en bio !"
             `}
 
-            Rotate Variants (A, B, C, D, E, F, G, H) for each scene. Prefer F, G, H for climax/result scenes (Scenes 5-8). VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable mid-shot, D=gentle dolly, E=macro rack-focus, F=crash zoom, G=orbit arc (triumph), H=parallax lateral slide.
+            Rotate Variants (A, B, C, D, E, F, G, H) for each scene. Prefer F, G, H for climax/result scenes (Scenes 5-8). VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable mid-shot, D=gentle dolly, E=macro rack-focus, F=crash zoom, G=subtle arc (triumph), H=parallax lateral slide.
             IMPORTANT: Use imageVariant "E" and videoVariant "E" for Scene 1 or Scene 2 to visually reveal the problem, pest, or damage in the foreground!
 
             Output JSON:
@@ -2340,7 +2497,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                   "imageVariant": "E",
                   "videoVariant": "E",
                   "imagePrompt": "In English: [PASTE CHARACTER BIBLE HERE]. In sharp foreground: the physical problem or pest up-close. In background bokeh: Génie inspecting the disaster. Describe the environment.",
-                  "videoPrompt": "In English: High-end 3D CGI animation. Describe the animation starting from the exact pose in imagePrompt. Animate rack focus from problem to character explaining. LIP-SYNC: \"[line]\""
+                  "videoPrompt": "In English: High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Animate rack focus from problem to character explaining. LIP-SYNC: \"[line]\""
                 }
               ]
             }`;

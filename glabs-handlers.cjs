@@ -229,12 +229,14 @@ const generateImageViaGLabs = async (options = {}) => {
 
         // Helper to execute single G-Labs image generation attempt
         const executeImageAttempt = async (targetModel, attemptNumber, maxAttempts) => {
-            const bodyData = { prompt, model: targetModel, aspect_ratio: aspectRatio };
+            const bodyData = { prompt, model: targetModel, aspect_ratio: aspectRatio, num_images: count };
             let requestEndpoint = '/api/image/generate';
 
-            if (targetModel === 'grok') {
-                requestEndpoint = '/api/grok/generate';
-                bodyData.mode = referenceImages && referenceImages.length > 0 ? 'i2i' : 't2i';
+            if (targetModel === 'nano_pics') {
+                // Google Pics — same /api/image/generate endpoint, but needs mode
+                bodyData.mode = referenceImages && referenceImages.length > 0 ? 'image_to_image' : 'text_to_image';
+                bodyData.keep = 1;
+                bodyData.remove_logo = true;
             }
 
             if (referenceImages && referenceImages.length > 0) {
@@ -307,21 +309,24 @@ const generateVideoViaGLabs = async (options = {}) => {
             sceneIndex = 0,
             mode = 'text_to_video',
             referenceImages = [],
-            onProgress = null
+            onProgress = null,
+            videoLength = null
         } = options;
 
         let finalMode = mode;
         let finalRefImages = referenceImages;
 
         if (finalRefImages && finalRefImages.length > 0 && finalMode === 'text_to_video') {
-            if (model === 'omni_flash' && finalRefImages.length >= 2) {
+            if ((model === 'omni_flash' || model === 'omni_vids') && finalRefImages.length >= 2) {
                 finalMode = 'components';
+            } else if (model === 'omni_vids' && finalRefImages.length === 1) {
+                finalMode = 'start_image';
             } else if (model === 'meta') {
                 finalMode = 'i2v';
             } else {
                 finalMode = finalRefImages.length >= 2 ? 'start_end_image' : 'start_image';
             }
-        } else if (model === 'omni_flash' && finalMode === 'start_end_image') {
+        } else if ((model === 'omni_flash' || model === 'omni_vids') && finalMode === 'start_end_image') {
             finalMode = 'components';
         } else if (model === 'meta' && finalMode === 'text_to_video') {
             finalMode = 't2v';
@@ -343,20 +348,29 @@ const generateVideoViaGLabs = async (options = {}) => {
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.start_image = finalRefImages[0].data;
             }
-        } else if (model === 'grok') {
-            requestEndpoint = '/api/grok/generate';
-            delete bodyData.resolution;
-            bodyData.mode = finalRefImages && finalRefImages.length > 0 ? 'i2v' : 't2v';
-            bodyData.video_length = 10;
-            bodyData.resolution = '720p';
+        } else if (model === 'omni_vids') {
+            // Google Vids — uses /api/video/generate, configurable duration 3-10s, 1080p
+            const numLength = Number(videoLength);
+            bodyData.video_length = (Number.isInteger(numLength) && numLength >= 3 && numLength <= 10) ? numLength : 9;
+            bodyData.resolution = ['1080p'];
+            bodyData.remove_logo = true;
             if (finalRefImages && finalRefImages.length > 0) {
-                bodyData.reference_images = finalRefImages.map(img => img.data || img);
+                if (finalMode === 'components') {
+                    bodyData.reference_images = finalRefImages.map((img, idx) => {
+                        const data = img.data || img;
+                        return { data, name: img.name || `ref_${idx + 1}` };
+                    });
+                } else {
+                    bodyData.reference_images = finalRefImages.map(img => img.data || img);
+                }
             }
         } else {
             if (finalRefImages && finalRefImages.length > 0) {
                 bodyData.reference_images = finalRefImages.map(img => img.data || img);
             }
         }
+
+        console.log(`[G-Labs VID Int] Request: model=${bodyData.model || model} mode=${bodyData.mode} video_length=${bodyData.video_length} res=${JSON.stringify(bodyData.resolution)} remove_logo=${bodyData.remove_logo}`);
 
         const { statusCode, text } = await gLabsRequest(requestEndpoint, {
             method: 'POST',
@@ -519,19 +533,22 @@ function registerGLabsHandlers(ipcMain) {
         sceneIndex = 0,
         mode = 'text_to_video',
         referenceImages = [],
-        generateAudio = false
+        generateAudio = false,
+        videoLength = null
     }) => {
         return gLabsTaskQueue.enqueue('video', async () => {
             let finalMode = mode;
             let finalRefImages = referenceImages;
 
             if (finalRefImages && finalRefImages.length > 0 && finalMode === 'text_to_video') {
-                if (model === 'omni_flash' && finalRefImages.length >= 2) {
+                if ((model === 'omni_flash' || model === 'omni_vids') && finalRefImages.length >= 2) {
                     finalMode = 'components';
+                } else if (model === 'omni_vids' && finalRefImages.length === 1) {
+                    finalMode = 'start_image';
                 } else {
                     finalMode = finalRefImages.length >= 2 ? 'start_end_image' : 'start_image';
                 }
-            } else if (model === 'omni_flash' && finalMode === 'start_end_image') {
+            } else if ((model === 'omni_flash' || model === 'omni_vids') && finalMode === 'start_end_image') {
                 finalMode = 'components';
             }
 
@@ -541,12 +558,28 @@ function registerGLabsHandlers(ipcMain) {
                 prompt,
                 model,
                 aspect_ratio: aspectRatio,
-                resolution: ['720p'],
+                resolution: model === 'omni_vids' ? ['1080p'] : ['720p'],
                 mode: finalMode
             };
-            if (finalRefImages && finalRefImages.length > 0) {
-                bodyData.reference_images = finalRefImages;
+            if (model === 'omni_vids') {
+                const numLength = Number(videoLength);
+                bodyData.video_length = (Number.isInteger(numLength) && numLength >= 3 && numLength <= 10) ? numLength : 9;
+                bodyData.remove_logo = true;
+                if (finalRefImages && finalRefImages.length > 0) {
+                    if (finalMode === 'components') {
+                        bodyData.reference_images = finalRefImages.map((img, idx) => {
+                            const data = img.data || img;
+                            return { data, name: img.name || `ref_${idx + 1}` };
+                        });
+                    } else {
+                        bodyData.reference_images = finalRefImages.map(img => img.data || img);
+                    }
+                }
+            } else if (finalRefImages && finalRefImages.length > 0) {
+                bodyData.reference_images = finalRefImages.map(img => img.data || img);
             }
+
+            console.log(`[G-Labs VID] Request: model=${bodyData.model} mode=${bodyData.mode} video_length=${bodyData.video_length} res=${JSON.stringify(bodyData.resolution)} remove_logo=${bodyData.remove_logo}`);
 
             const { statusCode, text } = await gLabsRequest('/api/video/generate', {
                 method: 'POST',

@@ -61,7 +61,7 @@ const ROLE_LABELS: Record<SegmentRole, string> = {
 const FrenchTalkTab: React.FC = () => {
   const [subTab, setSubTab] = useState<'blogger' | 'episode' | 'vlog' | 'stream_pack'>('blogger');
   const [llmProvider, setLlmProvider] = useState('custom');
-  const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
+  const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'nano_pics'>('nano_banana_2');
   const [videoModel, setVideoModel] = useState<'omni_flash' | 'veo_31_fast'>('omni_flash');
 
   // Stream Pack state

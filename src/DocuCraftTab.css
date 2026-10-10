@@ -1,0 +1,1182 @@
+/* ── DocuCraftTab — Educational & Documentary Studio ───────────────── */
+
+.docucraft-container {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  background: #0f1115;
+  color: #e4e7eb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ── Sidebar / Configuration ───────────────────────────────────────── */
+.docucraft-sidebar {
+  width: 340px;
+  min-width: 310px;
+  max-width: 380px;
+  padding: 22px 18px;
+  border-right: 1px solid #1f242c;
+  overflow-y: auto;
+  background: #14171d;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.docucraft-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.docucraft-sidebar::-webkit-scrollbar-thumb {
+  background: #2a303c;
+  border-radius: 4px;
+}
+
+.docucraft-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #1f242c;
+}
+
+.docucraft-brand-icon {
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, #e6a756 0%, #c47d2b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.docucraft-brand-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #f1f4f8;
+  margin: 0;
+}
+
+.docucraft-brand-sub {
+  font-size: 0.75rem;
+  color: #8c9ba5;
+  margin: 2px 0 0;
+}
+
+.docucraft-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docucraft-label {
+  font-size: 0.73rem;
+  color: #9aa8b6;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.docucraft-input,
+.docucraft-textarea,
+.docucraft-select {
+  background: #1c212a;
+  border: 1px solid #2b3340;
+  border-radius: 8px;
+  color: #edf2f7;
+  padding: 9px 12px;
+  font-size: 0.84rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.docucraft-input:focus,
+.docucraft-textarea:focus,
+.docucraft-select:focus {
+  border-color: #d49547;
+  box-shadow: 0 0 0 2px rgba(212, 149, 71, 0.18);
+}
+
+.docucraft-textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.docucraft-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.docucraft-pill {
+  background: #1e242d;
+  border: 1px solid #2e3644;
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  color: #b0bec5;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.docucraft-pill:hover {
+  background: #28303d;
+  color: #f0f4f8;
+  border-color: #d49547;
+}
+
+.docucraft-pill.active {
+  background: rgba(212, 149, 71, 0.15);
+  border-color: #d49547;
+  color: #f7ca88;
+  font-weight: 600;
+}
+
+.docucraft-btn-primary {
+  background: linear-gradient(135deg, #d49547 0%, #b87326 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(212, 149, 71, 0.25);
+}
+
+.docucraft-btn-primary:hover:not(:disabled) {
+  opacity: 0.95;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(212, 149, 71, 0.35);
+}
+
+.docucraft-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.docucraft-btn-secondary {
+  background: #1f2530;
+  color: #cfd8dc;
+  border: 1px solid #313c4c;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.docucraft-btn-secondary:hover:not(:disabled) {
+  background: #28303d;
+  border-color: #48566b;
+  color: #fff;
+}
+
+.docucraft-btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.docucraft-btn-sm {
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  border-radius: 6px;
+  border-radius: 6px;
+}
+
+/* ── Main Workspace ─────────────────────────────────────────────────── */
+.docucraft-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px 28px;
+  background: #0d0f14;
+  gap: 20px;
+}
+
+.docucraft-main::-webkit-scrollbar {
+  width: 8px;
+}
+.docucraft-main::-webkit-scrollbar-thumb {
+  background: #232936;
+  border-radius: 4px;
+}
+
+/* ── Progress Bar Banner ────────────────────────────────────────────── */
+.docucraft-progress-card {
+  background: #171b23;
+  border: 1px solid #293240;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.docucraft-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f1f4f8;
+}
+
+.docucraft-progress-track {
+  width: 100%;
+  height: 8px;
+  background: #232a37;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.docucraft-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d49547, #f7ca88);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ── Header Area ────────────────────────────────────────────────────── */
+.docucraft-header-card {
+  background: linear-gradient(180deg, #181d26 0%, #13171e 100%);
+  border: 1px solid #262e3d;
+  border-radius: 12px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.docucraft-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.docucraft-badge {
+  background: #222936;
+  border: 1px solid #333d4e;
+  color: #f7ca88;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.docucraft-badge-accent {
+  background: rgba(212, 149, 71, 0.16);
+  border-color: #d49547;
+  color: #ffc278;
+}
+
+.docucraft-title-input {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #f6f8fb;
+  background: transparent;
+  border: 1px dashed transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  outline: none;
+  width: 100%;
+}
+
+.docucraft-title-input:hover,
+.docucraft-title-input:focus {
+  border-color: #3b4658;
+  background: #1c222c;
+}
+
+.docucraft-synopsis-input {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #9cb0c3;
+  background: transparent;
+  border: 1px dashed transparent;
+  border-radius: 6px;
+  padding: 6px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+}
+
+.docucraft-synopsis-input:hover,
+.docucraft-synopsis-input:focus {
+  border-color: #3b4658;
+  background: #1c222c;
+}
+
+/* ── Action Bar ─────────────────────────────────────────────────────── */
+.docucraft-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #151921;
+  border: 1px solid #252c39;
+  border-radius: 10px;
+}
+
+.docucraft-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Chapters Hierarchy ─────────────────────────────────────────────── */
+.docucraft-chapters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.docucraft-chapter-card {
+  background: #141820;
+  border: 1px solid #232b38;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s;
+}
+
+.docucraft-chapter-card:hover {
+  border-color: #384457;
+}
+
+.docucraft-chapter-header {
+  padding: 16px 20px;
+  background: #1a1f2a;
+  border-bottom: 1px solid #232b38;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.docucraft-chapter-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.docucraft-chapter-num {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #d49547;
+  background: rgba(212, 149, 71, 0.12);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 149, 71, 0.3);
+}
+
+.docucraft-chapter-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #edf2f7;
+}
+
+.docucraft-chapter-duration {
+  font-size: 0.78rem;
+  color: #8da0b3;
+  margin-left: 6px;
+}
+
+.docucraft-chapter-objective {
+  padding: 10px 20px;
+  background: #11141a;
+  border-bottom: 1px solid #1f2530;
+  font-size: 0.82rem;
+  color: #9cb0c3;
+  font-style: italic;
+}
+
+.docucraft-scene-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+/* ── Scene Card ─────────────────────────────────────────────────────── */
+.docucraft-scene-card {
+  background: #171c24;
+  border: 1px solid #283241;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.docucraft-scene-card:hover {
+  border-color: #3f4c61;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.docucraft-scene-card.animated-card {
+  border-left: 3px solid #d49547;
+}
+
+.docucraft-scene-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.docucraft-scene-id {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #798a9c;
+  text-transform: uppercase;
+}
+
+.docucraft-anim-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.docucraft-anim-badge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.docucraft-anim-badge.badge-animated {
+  background: rgba(212, 149, 71, 0.2);
+  border: 1px solid #d49547;
+  color: #f7ca88;
+}
+
+.docucraft-anim-badge.badge-static {
+  background: #232a37;
+  border: 1px solid #374254;
+  color: #a4b4c6;
+}
+
+.docucraft-scene-title-input {
+  background: transparent;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 2px 4px;
+  outline: none;
+}
+
+.docucraft-scene-title-input:hover,
+.docucraft-scene-title-input:focus {
+  border-color: #3b4658;
+  background: #1c222c;
+}
+
+.docucraft-narration-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.docucraft-annotation-tag {
+  background: rgba(230, 167, 86, 0.08);
+  border: 1px dashed rgba(230, 167, 86, 0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  color: #e5b97d;
+  font-family: Georgia, serif;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Media Previews ─────────────────────────────────────────────────── */
+.docucraft-media-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #12151b;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #202632;
+}
+
+.docucraft-preview-stage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #090b0e;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.docucraft-preview-img,
+.docucraft-preview-vid {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.docucraft-preview-img {
+  cursor: pointer;
+}
+
+.docucraft-preview-switcher {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  background: rgba(13, 16, 23, 0.75);
+  backdrop-filter: blur(4px);
+  padding: 3px 4px;
+  border-radius: 6px;
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.docucraft-preview-switch-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.docucraft-preview-switch-btn.active {
+  background: #d49547;
+  color: #0b0d11;
+  font-weight: 700;
+}
+
+.docucraft-preview-expand-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(13, 16, 23, 0.75);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.15s ease;
+}
+
+.docucraft-preview-expand-btn:hover {
+  background: rgba(212, 149, 71, 0.85);
+  color: #0b0d11;
+}
+
+.docucraft-preview-empty {
+  color: #556272;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.docucraft-audio-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #181d25;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.76rem;
+}
+
+.docucraft-audio-player {
+  width: 100%;
+  height: 28px;
+  outline: none;
+}
+
+.docucraft-scene-btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Master Assembly & Output Panel ─────────────────────────────────── */
+.docucraft-assembly-panel {
+  background: linear-gradient(180deg, #161b24 0%, #12151c 100%);
+  border: 1px solid #293344;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.docucraft-assembly-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+}
+
+@media (max-width: 1100px) {
+  .docucraft-assembly-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.docucraft-final-player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.docucraft-yt-chapters-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #11141b;
+  border: 1px solid #222936;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.docucraft-yt-chapters-textarea {
+  background: #0d1016;
+  border: 1px solid #1e2430;
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-family: Consolas, monospace;
+  font-size: 0.8rem;
+  padding: 10px;
+  height: 180px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* ── Lightbox Modal ─────────────────────────────────────────────────── */
+.docucraft-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.docucraft-modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.docucraft-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.docucraft-modal-close:hover {
+  background: rgba(212, 149, 71, 0.8);
+}
+
+/* ── Scene Card Toolbar & Action Extensions ───────────────────────── */
+.docucraft-fit-select {
+  background: #12161f;
+  border: 1px solid #283345;
+  color: #9cb3c9;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  padding: 3px 6px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.docucraft-fit-select:hover {
+  border-color: #d49547;
+}
+
+.docucraft-btn-danger-sm {
+  background: transparent;
+  border: 1px solid #4a2228;
+  color: #ef7785;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.docucraft-btn-danger-sm:hover {
+  background: #521922;
+  border-color: #ff5469;
+  color: #fff;
+}
+
+.docucraft-add-scene-bar {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  background: #11141c;
+  border: 1px dashed #242c3b;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.docucraft-add-scene-btn {
+  background: #171d27;
+  border: 1px solid #2a3445;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.docucraft-add-scene-btn:hover {
+  background: #202937;
+  border-color: #d49547;
+  color: #f7ca88;
+}
+
+/* ── YouTube Broadcast Package Styles ───────────────────────────────── */
+.docucraft-yt-package-card {
+  background: #11141b;
+  border: 1px solid #222936;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.docucraft-yt-titles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docucraft-yt-title-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d1016;
+  border: 1px solid #1f2735;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: #e2e8f0;
+  gap: 10px;
+}
+
+.docucraft-yt-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.docucraft-yt-tag-pill {
+  background: #19202c;
+  border: 1px solid #293448;
+  color: #9cb3c9;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+/* ── Stock Archival & B-Roll Modal Styles ───────────────────────────── */
+.docucraft-stock-modal {
+  background: #0f131a;
+  border: 1px solid #273142;
+  border-radius: 12px;
+  width: 90vw;
+  max-width: 1100px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+}
+
+.docucraft-stock-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e2633;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #141a24;
+}
+
+.docucraft-stock-searchbar {
+  padding: 14px 20px;
+  background: #111620;
+  border-bottom: 1px solid #1e2633;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.docucraft-stock-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.docucraft-filter-pill {
+  background: #1a2230;
+  border: 1px solid #2b384e;
+  color: #94a3b8;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.docucraft-filter-pill:hover {
+  background: #242e40;
+  color: #e2e8f0;
+}
+
+.docucraft-filter-pill.active {
+  background: #064e3b;
+  border-color: #059669;
+  color: #6ee7b7;
+  font-weight: 600;
+}
+
+.docucraft-stock-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.docucraft-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.docucraft-stock-card {
+  background: #141a24;
+  border: 1px solid #222b3a;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.docucraft-stock-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.docucraft-stock-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #090c10;
+  overflow: hidden;
+}
+
+.docucraft-stock-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.docucraft-stock-badge-type {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  color: #f1f5f9;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.docucraft-stock-badge-dur {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.docucraft-stock-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.docucraft-stock-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.docucraft-stock-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: auto;
+}
+
+.docucraft-stock-source-tag {
+  font-weight: 600;
+  color: #6ee7b7;
+}
+
+.docucraft-stock-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+
+/* ── Multi-Shot Narrative Chaining Styles ────────────────────────── */
+.docucraft-shots-container {
+  margin-top: 10px;
+  background: #0b0e14;
+  border: 1px solid #1e2634;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docucraft-shots-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #18202d;
+  padding-bottom: 6px;
+}
+
+.docucraft-shots-timeline {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.docucraft-shot-card {
+  flex: 0 0 140px;
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+  overflow: hidden;
+  background: #111620;
+  border: 1px solid #232d3e;
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.docucraft-shot-card.ready {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.docucraft-shot-card.generating {
+  border-color: #d49547;
+  animation: shotPulse 1.5s infinite;
+}
+
+@keyframes shotPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 149, 71, 0.3); }
+  70% { box-shadow: 0 0 0 6px rgba(212, 149, 71, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 149, 71, 0); }
+}
+
+.docucraft-shot-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.docucraft-shot-role-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.role-cause {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.role-action {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.role-transform {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.role-result {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.role-detail {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.docucraft-shot-dur {
+  font-size: 0.65rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.docucraft-shot-preview {
+  width: 100%;
+  height: 75px;
+  background: #07090e;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.docucraft-shot-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.docucraft-shot-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.docucraft-shot-prompt-tooltip {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.docucraft-shot-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}

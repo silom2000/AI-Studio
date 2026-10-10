@@ -195,7 +195,7 @@ export interface IElectronAPI {
   timelapseGenerateCustomPrompts: (customIdea: string, images: (string | null)[], video: string | null, mode?: string, provider?: string) => Promise<any>,
   timelapseGenerateReversePrompts: (baseImage: string) => Promise<any>,
   timelapseGenerateImage: (imgIndex: number, prompt: string, model?: string, subFolder?: string, referenceImage?: string | null) => Promise<string>,
-  timelapseGenerateVideo: (videoIndex: number, prompt: string, subFolder?: string, referenceImages?: (string | null)[], videoModel?: string) => Promise<string>,
+  timelapseGenerateVideo: (videoIndex: number, prompt: string, subFolder?: string, referenceImages?: (string | null)[], videoModel?: string, videoLength?: number) => Promise<string>,
   timelapseAssemble: (subFolder?: string, projectTitle?: string) => Promise<string>,
 
   // Studio Tabs
@@ -327,7 +327,7 @@ export interface IElectronAPI {
   }) => Promise<string[]>,
   glabsGenerateVideo: (data: {
     prompt: string; model?: string; aspectRatio?: string; resolution?: string;
-    section?: string; subFolder?: string; sceneIndex?: number;
+    videoLength?: number; section?: string; subFolder?: string; sceneIndex?: number;
   }) => Promise<string>,
   glabsGetMultiThread: () => Promise<{ isMultiThread: boolean; concurrency: number; activeRunning: number; queueLength: number }>,
   glabsSetMultiThread: (enabled: boolean, concurrency?: number) => Promise<{ isMultiThread: boolean; concurrency: number; activeRunning: number; queueLength: number }>,
@@ -409,7 +409,289 @@ export interface IElectronAPI {
   amazonSourceByUrl: (data: { urlOrAsin: string; options?: { topic?: string; provider?: string; projectFolder?: string } }) => Promise<{ success: boolean; product: AmazonProduct; error?: string }>,
   onAmazonSourceProgress: (callback: (data: { status: string; progress: number }) => void) => void,
   removeAmazonSourceProgressListener: () => void,
+
+  // DocuCraft — Long-Form Educational & Historical Documentaries
+  docucraftGenerateScript: (params: {
+    topic: string;
+    targetDurationMinutes?: number;
+    stylePreset?: string;
+    customStyleDesc?: string;
+    language?: string;
+    aiModel?: string;
+  }) => Promise<DocuCraftScript>;
+  docucraftGenerateAudio: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    ttsService?: string;
+    sceneId?: string | null;
+  }) => Promise<DocuCraftScript>;
+  docucraftGenerateImages: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    imageModel?: string;
+    sceneId?: string | null;
+  }) => Promise<DocuCraftScript>;
+  docucraftRegenerateImage: (params: {
+    projectFolder?: string;
+    sceneId: string;
+    prompt: string;
+    imageModel?: string;
+  }) => Promise<{ imageUrl: string; localPath: string }>;
+  docucraftGenerateVideos: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    videoModel?: string;
+    videoDuration?: number;
+    sceneId?: string | null;
+  }) => Promise<DocuCraftScript>;
+  docucraftRegenerateVideo: (params: {
+    projectFolder?: string;
+    sceneId: string;
+    prompt: string;
+    imageUrl?: string;
+    videoModel?: string;
+  }) => Promise<{ videoUrl: string; localPath: string }>;
+  docucraftExtendVideo: (params: {
+    projectFolder?: string;
+    sceneId: string;
+    prompt: string;
+    existingVideoUrl: string;
+    videoModel?: string;
+  }) => Promise<{ videoUrl: string; localPath: string }>;
+  docucraftAssemble: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    bgmTrack?: string | null;
+    bgmVolume?: number;
+    showAnnotations?: boolean;
+    showChapterTitles?: boolean;
+    defaultFitMode?: string;
+  }) => Promise<{ videoUrl: string; youtubeChapters: string; youtubePackage?: DocuCraftYouTubePackage; totalDuration: number; manifest: DocuCraftScript }>;
+  docucraftGenerateShort: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    sceneId?: string;
+  }) => Promise<{ shortUrl: string; sceneId: string; title: string }>;
+  docucraftSaveScript: (params: {
+    projectFolder: string;
+    script: DocuCraftScript;
+  }) => Promise<{ success: boolean; path: string }>;
+  docucraftLoadProjects: () => Promise<DocuCraftProjectSummary[]>;
+  docucraftGetBgmTracks: () => Promise<DocuCraftBgmTrack[]>;
+  docucraftUploadCustomMedia: (params: {
+    projectFolder?: string;
+    sceneId?: string;
+  }) => Promise<{ canceled: boolean; mediaType?: 'image' | 'video'; url?: string; localPath?: string; filename?: string }>;
+  docucraftAddScene: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    chapterId: string;
+    insertAfterSceneId?: string;
+  }) => Promise<{ success: boolean; script: DocuCraftScript; newScene: DocuCraftScene }>;
+  docucraftDeleteScene: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    chapterId: string;
+    sceneId: string;
+  }) => Promise<{ success: boolean; script: DocuCraftScript }>;
+  docucraftSearchStock: (params: {
+    query: string;
+    source?: 'all' | 'wikimedia' | 'pexels' | 'archive_org';
+    mediaType?: 'all' | 'video' | 'image';
+    page?: number;
+    perPage?: number;
+    pexelsApiKey?: string;
+  }) => Promise<DocuCraftStockSearchResult>;
+  docucraftSelectStockMedia: (params: {
+    projectFolder?: string;
+    chapterId?: string;
+    sceneId: string;
+    item: DocuCraftStockItem;
+    script?: DocuCraftScript;
+  }) => Promise<{
+    success: boolean;
+    scene: DocuCraftScene;
+    script: DocuCraftScript;
+    mediaType: 'video' | 'image';
+    mediaUrl: string;
+    localPath: string;
+  }>;
+  docucraftDecomposeShots: (params: {
+    voiceoverText?: string;
+    duration?: number;
+    imagePrompt?: string;
+    stylePreset?: string;
+    language?: string;
+    aiModel?: string;
+  }) => Promise<DocuCraftShot[]>;
+  docucraftGenerateShotChain: (params: {
+    projectFolder?: string;
+    sceneId: string;
+    shots: DocuCraftShot[];
+    videoModel?: string;
+    baseImageUrl?: string;
+  }) => Promise<DocuCraftShot[]>;
+  docucraftGenerateSingleShot: (params: {
+    projectFolder?: string;
+    sceneId: string;
+    shotIndex?: number;
+    prompt: string;
+    duration?: number;
+    videoModel?: string;
+    referenceImageUrl?: string;
+  }) => Promise<{ videoUrl: string; localPath: string }>;
+  docucraftGenerateThumbnails: (params: {
+    projectFolder?: string;
+    script: DocuCraftScript;
+    imageModel?: string;
+  }) => Promise<Array<{
+    id: number;
+    style: string;
+    styleTitle: string;
+    overlayText: string;
+    prompt: string;
+    imageUrl: string;
+    fileName?: string;
+    error?: string;
+  }>>;
+  docucraftRegenerateThumbnail: (params: {
+    projectFolder?: string;
+    thumbIndex: number;
+    prompt: string;
+    imageModel?: string;
+  }) => Promise<{ thumbIndex: number; imageUrl: string; fileName: string }>;
+  onDocuCraftShotUpdated: (callback: (data: { sceneId: string; shotIndex: number; shot: DocuCraftShot }) => void) => void;
+  removeDocuCraftShotUpdatedListener: () => void;
+  onDocuCraftProgress: (callback: (data: { step: string; status: string; progress: number; sceneId?: string }) => void) => void;
+  removeDocuCraftProgressListener: () => void;
+
 }
+
+export interface DocuCraftStockItem {
+  id: string;
+  source: 'wikimedia' | 'pexels' | 'archive_org';
+  sourceName: string;
+  title: string;
+  mediaType: 'video' | 'image';
+  mime?: string;
+  thumbnailUrl: string;
+  previewUrl: string;
+  downloadUrl: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+  creator?: string;
+  license?: string;
+  sourcePageUrl?: string;
+}
+
+export interface DocuCraftStockSearchResult {
+  results: DocuCraftStockItem[];
+  totalCount: number;
+  pexelsConfigured: boolean;
+}
+
+export interface DocuCraftShot {
+  id: string;
+  index: number;
+  role: 'cause' | 'action' | 'transform' | 'result' | 'detail';
+  roleLabel?: string;
+  duration: number;
+  prompt: string;
+  sourceImage?: string;
+  videoUrl?: string;
+  status?: 'idle' | 'generating' | 'ready' | 'error';
+  error?: string;
+  brollMeta?: {
+    source: string;
+    sourceName: string;
+    title: string;
+    originalUrl?: string;
+  };
+}
+
+export interface DocuCraftScene {
+  id: string;
+  chapterIndex: number;
+  sceneIndex: number;
+  title: string;
+  voiceoverText: string;
+  imagePrompt: string;
+  videoAnimationPrompt: string;
+  isAnimated: boolean;
+  annotation?: string;
+  videoFitMode?: 'drift' | 'loop' | 'slowmo' | 'pingpong' | 'freeze';
+  imageUrl?: string;
+  videoUrl?: string;
+  extendedVideoUrl?: string;
+  audioUrl?: string;
+  audioDuration?: number;
+  videoDuration?: number;
+  shots?: DocuCraftShot[];
+  brollMeta?: {
+    source: string;
+    sourceName: string;
+    title: string;
+    license?: string;
+    creator?: string;
+    sourcePageUrl?: string;
+    selectedAt?: string;
+  };
+  error?: string;
+}
+
+export interface DocuCraftChapter {
+  id: string;
+  index: number;
+  title: string;
+  targetDuration: string;
+  objective?: string;
+  startTimecode?: string;
+  scenes: DocuCraftScene[];
+}
+
+export interface DocuCraftYouTubePackage {
+  titleVariants: string[];
+  description: string;
+  tags: string[];
+  chapters: string;
+  durationSeconds: number;
+  formattedDuration: string;
+  generatedAt: string;
+}
+
+export interface DocuCraftScript {
+  title: string;
+  synopsis: string;
+  stylePreset: string;
+  customStyleDesc?: string;
+  language: string;
+  targetDurationMinutes: number;
+  chapters: DocuCraftChapter[];
+  projectFolder?: string;
+  youtubeChapters?: string;
+  youtubePackage?: DocuCraftYouTubePackage;
+  finalVideoUrl?: string;
+  totalDurationSeconds?: number;
+}
+
+export interface DocuCraftProjectSummary {
+  folderName: string;
+  title: string;
+  language: string;
+  chaptersCount: number;
+  finalVideoUrl?: string | null;
+  createdAt: number;
+  manifest?: DocuCraftScript;
+}
+
+export interface DocuCraftBgmTrack {
+  id: string;
+  name: string;
+  filename: string;
+  path: string;
+}
+
 
 declare global {
   interface Window {

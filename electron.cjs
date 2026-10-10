@@ -20,6 +20,7 @@ const { registerGLabsHandlers } = require('./glabs-handlers.cjs');
 const { registerStoryHandlers } = require('./story-handlers.cjs');
 const { registerCartoonHandlers } = require('./cartoon-handlers.cjs');
 const { registerSurviveHandlers } = require('./survive-handlers.cjs');
+const { registerDocuCraftHandlers } = require('./docucraft-handlers.cjs');
 const { registerLocalizeHandlers } = require('./localize-handlers.cjs');
 const { registerExportHandlers } = require('./export-handlers.cjs');
 const { registerPrimateCastHandlers } = require('./primatecast-handlers.cjs');
@@ -38,6 +39,7 @@ function isPathInside(filePath, allowedRoot) {
 }
 
 const MEDIA_ROOTS = [
+    'DocuCraft',
     'Stories',
     'SkeletonShorts',
     'CinematicTimelapse',
@@ -227,6 +229,11 @@ app.whenReady().then(async () => {
             // On Windows, the pathname for media:///D:/... is /D:/...
             let filePath = decodeURIComponent(url.pathname);
             
+            // Handle media://D:/... where drive letter is parsed as host
+            if (url.host && /^[a-zA-Z]:?$/.test(url.host)) {
+                filePath = url.host.replace(':', '') + ':' + filePath;
+            }
+
             // Strip leading slash if it precedes a drive letter (Windows)
             if (filePath.startsWith('/') && /^[a-zA-Z]:/.test(filePath.substring(1))) {
                 filePath = filePath.substring(1);
@@ -285,6 +292,7 @@ app.whenReady().then(async () => {
     registerStoryHandlers(ipcMain);
     registerCartoonHandlers(ipcMain);
     registerSurviveHandlers(ipcMain);
+    registerDocuCraftHandlers(ipcMain);
     registerLocalizeHandlers(ipcMain);
     registerPrimateCastHandlers(ipcMain);
     registerFrenchTalkHandlers(ipcMain);

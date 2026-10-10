@@ -643,7 +643,7 @@ Output the 6-stage pipeline in JSON format as per the system instructions.`;
         return `data:${imgMime};base64,${imgBuffer.toString('base64')}`;
     });
 
-    ipcMain.handle('timelapse-generate-video', async (event, { videoIndex, prompt, subFolder, videoModel }) => {
+    ipcMain.handle('timelapse-generate-video', async (event, { videoIndex, prompt, subFolder, videoModel, videoLength }) => {
         const baseDir = subFolder ? path.join(TIMELAPSE_DIR, subFolder) : TIMELAPSE_DIR;
         
         // Helper to find the latest version of an image file (e.g. image_1_TIMESTAMP.jpg or scene_1_TIMESTAMP.jpg)
@@ -697,6 +697,7 @@ Negative: ugly hands, deformed fingers, blurry hand, extra digits, text, waterma
                 sceneIndex: videoIndex,
                 mode: 'start_image',
                 resolution: '720p',
+                videoLength: videoLength || null,
                 referenceImages: [
                     { data: `data:image/${getExt(capsuleImgPath)};base64,${capsuleB64}` }
                 ]
@@ -721,6 +722,7 @@ Negative: ugly hands, deformed fingers, blurry hand, extra digits, text, waterma
                 sceneIndex: videoIndex,
                 mode: 'start_image',
                 resolution: '720p',
+                videoLength: videoLength || null,
                 referenceImages: [
                     { data: `data:image/${getExt(startImgPath)};base64,${startB64}` }
                 ]
@@ -748,12 +750,13 @@ Negative: ugly hands, deformed fingers, blurry hand, extra digits, text, waterma
         // Mode `start_end_image` enables smooth transition between two frames; omni_flash does not support it, so use components
         const generatedVideoPath = await ai.generateVideo({
             prompt: `STATIC CAMERA. TIMELAPSE TRANSITION. ${activeAudioRule} ${prompt}`,
-            model: videoModel || 'veo_31_lite', 
+            model: videoModel || 'veo_31_lite',
             sectionDir: TIMELAPSE_DIR,
             subFolder: subFolder,
             sceneIndex: videoIndex,
-            mode: videoModel === 'omni_flash' ? 'components' : 'start_end_image',
+            mode: (videoModel === 'omni_flash' || videoModel === 'omni_vids') ? 'components' : 'start_end_image',
             resolution: '720p',
+            videoLength: videoLength || null,
             referenceImages: [
                 { data: `data:image/${getExt(startImgPath)};base64,${startB64}` },
                 { data: `data:image/${getExt(endImgPath)};base64,${endB64}` }

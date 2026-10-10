@@ -40,7 +40,7 @@ type Script = {
   steps: Step[];
 };
 
-type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'meta' | 'grok';
+type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'meta' | 'omni_vids';
 type TtsService = 'voiceapi' | 'elevenlabs';
 type AiTextModel = 'custom' | 'omniroute' | 'pollinations';
 
@@ -49,7 +49,7 @@ const VIDEO_MODELS: { value: VideoModel; label: string; desc: string }[] = [
   { value: 'veo_31_fast', label: 'Veo 3.1 Fast', desc: 'Fast generation' },
   { value: 'omni_flash', label: 'Omni Flash', desc: 'Omni Flash generation' },
   { value: 'meta', label: 'Meta AI (i2v)', desc: 'Meta image-to-video' },
-  { value: 'grok', label: 'Grok Generation', desc: '10s 720p Video' },
+  { value: 'omni_vids', label: 'Google Vids', desc: '3-10s 1080p Video' },
 ];
 
 const TTS_SERVICES: { value: TtsService; label: string; desc: string }[] = [
@@ -83,8 +83,9 @@ const STEP_LABELS: Record<number, string> = {
 
 export function SurviveTab() {
   const [language, setLanguage] = useState('Russian');
-  const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'grok'>('nano_banana_2');
+  const [imageModel, setImageModel] = useState<'nano_banana_2' | 'nano_banana_pro' | 'nano_pics'>('nano_banana_2');
   const [videoModel, setVideoModel] = useState<VideoModel>('veo_31_lite');
+  const [videoDuration, setVideoDuration] = useState<number>(9);
   const [ttsService, setTtsService] = useState<TtsService>('voiceapi');
   const [aiModel, setAiModel] = useState<AiTextModel>('custom');
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -267,6 +268,7 @@ export function SurviveTab() {
         sourceImageUrl: imgUrl,
         narrationLine: step.line,
         videoModel,
+        videoLength: videoModel === 'omni_vids' ? videoDuration : undefined,
         projectFolder,
         oldFileUrl: sceneStates[sceneIndex]?.vidUrl
       });
@@ -346,7 +348,7 @@ export function SurviveTab() {
             {([
               { value: 'nano_banana_2', label: 'Nano Banana 2', desc: 'Fast Gen' },
               { value: 'nano_banana_pro', label: 'Nano Banana Pro', desc: 'HQ 4K' },
-              { value: 'grok', label: 'Grok Generation', desc: 'Grok Image Model' }
+              { value: 'nano_pics', label: 'Google Pics', desc: 'Google Gemini Image' }
             ] as const).map(m => (
               <label key={m.value} className={`survive-model-option ${imageModel === m.value ? 'selected' : ''}`}>
                 <input
@@ -385,6 +387,33 @@ export function SurviveTab() {
             ))}
           </div>
         </div>
+
+        {videoModel === 'omni_vids' && (
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">⏱️ VIDEO DURATION</h3>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {[3, 4, 5, 6, 7, 8, 9, 10].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setVideoDuration(d)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: videoDuration === d ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,0.1)',
+                    background: videoDuration === d ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.03)',
+                    color: videoDuration === d ? '#c4b5fd' : '#999',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: videoDuration === d ? 700 : 400,
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {d}s
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="survive-form-group">
           <label className="survive-label">Voice Service</label>

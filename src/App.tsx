@@ -9,9 +9,10 @@ import CartoonTab from './CartoonTab';
 import LocalizeTab from './LocalizeTab';
 import PrimateCastTab from './PrimateCastTab';
 import FrenchTalkTab from './FrenchTalkTab';
+import { DocuCraftTab } from './DocuCraftTab';
 import './TimelapseTab.css';
 
-type AppTab = 'timelapse' | 'health' | 'psychology' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk';
+type AppTab = 'timelapse' | 'health' | 'psychology' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk' | 'docucraft';
 
 function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('timelapse');
@@ -75,6 +76,9 @@ function App() {
         <button style={tabStyle('frenchtalk')} onClick={() => setActiveTab('frenchtalk')}>
           🇫🇷 FrenchTalk
         </button>
+        <button style={tabStyle('docucraft')} onClick={() => setActiveTab('docucraft')}>
+          📜 DocuCraft
+        </button>
       </div>
 
       {/* ── TIMELAPSE TAB (CINEMATIC) ──────────────────────────────── */}
@@ -124,6 +128,12 @@ function App() {
       <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'frenchtalk' ? 'flex' : 'none', flexDirection: 'column', backgroundColor: '#0d0d1a' }}>
         <FrenchTalkTab />
       </div>
+
+      {/* ── DOCUCRAFT TAB ─────────────────────────────────── */}
+      <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'docucraft' ? 'flex' : 'none', flexDirection: 'column', backgroundColor: '#0f1115' }}>
+        <DocuCraftTab />
+      </div>
+
 
     </div>
   );

@@ -22,15 +22,14 @@ const PRIMARY_PRODUCTS_FILE = path.join(AMAZON_DIR, 'products.json');
 // Local fallback cache in AISTUDIO if amazon folder is moved
 const FALLBACK_PRODUCTS_FILE = path.join(__dirname, 'amazon_products_cache.json');
 
-// ── CTA Variations for Outro in French (18-22 words, natural, high retention) ──
-// 3-step sequence: (1) click link in bio → (2) type number on the site keypad → (3) press OK → arrives on Amazon
-// The site "Laboratoire des Trouvailles" has a real numeric keypad — viewers tap the number then press OK→Amazon
+// ── CTA Variations for Outro in French (18-22 words, natural, high conversion) ──
+// Clear 3-step sequence: (1) click link in bio → (2) enter code [X] & press OK → (3) direct redirect to Amazon
 const OUTRO_CTA_TEMPLATES_FR = [
-    (code) => `Clique le lien dans mon profil, tape le ${code} sur le clavier et appuie sur OK pour aller direct sur Amazon !`,
-    (code) => `Va sur le lien en bio, entre le numéro ${code} sur le clavier du site et OK t'emmène directement sur Amazon !`,
-    (code) => `Ouvre le lien dans ma bio, tape le ${code} sur le clavier et un clic sur OK et tu arrives sur Amazon pour commander !`,
-    (code) => `Clique mon lien en bio, entre le ${code} sur le clavier du Laboratoire et OK t'envoie direct sur la page Amazon !`,
-    (code) => `Lien dans mon profil en bio, numéro ${code} sur le clavier, OK — et te voilà directement sur Amazon pour acheter !`
+    (code) => `Clique sur le lien en bio, entre le code ${code} et appuie sur OK — tu arrives direct sur Amazon pour commander !`,
+    (code) => `Va sur le lien dans mon profil, tape le code ${code} et appuie sur OK — ça t'emmène direct sur Amazon !`,
+    (code) => `Ouvre le lien en bio, tape le code ${code} sur le clavier et clique sur OK pour aller direct sur Amazon !`,
+    (code) => `Clique sur le lien en bio, tape le code ${code} et valide avec OK — tu atterris direct sur Amazon pour en profiter !`,
+    (code) => `Le lien est dans ma bio : tape le code ${code}, appuie sur OK et retrouve-le directement sur Amazon !`
 ];
 
 function getProductsFilePath() {
@@ -246,7 +245,7 @@ function buildTopicForProduct(product) {
 PROBLÈME DU QUOTIDIEN: ${quote}
 ${hackMethod ? `MÉTHODE / ASTUCE INTELLIGENTE DU QUOTIDIEN: ${hackMethod}\n` : ''}PRINCIPE SCIENTIFIQUE / ASTUCE: ${verdict}
 POINTS FORTS & CARACTÉRISTIQUES: ${features}
-OUTRO OBLIGATOIRE: Mentionner explicitement le code #${code} à taper sur le site en bio (@bertranna).`;
+OUTRO OBLIGATOIRE: Guider le spectateur en 3 étapes simples : (1) lien en bio, (2) entrer le code #${code} et appuyer sur OK, (3) redirection directe vers Amazon pour commander.`;
 }
 
 /**

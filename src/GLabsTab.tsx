@@ -5,13 +5,13 @@ import { GLabsTask } from './electron.d';
 // ── Типы ──────────────────────────────────────────────────────────────────────
 type GenerateMode = 'image' | 'video';
 type StatusFilter = 'all' | 'pending' | 'running' | 'completed' | 'failed';
-type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'grok';
+type VideoModel = 'veo_31_lite' | 'veo_31_fast' | 'omni_flash' | 'omni_vids';
 
 const VIDEO_MODELS: { value: VideoModel; label: string; desc: string }[] = [
   { value: 'veo_31_lite', label: 'Veo 3.1 Lite', desc: 'Balanced generation' },
   { value: 'veo_31_fast', label: 'Veo 3.1 Fast', desc: 'Fast generation' },
   { value: 'omni_flash', label: 'Omni Flash', desc: 'Omni Flash generation' },
-  { value: 'grok', label: 'Grok Generation', desc: '10s 720p Video' },
+  { value: 'omni_vids', label: 'Google Vids', desc: '3-10s 1080p Video' },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
@@ -124,6 +124,7 @@ export default function GLabsTab() {
   const [mode, setMode] = useState<GenerateMode>('image');
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('');
+  const [videoDuration, setVideoDuration] = useState<number>(9);
   const [aspectRatio, setAspectRatio] = useState('9:16');
   const [count, setCount] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -201,6 +202,7 @@ export default function GLabsTab() {
           prompt: `${prompt.trim()}. ABSOLUTE RULES: NO MUSIC. STERNLY FOLLOW text for lip-sync. NO independent translations.`,
           model: model || undefined,
           aspectRatio,
+          videoLength: model === 'omni_vids' ? videoDuration : undefined,
         });
         setLastResults([url]);
       }
@@ -449,6 +451,33 @@ export default function GLabsTab() {
                 {videoModel.label}
               </button>
             ))}
+          </div>
+        )}
+
+        {model === 'omni_vids' && (
+          <div className="sidebar-section">
+            <h3 className="sidebar-title">⏱️ VIDEO DURATION</h3>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {[3, 4, 5, 6, 7, 8, 9, 10].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setVideoDuration(d)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: videoDuration === d ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,0.1)',
+                    background: videoDuration === d ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.03)',
+                    color: videoDuration === d ? '#c4b5fd' : '#999',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: videoDuration === d ? 700 : 400,
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {d}s
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

@@ -1,0 +1,354 @@
+[
+  {
+    "code": 1,
+    "title": "Extracteur portable BISSELL SpotClean Pro",
+    "category": "nettoyage",
+    "featured": true,
+    "img": "img/bissell.jpg",
+    "hackMethod": "Technique de pré-détachage ciblé et extraction immédiate : dissoudre la saleté en surface puis aspirer l'humidité en profondeur avant qu'elle ne pénètre la mousse du canapé ou matelas.",
+    "quote": "Efface les taches incrustées de matelas, canapés et sièges auto en 30 secondes.",
+    "verdict": "L'arme absolue contre les taches anciennes. Injection et aspiration puissante sans abîmer les tissus.",
+    "features": [
+      "✓ Idéal matelas, tapis, tissus d'ameublement",
+      "✓ Réservoirs eau propre et eau sale séparés",
+      "✓ Plus de 20 000 avis positifs en France"
+    ],
+    "amazonUrl": "https://link.amazon/A01sEaICp"
+  },
+  {
+    "code": 2,
+    "title": "Brosse de nettoyage électrique rotative",
+    "category": "nettoyage",
+    "featured": false,
+    "img": "img/brosse.jpg",
+    "hackMethod": "Application d'une émulsion moussante active pour décoller la crasse : la vitesse mécanique pulvérise le calcaire des joints sans aucun frottement manuel épuisant.",
+    "quote": "Nettoie les joints de carrelage et la douche sans se casser le dos ni frotter.",
+    "verdict": "Fait tourner la tête à 350 tours/minute. Les joints noirs redeviennent blancs comme neufs sans effort.",
+    "features": [
+      "✓ Manche télescopique pour ne pas se pencher",
+      "✓ 4 têtes interchangeables incluses",
+      "✓ Batterie rechargeable longue durée"
+    ],
+    "amazonUrl": "https://amzn.to/4yW8hZA"
+  },
+  {
+    "code": 3,
+    "title": "Ruban en cuivre pur anti-limaces",
+    "category": "jardin",
+    "featured": false,
+    "img": "img/cuivre.jpg",
+    "hackMethod": "Barrière électrochimique naturelle en bordure de pots et jardinières : le contact du cuivre avec le mucus crée une micro-décharge répulsive, sans aucun granulé toxique ni poison dangereux pour les animaux.",
+    "quote": "Barrière naturelle infranchissable pour les limaces et escargots sans poison.",
+    "verdict": "Une micro-réaction électrique naturelle repousse immédiatement les nuisibles sans danger pour vos animaux de compagnie.",
+    "features": [
+      "✓ 100% sans produits chimiques ni poison",
+      "✓ Résiste à la pluie et au soleil des années",
+      "✓ Facile à coller autour des pots et potagers"
+    ],
+    "amazonUrl": "https://amzn.to/3V8MkYU"
+  },
+  {
+    "code": 4,
+    "title": "Gel d'Aloe Vera 100% Pur & Bio",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/aloe.jpg",
+    "hackMethod": "Technique de scellage d'hydratation végétale : appliquer sur cheveux humides pour retenir l'eau au cœur de la fibre sans les silicones synthétiques qui étouffent les pointes.",
+    "quote": "Le secret naturel pour hydrater intensément les cheveux secs et apaiser la peau.",
+    "verdict": "Pressé à froid sans additifs. Répare la fibre capillaire et élimine les pointes sèches dès la première application.",
+    "features": [
+      "✓ Certifié Bio & Vegan",
+      "✓ Flacon pompe grand format très économique",
+      "✓ Multi-usage : masque cheveux, corps et visage"
+    ],
+    "amazonUrl": "https://amzn.to/4rxiNnO"
+  },
+  {
+    "code": 5,
+    "title": "Masque Collagène Hydrogel Coréen",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_5.jpg",
+    "hackMethod": "Le collagène ultra-faible poids moléculaire pénètre en profondeur pour repulper la peau, tandis que l'acide hyaluronique oligo retient l'eau cellulaire toute la nuit.",
+    "quote": "Ta peau tiraillée et tes pores dilatés te donnent l'air fatigué dès le réveil ?",
+    "verdict": "Ce masque hydrogel colle parfaitement à la peau et délivre ses actifs concentrés en continu pendant que tu dors, pour un teint lumineux au réveil.",
+    "features": [
+      "✓ Acide hyaluronique oligo : hydratation intense et repulpante visible dès la première nuit d'utilisation",
+      "✓ Collagène ultra-léger : resserre les pores dilatés et raffermit le galbe du visage en profondeur",
+      "✓ Niacinamide + Galactomyces : unifie le teint, atténue les taches et booste l'éclat naturel"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0B2RM68G2?tag=bertranna-21"
+  },
+  {
+    "code": 6,
+    "title": "Gel Anti-Imperfections CeraVe",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_6.jpg",
+    "hackMethod": "L'acide salicylique à 2% pénètre directement dans les pores pour les déboucher, tandis que l'argile blanche absorbe le sébum en excès dès le lavage.",
+    "quote": "Les boutons qui reviennent sans cesse ruinent ta peau et ta confiance chaque matin.",
+    "verdict": "Ce gel nettoyant visage et corps dégage les pores dès la première utilisation et lisse visiblement la peau en une seule semaine.",
+    "features": [
+      "✓ Débouche les pores en profondeur dès la première utilisation grâce à l'acide salicylique à 2%",
+      "✓ Matifie et purifie grâce à l'argile blanche qui capte et élimine le sébum en excès",
+      "✓ Préserve la barrière cutanée avec les céramides et apaise les rougeurs via la niacinamide"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0F3DJ5QCG?tag=bertranna-21"
+  },
+  {
+    "code": 7,
+    "title": "Ruban Double Face Puissant",
+    "category": "bricolage",
+    "featured": false,
+    "img": "img/prod_7.jpg",
+    "hackMethod": "Le ruban double face exploite une adhésion mécanique bilatérale instantanée, créant une liaison invisible entre deux surfaces sans vis, ni colle liquide salissante.",
+    "quote": "Marre de percer des trous pour accrocher vos décos sans abîmer vos murs ?",
+    "verdict": "Ce ruban Art3d amplifie chaque fixation grâce à ses 3 mètres d'adhérence industrielle, pour poser cadres, panneaux et objets en quelques secondes chrono.",
+    "features": [
+      "✓ Fixation ultra-résistante sans perçage ni outillage",
+      "✓ Compatible avec la majorité des surfaces lisses et semi-poreuses",
+      "✓ Retrait propre sans laisser de traces ni résidus"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B09K58K13V?tag=bertranna-21"
+  },
+  {
+    "code": 8,
+    "title": "Cadenas À Code Sans Clé",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_8.jpg",
+    "hackMethod": "Avec un code à 4 chiffres personnalisable parmi 10 000 combinaisons uniques, tu sécurises n'importe quoi sans jamais transporter de clé.",
+    "quote": "Tu perds tes clés tout le temps et tu bloques devant ton casier ?",
+    "verdict": "Le corps en zinc et l'anse en acier trempé résistent aux chocs et intempéries, parfait pour la salle de sport, le garage ou les voyages.",
+    "features": [
+      "✓ 10 000 combinaisons possibles pour un code 100 % personnalisé et introuvable",
+      "✓ Corps en alliage de zinc haute résistance avec anse en acier trempé anti-casse",
+      "✓ Grands chiffres et fenêtre latérale pour reprogrammer le code en 6 étapes simples"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B07F38QMZK?tag=bertranna-21"
+  },
+  {
+    "code": 9,
+    "title": "Crème Contour Yeux CeraVe",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_9.jpg",
+    "hackMethod": "L'acide hyaluronique attire et retient l'eau dans les cellules tandis que les céramides réparent la barrière cutanée fragilisée autour des yeux.",
+    "quote": "Tes cernes et poches sous les yeux sabotent ton regard même après huit heures de sommeil.",
+    "verdict": "Appliquée matin et soir, cette crème légère décongestionne, hydrate et répare visiblement le contour des yeux en agissant pendant 24 heures.",
+    "features": [
+      "✓ Formule avec 3 céramides essentiels et niacinamide pour restaurer activement la peau fragilisée du contour des yeux",
+      "✓ Action décongestionnante en continu sur 24h pour réduire visiblement les poches et atténuer les cernes",
+      "✓ Texture ultra-légère non grasse à pénétration rapide, idéale pour une routine quotidienne matin et soir"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B07C5T3DKW?tag=bertranna-21"
+  },
+  {
+    "code": 10,
+    "title": "Détartrant Naturel pour Cafetière",
+    "category": "cuisine",
+    "featured": false,
+    "img": "img/prod_10.jpg",
+    "hackMethod": "L'acide lactique d'origine végétale attaque et dissout chimiquement les dépôts de calcaire sans abîmer les pièces internes de ta machine.",
+    "quote": "Le calcaire détruit silencieusement ta machine à café et gâche chaque tasse que tu prépares.",
+    "verdict": "Utilisé régulièrement, il maintient les performances optimales de ta machine, réduit la consommation d'énergie et garantit un café toujours savoureux.",
+    "features": [
+      "✓ Formule 100% végétale à base d'acide lactique naturel, douce avec les composants de ta machine",
+      "✓ Détartre plus rapidement et efficacement que les produits chimiques classiques du commerce",
+      "✓ Prolonge la durée de vie de ton appareil et préserve le goût authentique de ton café"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B008YETL18?tag=bertranna-21"
+  },
+  {
+    "code": 11,
+    "title": "Gants Nitrile Noirs Jetables",
+    "category": "nettoyage",
+    "featured": false,
+    "img": "img/prod_11.jpg",
+    "hackMethod": "Le nitrile forme une barrière chimique imperméable sur la peau, bloquant détergents, colorants et micro-organismes sans jamais déclencher d'allergie au latex.",
+    "quote": "Marre d'avoir les mains cramées et tachées après chaque corvée ou bricolage ?",
+    "verdict": "Épais, texturés et sans poudre, ces gants s'enfilent en deux secondes et te laissent les mains intactes après n'importe quelle tâche salissante.",
+    "features": [
+      "✓ Sans latex ni poudre — zéro risque d'allergie ou d'irritation cutanée",
+      "✓ Embouts texturés pour une prise ferme et précise, même sur surfaces humides",
+      "✓ Conformes EN 455 & EN 374 — approuvés contact alimentaire et produits chimiques"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B093SWH4D8?tag=bertranna-21"
+  },
+  {
+    "code": 12,
+    "title": "Ampoule LED Connectée Multicolore",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_12.jpg",
+    "hackMethod": "Cette ampoule Wi-Fi exploite 16 millions de couleurs et la programmation horaire pour transformer instantanément l'atmosphère de n'importe quelle pièce depuis ton téléphone.",
+    "quote": "Régler l'ambiance lumineuse de ta pièce te prend du temps et te coûte cher.",
+    "verdict": "Compatible Alexa et pilotable à distance, elle automatise ta lumière et réduit ta consommation électrique jusqu'à 89% sans le moindre effort quotidien.",
+    "features": [
+      "✓ Contrôle vocal et à distance via l'app Tapo ou Alexa, même hors de chez toi",
+      "✓ 16 millions de couleurs et intensité ajustable pour une ambiance parfaite en deux secondes",
+      "✓ Économie jusqu'à 89% d'énergie avec programmation Lever/Coucher de soleil automatique"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B08GDC99PX?tag=bertranna-21"
+  },
+  {
+    "code": 14,
+    "title": "La Pierre d'Argent Universelle",
+    "category": "nettoyage",
+    "featured": false,
+    "img": "img/prod_14.jpg",
+    "hackMethod": "La formule minérale micronisée agit par micro-abrasion douce : elle décolle les dépôts tenaces tout en libérant des agents nettoyants naturels sans produits chimiques.",
+    "quote": "Tu frottes encore et encore, mais les taches tenaces semblent impossibles à faire disparaître !",
+    "verdict": "Certifiée ECOCERT et fabriquée en France, cette pierre remplace des dizaines de produits chimiques et protège durablement chaque surface traitée.",
+    "features": [
+      "✓ Nettoie chrome, inox, carrelage, vitres et acrylique sans rayer grâce à sa micro-abrasion ultra-douce",
+      "✓ Dépose une couche protectrice brillante après chaque passage pour un effet longue durée sur vos surfaces",
+      "✓ Éponge fournie, sans rinçage fastidieux, certifiée ECOCERT — efficace, économique et respectueux de l'environnement"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B00V8RIUKG?tag=bertranna-21"
+  },
+  {
+    "code": 15,
+    "title": "Huile Réparatrice Bi-Oil 200ml",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_15.jpg",
+    "hackMethod": "L'action combinée de vitamines A et E avec un lipide fluide optimise le renouvellement cellulaire en restaurant l'élasticité profonde des tissus cutanés.",
+    "quote": "Marre de voir ces vergetures et cicatrices persister sur votre peau malgré les crèmes classiques ?",
+    "verdict": "Grâce au Purcellin Oil, cette formule pénètre instantanément sans film gras pour sceller l'hydratation et booster durablement la régénération cutanée.",
+    "features": [
+      "✓ Atténue visiblement les cicatrices et vergetures récentes ou anciennes",
+      "✓ Texture légère enrichie en Purcellin Oil à pénétration rapide",
+      "✓ Formule nourrissante aux vitamines A et E pour peaux déshydratées"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B07XF23G3N?tag=bertranna-21"
+  },
+  {
+    "code": 16,
+    "title": "Réglette LED Détecteur Sans Fil",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_16.jpg",
+    "hackMethod": "Placer un réflecteur magnétique à détection thermique active automatiquement la lumière sans aucun câblage dès l'ouverture de votre meuble.",
+    "quote": "Chercher dans le noir au fond d'un placard sombre sans visibilité vous fait perdre un temps précieux.",
+    "verdict": "Cette réglette ultra-fine s'aimante partout en un clin d'œil, transformant instantanément vos recoins sombres en espaces parfaitement éclairés sans travaux.",
+    "features": [
+      "✓ Détecteur de mouvement précis avec 4 modes d'allumage",
+      "✓ 3 températures de couleur et intensité lumineuse modulable",
+      "✓ Fixation magnétique immédiate et batterie rechargeable USB-C"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0F1C56SR1?tag=bertranna-21"
+  },
+  {
+    "code": 17,
+    "title": "Déodorant Maximum Protection 96h",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_17.jpg",
+    "hackMethod": "La formule brevetée antitranspirante agit directement sur les glandes sudoripares en formant une barrière invisible qui bloque la transpiration jusqu'à 96 heures consécutives.",
+    "quote": "Tu transpires abondamment malgré ton déodorant et les auréoles ruinent tes vêtements préférés.",
+    "verdict": "3x plus efficace que les déodorants classiques, ce stick Clean Scent offre une protection longue durée sans réapplication, même lors des journées intenses.",
+    "features": [
+      "✓ Jusqu'à 96h de protection antitranspirante continue sans réapplication nécessaire",
+      "✓ Formule brevetée 3x plus efficace contre transpiration excessive et mauvaises odeurs",
+      "✓ Parfum Clean Scent frais et neutre, conçu pour un usage féminin quotidien"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B00AI7COA4?tag=bertranna-21"
+  },
+  {
+    "code": 18,
+    "title": "Enceinte Bluetooth Son Puissant",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_18.jpg",
+    "hackMethod": "Posée dans un coin ou contre un mur, l'enceinte exploite la réflexion sonore naturelle pour amplifier les basses et remplir l'espace.",
+    "quote": "Marre d'une musique étouffée qui gâche vos soirées à la maison ou dehors ?",
+    "verdict": "Avec 24 heures d'autonomie et sa résistance à l'eau, elle accompagne chaque moment sans compromis sur la qualité sonore.",
+    "features": [
+      "✓ 24h d'autonomie continue pour écouter jusqu'à 500 chansons sans recharger",
+      "✓ Technologie BassUp pour des basses profondes et un son riche et immersif",
+      "✓ Résistante à l'eau et aux chocs, parfaite en intérieur comme en extérieur"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B01MTB55WH?tag=bertranna-21"
+  },
+  {
+    "code": 19,
+    "title": "Mandoline Réglable OXO",
+    "category": "cuisine",
+    "featured": false,
+    "img": "img/prod_19.jpg",
+    "hackMethod": "La lame en acier inoxydable glisse à angle fixe, produisant des tranches d'épaisseur constante en un seul geste fluide et précis.",
+    "quote": "Couper des légumes en tranches égales à la main prend une éternité et abîme les doigts.",
+    "verdict": "La mandoline OXO remplace 10 minutes de découpe laborieuse par quelques secondes de glissade, avec des résultats dignes d'un chef.",
+    "features": [
+      "✓ Trois réglages d'épaisseur pour passer des chips croustillantes aux carpaccios ultra-fins en un clic",
+      "✓ Ouverture transparente pour voir les tranches se former sans jamais interrompre votre cadence de découpe",
+      "✓ Compatible lave-vaisselle pour un entretien rapide et sans effort après chaque utilisation"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B000YDO2LG?tag=bertranna-21"
+  },
+  {
+    "code": 21,
+    "title": "Égouttoir à Vaisselle Extensible Joseph Joseph",
+    "category": "cuisine",
+    "featured": false,
+    "img": "img/prod_21.jpg",
+    "hackMethod": "L'évacuation gravitaire inclinée combinée à des nervures surélevées crée un flux d'air continu qui accélère le séchage sans traces de calcaire.",
+    "quote": "Marre de l'eau stagnante sur votre plan de travail et du manque d'espace après la vaisselle ?",
+    "verdict": "Grâce à sa structure modulable et son bec orientable, vous doublez votre capacité de séchage tout en gardant l'évier immaculé.",
+    "features": [
+      "✓ Format extensible doublant la surface de séchage",
+      "✓ Bec d'évacuation pivotant orientable vers l'évier",
+      "✓ Nervures anti-eau stagnante et compartiment amovible"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B07YLGKFR9?tag=bertranna-21"
+  },
+  {
+    "code": 22,
+    "title": "Pulvérisateur d'Huile 2-en-1 Anti-UV",
+    "category": "cuisine",
+    "featured": false,
+    "img": "img/prod_22.jpg",
+    "hackMethod": "La micronisation de l'huile couvre toute la poêle avec 80% de gras en moins, tandis que l'opacité bloque l'oxydation due aux rayons UV.",
+    "quote": "Fini les plats qui baignent dans l'huile et les bouteilles grasses qui rancissent à la lumière.",
+    "verdict": "Ce flacon 2-en-1 en verre foncé combine spray brumisateur et bec verseur tout en protégeant vos meilleures huiles de la dégradation lumineuse.",
+    "features": [
+      "✓ Double fonction ultra-pratique : pulvérisateur fin ou verseur classique",
+      "✓ Verre vert foncé anti-UV pour conserver la fraîcheur de l'huile",
+      "✓ Dosage précis pour une cuisson saine à l'Airfryer ou à la poêle"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0DJXSFLJ5?tag=bertranna-21"
+  },
+  {
+    "code": 23,
+    "title": "Nettoyant Machine à Laver Bosch",
+    "category": "nettoyage",
+    "featured": false,
+    "img": "img/prod_23.jpg",
+    "hackMethod": "Les résidus de lessive et le calcaire s'accumulent en silence dans le tambour et les joints, créant bactéries et odeurs tenaces. Un nettoyage mensuel ciblé brise ce cycle.",
+    "quote": "Ta machine à laver sent mauvais et tes vêtements ressortent jamais vraiment propres ?",
+    "verdict": "Ce nettoyant Bosch officiel dissout en profondeur dépôts et biofilm invisibles, redonnant à ta machine une hygiène optimale sans effort ni démontage.",
+    "features": [
+      "✓ Élimine les dépôts de lessive et de calcaire incrustés dans le tambour",
+      "✓ Formule certifiée Bosch pour une compatibilité totale avec ta machine",
+      "✓ Neutralise les mauvaises odeurs durablement pour des lavages vraiment frais"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B07FCNFB5W?tag=bertranna-21"
+  },
+  {
+    "code": 25,
+    "title": "Pulvérisateur Haute Pression en Laiton",
+    "category": "jardin",
+    "featured": false,
+    "img": "img/prod_25.jpg",
+    "hackMethod": "Infusez des épluchures de pomme de terre dans de l'eau bouillante avec du sel et du liquide vaisselle pour détruire la racine en 48h.",
+    "quote": "Les mauvaises herbes envahissent votre allée et reviennent sans cesse malgré des heures de désherbage ?",
+    "verdict": "Ce pulvérisateur en laiton haute pression résiste aux mélanges naturels et permet de cibler précisément chaque mauvaise herbe sans vous baisser ni vous fatiguer.",
+    "features": [
+      "✓ Buse en laiton et cuivre ultra-résistante à la corrosion",
+      "✓ Jet haute pression réglable pour un ciblage ultra-précis",
+      "✓ Poignée ergonomique qui réduit la fatigue des mains"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0HLT2FJLF?tag=bertranna-21"
+  }
+]

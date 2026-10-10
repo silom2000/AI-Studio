@@ -603,7 +603,7 @@ videoPrompt2: "CAMERA MOVEMENT: Stop-motion camera style, tracking shot. ACTION 
     // 5. Generate Video (VEO3 / Meta with chaining)
     // ─────────────────────────────────────────────────────────────────────────
     ipcMain.handle('survive-generate-video', async (event, {
-        sceneIndex, videoPrompt, videoPrompt2, sourceImageUrl, narrationLine, projectFolder, videoModel, oldFileUrl
+        sceneIndex, videoPrompt, videoPrompt2, sourceImageUrl, narrationLine, projectFolder, videoModel, oldFileUrl, videoLength
     }) => {
         if (oldFileUrl) {
             try {
@@ -727,7 +727,8 @@ AMBIENT SOUND: realistic environmental sounds matching the survival scenario (wi
             sectionDir: SURVIVE_DIRS.base,
             subFolder: projectFolder,
             sceneIndex,
-            referenceImages
+            referenceImages,
+            videoLength: videoLength || null
         };
 
         try {

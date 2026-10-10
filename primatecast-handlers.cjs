@@ -246,7 +246,7 @@ Return ONLY valid JSON in this format:
     });
 
     // 6. Generate Episode
-    ipcMain.handle('primatecast-generate-episode', async (event, { script, host1Id, host2Id, clothes1, clothes2, location, episodeTitle, aspectRatio = '16:9', language = null, videoModel = 'omni_flash' }) => {
+    ipcMain.handle('primatecast-generate-episode', async (event, { script, host1Id, host2Id, clothes1, clothes2, location, episodeTitle, aspectRatio = '16:9', language = null, videoModel = 'omni_flash', videoLength = null }) => {
         const characters = getCharacters();
         const host1 = characters.find(c => c.id === host1Id);
         const host2 = characters.find(c => c.id === host2Id);
@@ -364,7 +364,8 @@ Return ONLY valid JSON in this format:
                 subFolder: '',
                 sceneIndex: `clip_${String(i+1).padStart(3, '0')}_${seg.speaker.name}`,
                 referenceImages: [{ data: hostImgBase64 }],
-                generateAudio: true
+                generateAudio: true,
+                videoLength: videoLength || null
             });
 
             generatedClips.push(videoPath);
@@ -386,7 +387,8 @@ Return ONLY valid JSON in this format:
         segmentIndex, speakerId, dialogueText,
         host1Id, host2Id, clothes1, clothes2,
         location, episodeTitle, aspectRatio = '16:9',
-        language = null, videoModel = 'omni_flash'
+        language = null, videoModel = 'omni_flash',
+        videoLength = null
     }) => {
         const characters = getCharacters();
         const speaker = characters.find(c => c.id === speakerId);
@@ -478,7 +480,8 @@ Return ONLY valid JSON in this format:
             subFolder: '',
             sceneIndex: `clip_${String(segmentIndex + 1).padStart(3, '0')}_${speaker.name}`,
             referenceImages: [{ data: hostImgBase64 }],
-            generateAudio: true
+            generateAudio: true,
+            videoLength: videoLength || null
         });
 
         saveEpisodePromptsMetadata(episodeDir, episodeTitle, {
