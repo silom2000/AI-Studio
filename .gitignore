@@ -116,12 +116,7 @@ PrimateCast/
 TikTokLocalizer/
 Survive/
 SkeletonShorts/
-FrenchTalk/FT_*/
-FrenchTalk/Vlog_*/
-FrenchTalk/StreamPack_*/
-FrenchTalk/TempReference/
-FrenchTalk/Locations/
-FrenchTalk/_recipe_cache.json
+FrenchTalk/
 _temp_claude_video/
 .codegraph/
 instagram_cookies.txt
