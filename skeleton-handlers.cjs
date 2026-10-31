@@ -3165,6 +3165,20 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                  * "Partage cette vidéo à un proche qui en a besoin — et retrouve tous mes conseils et analyses sur mon profil !"
                  * "Dis-moi en commentaire quel sujet tu veux voir ensuite — et abonne-toi pour ne rater aucun décryptage !"
                  Strictly 18-22 words.`}
+            13. 🔢 FACTUAL CONSISTENCY ACROSS ALL SCENES (MANDATORY — ZERO TOLERANCE):
+                 - Every specific number (price, percentage, duration, quantity) introduced in Scene 1 MUST remain IDENTICAL in ALL subsequent scenes.
+                 - If Scene 1 says "spray à 15 €", then Scene 7, Scene 9, and Scene 10 MUST also say "15 €" — NEVER "12 €", "quinze euros", or "un produit pro".
+                 - BEFORE finalizing the script, mentally scan: "Is every price/number I introduced in Scene 1 used consistently in later scenes?" If not, fix it.
+                 - This rule also applies to product names, durations ("2 minutes"), and quantities ("3 gouttes").
+            14. 💡 UNEXPECTED PRO TIP (MANDATORY FOR Scene targetSceneCount - 1 — IMPACT & PRO TIP):
+                 - The penultimate scene MUST deliver a NON-OBVIOUS, COUNTERINTUITIVE bonus insight — a "secret combination" or unexpected use-case that the viewer did NOT predict from the setup.
+                 - BANNED generic conclusions: "use product A for task A and product B for task B" (this is simply the obvious conclusion of the test, NOT a tip).
+                 - REQUIRED: An unexpected angle — mixing both products, an unusual application, a surprising frequency, a hidden synergy, or a cheaper DIY version nobody would think of.
+                 - Examples of strong unexpected tips:
+                   * "mélange-les à 50/50 dans un vaporisateur pour les graisses intermédiaires"
+                   * "applique d'abord la mousse, attends 90 secondes, puis termine avec l'alcool — tu divises ton temps de frottage par trois"
+                   * "quelques gouttes d'alcool sur la mousse séchée décuplent l'effet tensioactif sans frottage supplémentaire"
+                 - The surprise must feel like insider knowledge the viewer could not have guessed — this is what drives saves and shares.
             `;
 
             const effectiveTopic = localVideoData
@@ -3210,7 +3224,7 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             - Scene 4 (THE UNDERLYING MECHANISM): Explain in clear, dynamic terms why this works (scientific principle, physical reaction, psychological reflex, or factual reality).
             - Scenes 5 to ${targetSceneCount - 3} (HANDS-ON ACTION & DEMONSTRATION): Follow the narrative arc of ${selectedArchetype.name} (${selectedArchetype.narrativeArc}) adapted specifically to "${effectiveTopic}" — concrete steps, precise examples, real-time testing and active handling.
             - Scene ${targetSceneCount - 2} (THE DRAMATIC PROOF / BEFORE-AFTER): Visual or behavioral evidence of success, clear transformation, or test result.
-            - Scene ${targetSceneCount - 1} (IMPACT & PRO TIP): Concrete real-world benefit or savings, plus an insider pro-tip to sustain the result.
+            - Scene ${targetSceneCount - 1} (IMPACT & PRO TIP — UNEXPECTED TWIST MANDATORY): A counterintuitive insider bonus tip that combines, repurposes, or reframes the tested methods in a way the viewer could NOT predict — drives saves and shares. NEVER write the obvious "use A for X and B for Y" conclusion. Go deeper: a surprise synergy, unexpected combo, hidden dosage trick, or DIY hybrid.
             - Scene ${targetSceneCount} (FINAL VERDICT & ENGAGEMENT CTA): Final score / punchline + invite viewers to test and share their experience in comments. Strictly 18-22 words.
             `}
 
