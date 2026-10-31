@@ -12,7 +12,7 @@ import FrenchTalkTab from './FrenchTalkTab';
 import { DocuCraftTab } from './DocuCraftTab';
 import './TimelapseTab.css';
 
-type AppTab = 'timelapse' | 'health' | 'psychology' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk' | 'docucraft';
+type AppTab = 'timelapse' | 'health' | 'psychology' | 'business' | 'glabs' | 'story' | 'cartoon' | 'survive' | 'localize' | 'primatecast' | 'frenchtalk' | 'docucraft';
 
 function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('timelapse');
@@ -53,6 +53,9 @@ function App() {
         <button style={tabStyle('psychology')} onClick={() => setActiveTab('psychology')}>
           🧠 Psychology
         </button>
+        <button style={tabStyle('business')} onClick={() => setActiveTab('business')}>
+          💼 BusinessTalk
+        </button>
         <button style={tabStyle('story')} onClick={() => setActiveTab('story')}>
           📖 AI Stories
         </button>
@@ -92,6 +95,9 @@ function App() {
       </div>
       <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'psychology' ? 'flex' : 'none', flexDirection: 'column' }}>
         <StudioTab mode="psychology" />
+      </div>
+      <div style={{ flex: 1, overflow: 'hidden', display: activeTab === 'business' ? 'flex' : 'none', flexDirection: 'column' }}>
+        <StudioTab mode="business" />
       </div>
 
 {/* ── STORY TAB ──────────────────────────────────── */}

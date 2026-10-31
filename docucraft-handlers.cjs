@@ -934,7 +934,7 @@ OUTPUT FORMAT (STRICT JSON ONLY):
         } else {
             const timestamp = Date.now();
             const safeTopic = (topic || 'documentary').replace(/[^a-z0-9_-]/gi, '_').substring(0, 24);
-            folderName = \`DocuCraft_${safeTopic}_${timestamp}\`;
+            folderName = `DocuCraft_${safeTopic}_${timestamp}`;
             projectDir = path.join(DOCUCRAFT_DIRS.projects, folderName);
             fs.mkdirSync(projectDir, { recursive: true });
         }

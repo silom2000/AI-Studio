@@ -222,6 +222,13 @@ class AntigravityClient {
                         const content = this._extractChatContent(data);
 
                         if (content) {
+                            // Detect upstream safety refusal / policy block messages disguised as 200 OK completions
+                            const isRefusal = /(?:The prompt could not be submitted|violate Google's|sensitive words that violate|generative-ai\/use-policy|ai\.google\.dev\/gemini-api\/docs\/troubleshooting|Blocked by safety policy|Safety filter triggered|I cannot fulfill this request|I am unable to fulfill this request)/i.test(content);
+                            if (isRefusal) {
+                                lastError = new Error(`Provider ${p.id}/${p.model} returned upstream safety refusal: "${content.slice(0, 120)}..."`);
+                                console.warn(`[AiClient:Chat] ${lastError.message}. Falling back to next model...`);
+                                continue;
+                            }
                             return content;
                         }
 
@@ -591,7 +598,7 @@ class AntigravityClient {
         }
 
         // ── Priority 2: Custom local proxy (Gemini) ──────────────────────────────
-        const customSttModel = process.env.CUSTOM_STT_MODEL || 'gemini-2.5-flash';
+        const customSttModel = process.env.CUSTOM_STT_MODEL || 'gemini-3.5-flash';
         let customLastError = null;
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {

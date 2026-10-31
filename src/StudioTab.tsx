@@ -7,6 +7,7 @@ import {
     Zap,
     Lightbulb,
     Brain,
+    Briefcase,
     X,
     AlertTriangle,
     Download,
@@ -23,16 +24,19 @@ import {
     PlusCircle,
     Sparkles,
     ZoomIn,
+    Edit3,
     Check,
     Search,
     Link,
+    ChevronDown,
+    List,
     Trash2
 } from 'lucide-react';
 import { StudioScript, StudioScene, LifehackQueueItem, AmazonProduct, StudioVideoCover } from './electron.d';
 import './StudioTab.css';
 
 interface StudioTabProps {
-    mode: 'health' | 'objects' | 'psychology';
+    mode: 'health' | 'objects' | 'psychology' | 'business';
 }
 
 const LANGUAGES = [
@@ -65,9 +69,9 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const [screenshotBase64, setScreenshotBase64] = useState<string | null>(null);
     const [videoBase64, setVideoBase64] = useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-    const [durationMode, setDurationMode] = useState<'30s' | 'full'>('30s');
+    const [durationMode, setDurationMode] = useState<'30s' | 'full'>('full');
     const [progressStatus, setProgressStatus] = useState<string>('');
-    const [lang, setLang] = useState('Russian');
+    const [lang, setLang] = useState((mode === 'health' || mode === 'business') ? 'French' : 'Russian');
     const [llmProvider, setLlmProvider] = useState<string>('custom');
     const [imageModel, setImageModel] = useState<string>('freepik-mystic');
     const [videoModel, setVideoModel] = useState<VideoModel>('veo_31_lite');
@@ -109,7 +113,9 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     const [isGeneratingCovers, setIsGeneratingCovers] = useState<boolean>(false);
     const [regeneratingCoverIndex, setRegeneratingCoverIndex] = useState<number | null>(null);
     const [previewCoverModal, setPreviewCoverModal] = useState<StudioVideoCover | null>(null);
+    const [editedCoverPrompt, setEditedCoverPrompt] = useState<string>('');
     const [coversProgressStatus, setCoversProgressStatus] = useState<string>('');
+    const [showAllPromptsSummary, setShowAllPromptsSummary] = useState<boolean>(false);
 
     // ── Multi-thread G-Labs Concurrency State ──
     const [isMultiThread, setIsMultiThread] = useState<boolean>(true);
@@ -160,6 +166,9 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         if (mode === 'health') {
             refreshQueueStats();
             refreshAmazonProducts();
+            if (lang === 'Russian') {
+                setLang('French');
+            }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode]);
@@ -459,7 +468,9 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     React.useEffect(() => {
         if (window.electronAPI?.onStudioCoversProgress) {
             window.electronAPI.onStudioCoversProgress((data) => {
-                if (data.status === 'generating') {
+                if (data.status === 'analyzing') {
+                    setCoversProgressStatus(data.message || '🧠 AI анализирует сценарий и подбирает вирусные архетипы...');
+                } else if (data.status === 'generating') {
                     setCoversProgressStatus(`Генерация обложки ${((data.coverIndex ?? 0) + 1)}/4 (${data.styleTitle || ''})...`);
                 } else if (data.status === 'completed') {
                     setCoversProgressStatus('✅ Все 4 обложки успешно сгенерированы!');
@@ -473,6 +484,11 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
             }
         };
     }, []);
+
+    const handleOpenCoverModal = (cover: StudioVideoCover) => {
+        setPreviewCoverModal(cover);
+        setEditedCoverPrompt(cover.prompt || '');
+    };
 
     const handleGenerateCovers = async () => {
         if (!projectFolder && !script) {
@@ -491,7 +507,8 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                 amazonProduct: selectedAmazonProduct || undefined,
                 script: script || undefined,
                 imageModel: imageModel as any,
-                provider: llmProvider
+                provider: llmProvider,
+                mode
             });
 
             if (result && Array.isArray(result)) {
@@ -533,6 +550,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
 
             if (res?.imageUrl) {
                 setCovers(prev => prev.map((c, i) => i === index ? { ...c, imageUrl: res.imageUrl, prompt: promptToUse } : c));
+                setPreviewCoverModal(prev => (prev && prev.id === index) ? { ...prev, imageUrl: res.imageUrl, prompt: promptToUse } : prev);
             }
         } catch (e: any) {
             alert('Ошибка перегенерации обложки: ' + e.message);
@@ -679,7 +697,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
     }, [mode, topic, lang]);
 
     const generateScript = async () => {
-        const effectiveTopic = topic.trim() || (referenceUrl.trim() ? `Reference: ${referenceUrl.trim()}` : '') || (screenshotBase64 ? 'Screenshot Rules Reference' : '') || (videoBase64 ? 'Video Demonstration Reference' : '');
+        const effectiveTopic = topic.trim() || (referenceUrl.trim() ? `Reference: ${referenceUrl.trim()}` : '');
         if (!effectiveTopic && !referenceUrl.trim() && !screenshotBase64 && !videoBase64) return;
         setIsLoading(true);
         setError(null);
@@ -705,7 +723,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                 autoSourceAmazon: autoSourceAmazon && !selectedAmazonProduct
             });
             if ((result as any).amazonProduct) {
-                setSelectedAmazonProduct((result as any).amazonProduct);
+                // Do not permanently lock auto-sourced products into input state for future unrelated topics!
                 refreshAmazonProducts();
             }
             const initializedScript: StudioScript = {
@@ -836,6 +854,8 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
         setTopic('');
         setReferenceUrl('');
         setScreenshotBase64(null);
+        setVideoBase64(null);
+        setSelectedAmazonProduct(null);
         setError(null);
         setFinalVideoUrl(null);
         setProjectFolder('');
@@ -1674,10 +1694,10 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                     <div className="studio-header-inner">
                         <div className="studio-logo">
                             <div className="studio-logo-icon">
-                                {mode === 'health' ? <Lightbulb color="white" size={24} /> : mode === 'psychology' ? <Brain color="white" size={24} /> : <Box color="white" size={24} />}
+                                {mode === 'health' ? <Lightbulb color="white" size={24} /> : mode === 'psychology' ? <Brain color="white" size={24} /> : mode === 'business' ? <Briefcase color="white" size={24} /> : <Box color="white" size={24} />}
                             </div>
                             <h1>
-                                AI <span className="mode-text">{mode === 'health' ? 'GenieTalk' : mode === 'psychology' ? 'Psychology' : 'ObjectWars'}</span>
+                                AI <span className="mode-text">{mode === 'health' ? 'GenieTalk' : mode === 'psychology' ? 'Psychology' : mode === 'business' ? 'BusinessTalk' : 'ObjectWars'}</span>
                             </h1>
                         </div>
                         {script && (
@@ -1723,7 +1743,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                                     transition: 'all 0.15s'
                                                 }}
                                             >
-                                                ⚡ 30 сек (4-5 сцен — TikTok)
+                                                ⚡ 35-45 сек (Short: 4-6 сцен)
                                             </button>
                                             <button
                                                 type="button"
@@ -1740,7 +1760,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                                     transition: 'all 0.15s'
                                                 }}
                                             >
-                                                🎬 Полное (8 сцен / ~60с)
+                                                🎬 80-120 сек (High RPM: 10-14 сцен)
                                             </button>
                                         </div>
                                     </div>
@@ -1752,7 +1772,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                         <span>🔗 ССЫЛКА НА РЕФЕРЕНС (TIKTOK / REELS / SHORTS) — НЕОБЯЗАТЕЛЬНО</span>
                                         {referenceUrl && (
                                             <span style={{ color: '#38bdf8', fontSize: '11px', fontWeight: 500 }}>
-                                                ✓ Видео будет скачано, транскрибировано и адаптировано под {mode === 'psychology' ? 'Психолога' : 'Вундеркинда'}
+                                                ✓ Видео будет скачано, транскрибировано и адаптировано под {mode === 'psychology' ? 'Психолога' : mode === 'business' ? 'Бизнес-учителя' : 'Вундеркинда'}
                                             </span>
                                         )}
                                     </label>
@@ -1987,7 +2007,7 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                             placeholder={
                                                 screenshotBase64
                                                     ? "Оставьте пустым, чтобы взять все правила из скриншота, или задайте тон..."
-                                                    : (referenceUrl.trim() ? "Оставьте пустым, чтобы взять историю из видео целиком, или уточните фокус..." : (mode === 'health' ? "Например: 5 секретов чистки кухни, Лайфхак для быстрой уборки или Как сложить вещи" : mode === 'psychology' ? "Например: почему люди терпят токсичных людей, как не дать собой манипулировать..." : "История забытой картошки..."))
+                                                    : (referenceUrl.trim() ? "Оставьте пустым, чтобы взять историю из видео целиком, или уточните фокус..." : (mode === 'health' ? "Например: 5 секретов чистки кухни, Лайфхак для быстрой уборки или Как сложить вещи" : mode === 'psychology' ? "Например: почему люди терпят токсичных людей, как не дать собой манипулировать..." : mode === 'business' ? "Например: Почему IKEA зарабатывает на тефтелях больше чем на мебели, 5 бизнес-моделей в метафорах..." : "История забытой картошки..."))
                                             }
                                             className="studio-input"
                                         />
@@ -1995,6 +2015,42 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                             {isIdeasLoading ? <RefreshCw className="spin" size={20} /> : <Lightbulb size={20} />}
                                         </button>
                                     </div>
+                                    {mode === 'health' && selectedAmazonProduct && (
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            background: 'rgba(245, 158, 11, 0.12)',
+                                            border: '1px solid rgba(245, 158, 11, 0.4)',
+                                            borderRadius: '6px',
+                                            padding: '6px 10px',
+                                            marginTop: '6px',
+                                            gap: '8px'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#fbbf24', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <ShoppingCart size={13} style={{ flexShrink: 0 }} />
+                                                <span><strong>Привязан товар #{selectedAmazonProduct.code}:</strong> {selectedAmazonProduct.title}</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedAmazonProduct(null)}
+                                                style={{
+                                                    background: 'rgba(239, 68, 68, 0.2)',
+                                                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                                                    borderRadius: '4px',
+                                                    color: '#fca5a5',
+                                                    cursor: 'pointer',
+                                                    fontSize: '10px',
+                                                    padding: '2px 8px',
+                                                    fontWeight: 600,
+                                                    flexShrink: 0
+                                                }}
+                                                title="Отвязать товар: сценарий будет сгенерирован по теме без принудительной интеграции этого товара"
+                                            >
+                                                ✕ Отвязать
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {!script && (
@@ -2159,18 +2215,111 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                         )}
 
                         {finalVideoUrl && (
-                            <section className="final-assembly-preview">
-                                <div className="scene-card final-card">
-                                    <div className="scene-info">
-                                        <div className="scene-header">
-                                            <div className="scene-number">★</div>
-                                            <div className="status-badge gold">FINAL VIDEO READY</div>
+                            <section className="final-assembly-preview" style={{ marginBottom: '2.5rem' }}>
+                                <div className="scene-card final-card" style={{
+                                    border: '2px solid rgba(245, 158, 11, 0.4)',
+                                    background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.75) 100%)',
+                                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(245, 158, 11, 0.15)'
+                                }}>
+                                    <div className="scene-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                                        <div>
+                                            <div className="scene-header" style={{ marginBottom: '1rem' }}>
+                                                <div className="scene-number" style={{ background: '#f59e0b', color: '#000', fontWeight: 900 }}>★</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', fontWeight: 700 }}>
+                                                        {script?.scenes?.length || 0} СЦЕН СОБРАНО
+                                                    </span>
+                                                    <div className="status-badge gold">ФИНАЛЬНЫЙ РОЛИК ГОТОВ</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="line-container" style={{ marginBottom: '1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#fbbf24', fontWeight: 800, marginBottom: '4px', letterSpacing: '0.05em' }}>
+                                                    🎬 Тема ролика
+                                                </div>
+                                                <p className="line-text" style={{ fontSize: '1.15rem', color: '#f8fafc', margin: 0, fontWeight: 700 }}>
+                                                    {script?.socialPost?.title || script?.intro}
+                                                </p>
+                                            </div>
+
+                                            {script?.socialPost?.description && (
+                                                <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '10px', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '12px' }}>
+                                                    <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, marginBottom: '2px' }}>
+                                                        📝 Описание для публикации
+                                                    </div>
+                                                    <p style={{ margin: 0, fontSize: '11px', color: '#cbd5e1', lineHeight: 1.4 }}>
+                                                        {script.socialPost.description}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Quick Actions for Prompts and Navigation */}
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        const fullText = script?.scenes.map((s, i) =>
+                                                            `--- СЦЕНА ${i + 1} ---\nРЕПЛИКА: "${s.line}"\n\n[ПРОМПТ КАДРА]:\n${s.imagePrompt}\n\n[ПРОМПТ АНИМАЦИИ]:\n${s.videoPrompt}\n`
+                                                        ).join('\n\n') || '';
+                                                        copyToClipboard(fullText, 'full_script');
+                                                    }}
+                                                    className="action-btn secondary"
+                                                    style={{ padding: '8px 12px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                                >
+                                                    {copiedField === 'full_script' ? <CheckCircle size={14} color="#10b981" /> : <Copy size={14} />}
+                                                    {copiedField === 'full_script' ? 'СКОПИРОВАНО!' : 'СКОПИРОВАТЬ ВСЕ ПРОМПТЫ И РЕПЛИКИ'}
+                                                </button>
+
+                                                <button
+                                                    onClick={() => setShowAllPromptsSummary(!showAllPromptsSummary)}
+                                                    className="action-btn secondary"
+                                                    style={{ padding: '8px 12px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                                >
+                                                    <List size={14} />
+                                                    {showAllPromptsSummary ? 'СКРЫТЬ ПРОМПТЫ СЦЕН' : `ПОКАЗАТЬ ВСЕ ${script?.scenes?.length || 0} СЦЕН ЗДЕСЬ`}
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        document.querySelector('.scenes-grid')?.scrollIntoView({ behavior: 'smooth' });
+                                                    }}
+                                                    className="action-btn secondary"
+                                                    style={{ padding: '8px 12px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981' }}
+                                                >
+                                                    <ChevronDown size={14} /> К РЕДАКТИРОВАНИЮ СЦЕН НИЖЕ
+                                                </button>
+                                            </div>
+
+                                            {/* Inline Accordion for All Scenes Prompts */}
+                                            {showAllPromptsSummary && script && (
+                                                <div style={{
+                                                    marginTop: '12px',
+                                                    background: 'rgba(0,0,0,0.5)',
+                                                    borderRadius: '10px',
+                                                    padding: '12px',
+                                                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                                                    maxHeight: '260px',
+                                                    overflowY: 'auto'
+                                                }}>
+                                                    {script.scenes.map((s, idx) => (
+                                                        <div key={s.id} style={{ marginBottom: idx === script.scenes.length - 1 ? 0 : '12px', paddingBottom: '10px', borderBottom: idx === script.scenes.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#fbbf24' }}>СЦЕНА {idx + 1}</span>
+                                                                <span style={{ fontSize: '10px', color: '#94a3b8' }}>{s.line.slice(0, 45)}...</span>
+                                                            </div>
+                                                            <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace', lineHeight: 1.3, marginBottom: '4px' }}>
+                                                                <strong style={{ color: '#cbd5e1' }}>Character:</strong> {s.imagePrompt.slice(0, 140)}...
+                                                            </div>
+                                                            <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace', lineHeight: 1.3 }}>
+                                                                <strong style={{ color: '#cbd5e1' }}>Animation:</strong> {s.videoPrompt.slice(0, 140)}...
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="line-container">
-                                            <p className="line-text" style={{ fontSize: '1.2rem', color: '#fbbf24' }}>{script?.intro}</p>
-                                        </div>
-                                        <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '1rem' }}>
-                                            Your viral short is ready with background music and cinematic flow.
+
+                                        <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '6px 0 0' }}>
+                                            Все исходные сцены с полными промптами, кадрами и видеоклипами доступны ниже.
                                         </p>
                                     </div>
                                     <div className="asset-display">
@@ -2349,12 +2498,19 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                         const isRegenerating = regeneratingCoverIndex === idx;
 
                                         // Fallback display styles if not generated yet
-                                        const fallbackStyles = [
+                                        const healthFallbackStyles = [
                                             { title: 'Шок-открытие', badge: 'Любопытство (Curiosity)', desc: 'Крупный план, широко раскрытые глаза, светящаяся реакция' },
                                             { title: 'Контраст До / После', badge: 'До / После (Proof)', desc: 'Разделенный экран: грязь слева и чистый блеск справа' },
                                             { title: 'Герой Продукта', badge: 'Товар (Hero Showcase)', desc: 'Фокус на товаре в руках с кодом #X и размытым фоном' },
                                             { title: 'Заговорщический секрет', badge: 'Секрет (Insider Hook)', desc: 'Палец у губ «Тсс!», драматичный свет, закрытый инсайд' }
                                         ];
+                                        const businessFallbackStyles = [
+                                            { title: 'TED-Talk Авторитет', badge: 'Авторитет (Authority)', desc: 'Génie на сцене TED с хуком на французском' },
+                                            { title: 'Метафора → Инсайт', badge: 'Метафора (Metaphor Hook)', desc: 'Визуальная метафора и провокационный вопрос' },
+                                            { title: 'Шокирующие цифры', badge: 'Цифры (Numbers Shock)', desc: 'Голографические цифры прибыли и стратегия' },
+                                            { title: 'Секрет миллиардера', badge: 'Секрет (Insider Secret)', desc: 'Доверительный жест с секретным бизнес-инсайтом' }
+                                        ];
+                                        const fallbackStyles = mode === 'business' ? businessFallbackStyles : healthFallbackStyles;
                                         const styleInfo = cover ? {
                                             title: cover.styleTitle,
                                             badge: cover.badge,
@@ -2430,7 +2586,14 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                                             )}
                                                             <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
                                                                 <button
-                                                                    onClick={(e) => { e.stopPropagation(); setPreviewCoverModal(cover); }}
+                                                                    onClick={(e) => { e.stopPropagation(); handleOpenCoverModal(cover); }}
+                                                                    title="Редактировать промпт и увеличить"
+                                                                    style={{ background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fbbf24', borderRadius: '6px', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                                >
+                                                                    <Edit3 size={13} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleOpenCoverModal(cover); }}
                                                                     title="Увеличить обложку"
                                                                     style={{ background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fff', borderRadius: '6px', width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                                                                 >
@@ -2576,14 +2739,59 @@ const StudioTab: React.FC<StudioTabProps> = ({ mode }) => {
                                     </button>
                                 </div>
 
-                                <div style={{ marginTop: '16px' }}>
-                                    <label style={{ fontSize: '11px', fontWeight: 700, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                                        <ImageIcon size={13} /> Промпт из 100K Guide:
-                                    </label>
-                                    <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '8px', padding: '10px', border: '1px solid rgba(255,255,255,0.06)', maxHeight: '180px', overflowY: 'auto' }}>
-                                        <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8', lineHeight: 1.4, fontFamily: 'monospace' }}>
-                                            {previewCoverModal.prompt}
-                                        </p>
+                                <div style={{ marginTop: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                        <label style={{ fontSize: '11px', fontWeight: 700, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <Edit3 size={13} color="#fbbf24" /> Редактирование промпта обложки:
+                                        </label>
+                                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                            Скорректируйте надпись, детали или реквизит
+                                        </span>
+                                    </div>
+                                    <textarea
+                                        value={editedCoverPrompt}
+                                        onChange={(e) => setEditedCoverPrompt(e.target.value)}
+                                        rows={6}
+                                        style={{
+                                            width: '100%',
+                                            background: 'rgba(0,0,0,0.5)',
+                                            color: '#e2e8f0',
+                                            border: '1px solid rgba(245, 158, 11, 0.35)',
+                                            borderRadius: '8px',
+                                            padding: '10px',
+                                            fontSize: '11px',
+                                            fontFamily: 'monospace',
+                                            lineHeight: 1.45,
+                                            resize: 'vertical',
+                                            outline: 'none',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                        <button
+                                            onClick={async () => {
+                                                const idx = previewCoverModal.id;
+                                                await handleRegenerateCover(idx, editedCoverPrompt);
+                                            }}
+                                            disabled={regeneratingCoverIndex === previewCoverModal.id}
+                                            style={{
+                                                background: regeneratingCoverIndex === previewCoverModal.id ? '#64748b' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                                color: '#000',
+                                                border: 'none',
+                                                borderRadius: '7px',
+                                                padding: '7px 14px',
+                                                fontWeight: 800,
+                                                fontSize: '11px',
+                                                cursor: regeneratingCoverIndex === previewCoverModal.id ? 'not-allowed' : 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+                                            }}
+                                        >
+                                            {regeneratingCoverIndex === previewCoverModal.id ? <RefreshCw size={13} className="spin" /> : <Sparkles size={13} />}
+                                            {regeneratingCoverIndex === previewCoverModal.id ? 'Генерация...' : '⚡ Перегенерировать с этим промптом'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>

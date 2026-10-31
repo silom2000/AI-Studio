@@ -208,18 +208,18 @@
     "amazonUrl": "https://www.amazon.fr/dp/B00V8RIUKG?tag=bertranna-21"
   },
   {
-    "code": 15,
-    "title": "Huile Réparatrice Bi-Oil 200ml",
+    "code": 33,
+    "title": "Huile de Soin Régénérante Bi-Oil",
     "category": "beaute",
     "featured": false,
-    "img": "img/prod_15.jpg",
-    "hackMethod": "L'action combinée de vitamines A et E avec un lipide fluide optimise le renouvellement cellulaire en restaurant l'élasticité profonde des tissus cutanés.",
-    "quote": "Marre de voir ces vergetures et cicatrices persister sur votre peau malgré les crèmes classiques ?",
-    "verdict": "Grâce au Purcellin Oil, cette formule pénètre instantanément sans film gras pour sceller l'hydratation et booster durablement la régénération cutanée.",
+    "img": "img/prod_33.jpg",
+    "hackMethod": "Masser la peau avec des lipides ciblés permet aux vitamines d'activer le renouvellement cellulaire pour estomper rapidement les marques cutanées.",
+    "quote": "Marre des vergetures tenaces et des cicatrices visibles qui gâchent l'aspect de votre peau au quotidien ?",
+    "verdict": "Grâce à sa formule unique, cette huile accélère la régénération cutanée et estompe les vergetures sans fini gras au quotidien.",
     "features": [
-      "✓ Atténue visiblement les cicatrices et vergetures récentes ou anciennes",
-      "✓ Texture légère enrichie en Purcellin Oil à pénétration rapide",
-      "✓ Formule nourrissante aux vitamines A et E pour peaux déshydratées"
+      "✓ Atténue visiblement cicatrices et vergetures récentes ou anciennes",
+      "✓ Formule enrichie en Purcellin Oil non grasse et absorbante",
+      "✓ Soin idéal pour maintenir l'élasticité cutanée pendant la grossesse"
     ],
     "amazonUrl": "https://www.amazon.fr/dp/B07XF23G3N?tag=bertranna-21"
   },
@@ -350,5 +350,149 @@
       "✓ Poignée ergonomique qui réduit la fatigue des mains"
     ],
     "amazonUrl": "https://www.amazon.fr/dp/B0HLT2FJLF?tag=bertranna-21"
+  },
+  {
+    "code": 26,
+    "title": "Pastilles en Feutre Adhésif",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_26.jpg",
+    "hackMethod": "L'odeur forte du baume mentholé agit comme un répulsif olfactif naturel ultra-efficace pour éloigner instantanément votre félin de vos meubles.",
+    "quote": "Vous en avez marre de voir votre chat détruire votre canapé préféré avec ses griffes ?",
+    "verdict": "Appliquez le baume sur ces pastilles en feutre adhésives et cachez-les sous le canapé pour protéger le tissu tout en diffusant l'odeur.",
+    "features": [
+      "✓ Fixation auto-adhésive puissante qui tient fermement sur toutes les surfaces",
+      "✓ Matériau en feutre absorbant idéal pour retenir et diffuser le baume",
+      "✓ Conception discrète pour protéger vos meubles sans jamais abîmer le tissu"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0H9FCLT3Q?tag=bertranna-21"
+  },
+  {
+    "code": 27,
+    "title": "Détranspirant Etiaxil Peaux Sensibles",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_27.jpg",
+    "hackMethod": "Appliqué le soir sur peau parfaitement sèche, son complexe breveté endort les glandes sudoripares pour stopper l'humidité pendant plusieurs jours.",
+    "quote": "Marre des auréoles gênantes qui ruinent vos chemises et détruisent votre confiance en public ?",
+    "verdict": "Ce traitement ciblé remplace vos déodorants quotidiens inefficaces en assurant jusqu'à cinq jours de protection totale avec une seule application.",
+    "features": [
+      "✓ Efficacité cliniquement prouvée de 3 à 5 jours",
+      "✓ Formule CPX haute tolérance sans parfum",
+      "✓ Format bille ultra économique et ciblé"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B086R8LQJ9?tag=bertranna-21"
+  },
+  {
+    "code": 28,
+    "title": "Spray Peeling Purifiant Medicube",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_28.jpg",
+    "hackMethod": "L'acide hypochloreux neutralise instantanément les bactéries responsables des imperfections tout en apaisant l'inflammation cellulaire cutanée sans jamais agresser l'épiderme.",
+    "quote": "Marre des boutons tenaces dans le dos et du grain de peau rugueux qui gâchent l'été ?",
+    "verdict": "Ce spray ciblé pulvérise uniformément la formule même dans les zones difficiles d'accès, purifiant votre dos sans aucun frottement douloureux.",
+    "features": [
+      "✓ Diffusion brume pratique à 360°",
+      "✓ Formule antibactérienne à l'acide hypochloreux",
+      "✓ Lisse visiblement le grain de peau"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0FPCC599C?tag=bertranna-21"
+  },
+  {
+    "code": 29,
+    "title": "Pulvérisateur Électrique Rechargeable Sans Fil",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_29.jpg",
+    "hackMethod": "L'acide acétique du vinaigre blanc combiné aux aldéhydes de cannelle neutralise instantanément les phéromones des fourmis et stoppe net leur progression.",
+    "quote": "Marre de voir des colonnes de fourmis envahir votre cuisine malgré vos nettoyages répétés ?",
+    "verdict": "Grâce à sa pression constante, ce pulvérisateur électrique dépose une brume fine et continue dans chaque recoin sans fatiguer vos mains.",
+    "features": [
+      "✓ Pulvérisation automatique continue sans pompage manuel",
+      "✓ Buse réglable pour cibler plinthes et fissures",
+      "✓ Batterie rechargeable par câble USB universel"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0FWKBTG6C?tag=bertranna-21"
+  },
+  {
+    "code": 30,
+    "title": "Infuseur à Thé Inox Ultra-Fin",
+    "category": "cuisine",
+    "featured": false,
+    "img": "img/prod_30.jpg",
+    "hackMethod": "Infuser directement des feuilles brutes en vrac extrait tous les arômes purs sans dégrader de polymères synthétiques sous la haute température.",
+    "quote": "Boire des milliards de microplastiques invisibles infusés dans sa tasse brûlante gâche le plaisir du thé quotidien.",
+    "verdict": "Cette boule en inox alimentaire filtre parfaitement les débris végétaux et garantit une infusion saine, lavable et réutilisable à l'infini.",
+    "features": [
+      "✓ Maille micro-perforée retenant même les plus fines particules",
+      "✓ Acier inoxydable de qualité alimentaire garanti sans microplastiques",
+      "✓ Système de fermeture sécurisé facile à ouvrir et nettoyer"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0FX61TWHQ?tag=bertranna-21"
+  },
+  {
+    "code": 31,
+    "title": "Sérum Acide Hyaluronique The Ordinary",
+    "category": "beaute",
+    "featured": false,
+    "img": "img/prod_31.jpg",
+    "hackMethod": "Appliquez ce sérum sur une peau légèrement humide : ses molécules hygroscopiques retiennent l'eau pour repulper intensément votre barrière cutanée déshydratée.",
+    "quote": "Marre d'avoir la peau qui tiraille et des ridules marquées malgré vos crèmes hydratantes classiques ?",
+    "verdict": "Enrichi en céramides ciblés, ce sérum décuple l'hydratation de votre crème habituelle sans multiplier les étapes ni dépenser une fortune.",
+    "features": [
+      "✓ Hydratation multi-profondeur grâce à cinq formes d'acide hyaluronique",
+      "✓ Céramides protecteurs renforçant durablement la barrière cutanée",
+      "✓ Texture fluide non grasse enrichie en pro-vitamine B5 repulpante"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B01MYEZPC8?tag=bertranna-21"
+  },
+  {
+    "code": 32,
+    "title": "Mini déshumidificateur d'air silencieux",
+    "category": "maison",
+    "featured": false,
+    "img": "img/prod_32.jpg",
+    "hackMethod": "Aérer dix minutes abaisse le taux d'humidité, mais stabiliser durablement l'air intérieur empêche physiquement la vapeur de condenser sur vos vitres.",
+    "quote": "Marre des vitres ruisselantes d'eau chaque matin et des moisissures toxiques sur vos joints ?",
+    "verdict": "Cet appareil compact absorbe activement jusqu'à 350 ml d'eau par jour, gardant vos vitres parfaitement sèches sans le moindre effort quotidien.",
+    "features": [
+      "✓ Extraction continue jusqu'à 350 ml par jour",
+      "✓ Fonctionnement ultra silencieux adapté aux chambres",
+      "✓ Arrêt automatique sécurisé quand le réservoir est plein"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0GNL6KJLC?tag=bertranna-21"
+  },
+  {
+    "code": 34,
+    "title": "Brosse à Vaisselle Ergonomique",
+    "category": "nettoyage",
+    "featured": false,
+    "img": "img/prod_34.jpg",
+    "hackMethod": "Faites bouillir du vinaigre blanc avec du bicarbonate : la réaction effervescente décolle instantanément les dépôts carbonisés incrustés au fond de la casserole.",
+    "quote": "Frotter une casserole brûlée pendant des heures sans résultat ruine complètement votre soirée et vos bras.",
+    "verdict": "Cette brosse ergonomique amplifie l'action chimique en délogeant les résidus ramollis sans jamais rayer vos ustensiles ni fatiguer vos poignets.",
+    "features": [
+      "✓ Poils haute densité pour éliminer les résidus tenaces sans rayer",
+      "✓ Manche ergonomique antidérapant assurant une pression maximale sans effort",
+      "✓ Conception robuste et durable résistante à l'eau bouillante"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0HC4H7V55?tag=bertranna-21"
+  },
+  {
+    "code": 35,
+    "title": "Rails Réglables Pour Clayettes Frigo",
+    "category": "cuisine",
+    "featured": false,
+    "img": "img/prod_35.jpg",
+    "hackMethod": "En exploitant la stratification spatiale verticale, vous doublez immédiatement les surfaces de rangement utiles sans saturer le volume d'air réfrigéré disponible.",
+    "quote": "Marre d'un frigo saturé où l'espace vertical reste totalement inexploité dans votre petite cuisine ?",
+    "verdict": "Ces rails robustes fixent vos clayettes à la hauteur exacte voulue, créant un agencement sur-mesure parfait en seulement quelques secondes chrono.",
+    "features": [
+      "✓ Installation rapide et clipsable sans aucun perçage complexe",
+      "✓ Compatibilité universelle pour la plupart des réfrigérateurs et congélateurs",
+      "✓ Alliage haute résistance assurant une parfaite stabilité sous charge"
+    ],
+    "amazonUrl": "https://www.amazon.fr/dp/B0HLJSFSCT?tag=bertranna-21"
   }
 ]

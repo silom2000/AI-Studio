@@ -179,6 +179,7 @@ export function DocuCraftTab() {
   const [decomposingScenes, setDecomposingScenes] = useState<Record<string, boolean>>({});
   const [chainingScenes, setChainingScenes] = useState<Record<string, boolean>>({});
   const [generatingShots, setGeneratingShots] = useState<Record<string, boolean>>({});
+  const hasMediaErrors = script?.chapters.some(ch => ch.scenes.some(sc => sc.error)) || false;
 
   // B-Roll / Stock Archival Retrieval Modal State
   const [stockModalTarget, setStockModalTarget] = useState<{ chapIdx: number; scIdx: number; scene: DocuCraftScene } | null>(null);
@@ -304,30 +305,31 @@ export function DocuCraftTab() {
     }
   };
 
-  const handleGenerateAllAudio = async () => {
+
+
+    const handleGenerateBaseMedia = async () => {
     if (!script) return;
     setIsGeneratingAudio(true);
+    let updated = script;
     try {
-      const updated = await window.electronAPI.docucraftGenerateAudio({
+      updated = await window.electronAPI.docucraftGenerateAudio({
         projectFolder: script.projectFolder,
-        script,
+        script: updated,
         ttsService
       });
       setScript(updated);
     } catch (err: any) {
       alert('Audio generation failed: ' + err.message);
-    } finally {
       setIsGeneratingAudio(false);
+      return;
     }
-  };
+    setIsGeneratingAudio(false);
 
-  const handleGenerateAllImages = async () => {
-    if (!script) return;
     setIsGeneratingImages(true);
     try {
-      const updated = await window.electronAPI.docucraftGenerateImages({
-        projectFolder: script.projectFolder,
-        script,
+      updated = await window.electronAPI.docucraftGenerateImages({
+        projectFolder: updated.projectFolder,
+        script: updated,
         imageModel
       });
       setScript(updated);
@@ -337,6 +339,8 @@ export function DocuCraftTab() {
       setIsGeneratingImages(false);
     }
   };
+
+
 
   const handleGenerateAllVideos = async () => {
     if (!script) return;
@@ -613,6 +617,27 @@ export function DocuCraftTab() {
       alert('Failed to regenerate image: ' + err.message);
     }
   };
+
+  const handleRegenerateSequence = async (chapIdx: number, scIdx: number) => {
+    if (!script) return;
+    const sc = script.chapters[chapIdx].scenes[scIdx];
+    setDecomposingScenes(prev => ({...prev, [sc.id]: true}));
+    try {
+      const updated = await window.electronAPI.docucraftGenerateImages({
+        projectFolder: script.projectFolder,
+        script: script,
+        imageModel,
+        sceneId: sc.id
+      });
+      setScript(updated);
+    } catch (err: any) {
+      alert('Failed to regenerate sequence: ' + err.message);
+    } finally {
+      setDecomposingScenes(prev => ({...prev, [sc.id]: false}));
+    }
+  };
+
+
 
   const handleRegenerateSingleVideo = async (chapIdx: number, scIdx: number) => {
     if (!script) return;
@@ -951,8 +976,37 @@ export function DocuCraftTab() {
           </div>
         )}
 
+        
+        {/* Loading State when generating new script */}
+        {activeTab === 'editor' && !script && isGeneratingScript && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: '#94a3b8',
+            gap: '24px',
+            background: '#13161c',
+            borderRadius: '12px',
+            margin: '20px',
+            padding: '40px'
+          }}>
+            <div style={{ fontSize: '4rem', opacity: 0.9, animation: 'pulse 2s infinite' }}>🧠</div>
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={{ color: '#f1f5f9', marginBottom: '12px', fontSize: '1.8rem' }}>Conceiving Documentary...</h2>
+              <p style={{ margin: '0 auto', maxWidth: '500px', lineHeight: 1.6, fontSize: '1.05rem' }}>
+                AI is researching the topic, structuring chapters, and drafting a compelling narrative.
+              </p>
+              <div style={{ marginTop: '30px', color: '#6ee7b7', fontSize: '0.9rem' }}>
+                This usually takes 1-3 minutes depending on duration.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Empty State when no script */}
-        {activeTab === 'editor' && !script && (
+        {activeTab === 'editor' && !script && !isGeneratingScript && (
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -1049,17 +1103,11 @@ export function DocuCraftTab() {
               <div className="docucraft-action-group">
                 <button
                   className="docucraft-btn-secondary"
-                  onClick={handleGenerateAllAudio}
-                  disabled={isGeneratingAudio}
+                  onClick={handleGenerateBaseMedia}
+                  disabled={isGeneratingAudio || isGeneratingImages}
+                  style={hasMediaErrors ? { borderColor: '#ef4444', color: '#f87171' } : {}}
                 >
-                  {isGeneratingAudio ? '⏳ Synthesizing Audio...' : '🎙️ Generate Voiceover (All)'}
-                </button>
-                <button
-                  className="docucraft-btn-secondary"
-                  onClick={handleGenerateAllImages}
-                  disabled={isGeneratingImages}
-                >
-                  {isGeneratingImages ? '⏳ Illustrating...' : '🎨 Generate Images (All)'}
+                  {isGeneratingAudio ? '⏳ Synthesizing Audio...' : isGeneratingImages ? '⏳ Illustrating...' : hasMediaErrors ? '⚠️ Retry Failed Media' : '⚡ Generate Base Media'}
                 </button>
                 <button
                   className="docucraft-btn-secondary"
@@ -1188,7 +1236,7 @@ export function DocuCraftTab() {
                                   value={scene.voiceoverText || ''}
                                   placeholder="Voiceover narration in chosen language..."
                                   onChange={(e) => handleUpdateScene(cIdx, sIdx, 'voiceoverText', e.target.value)}
-                                />
+                                ></textarea>
                               </div>
 
                               {scene.annotation && (
@@ -1201,7 +1249,7 @@ export function DocuCraftTab() {
                               {scene.shots && scene.shots.length > 0 ? (
                                 (() => {
                                   // Determine if these are video decomposition shots or static multiple images
-                                  const isStaticSequence = scene.shots.some(s => s.imageUrl && !s.role);
+                                  const isStaticSequence = !scene.isAnimated && scene.shots.some(s => s.imageUrl && !s.role);
 
                                   if (isStaticSequence) {
                                     return (
@@ -1211,6 +1259,18 @@ export function DocuCraftTab() {
                                             <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#f3f4f6' }}>
                                               🖼️ Multi-Image Sequence ({scene.shots.length} angles)
                                             </span>
+                                          </div>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <button
+                                              type="button"
+                                              className="docucraft-btn-secondary docucraft-btn-sm"
+                                              style={{ fontSize: '0.66rem', padding: '2px 7px' }}
+                                              onClick={() => handleRegenerateSequence(cIdx, sIdx)}
+                                              disabled={decomposingScenes[scene.id]}
+                                              title="Regenerate all images for this static sequence based on audio duration"
+                                            >
+                                              {decomposingScenes[scene.id] ? '⏳ Generating...' : '🔄 Regenerate Sequence'}
+                                            </button>
                                           </div>
                                         </div>
                                         <div className="docucraft-shots-timeline" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))' }}>
@@ -1315,9 +1375,14 @@ export function DocuCraftTab() {
                                                 ) : shot.sourceImage ? (
                                                   <img src={shot.sourceImage} alt={`Shot ${shot.index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                 ) : (
-                                                  <div className="docucraft-shot-placeholder">
-                                                    <span>{isThisShotGenerating ? '⏳' : '🎬'}</span>
-                                                    <span>{isThisShotGenerating ? 'Rendering' : 'Pending'}</span>
+                                                  <div
+                                                    className="docucraft-shot-placeholder"
+                                                    title={shot.status === 'error' ? shot.error : undefined}
+                                                  >
+                                                    <span>{isThisShotGenerating ? '⏳' : shot.status === 'error' ? '❌' : '🎬'}</span>
+                                                    <span style={{ color: shot.status === 'error' ? '#ef4444' : 'inherit' }}>
+                                                      {isThisShotGenerating ? 'Rendering' : shot.status === 'error' ? 'Error' : 'Pending'}
+                                                    </span>
                                                   </div>
                                                 )}
                                               </div>
@@ -1432,9 +1497,11 @@ export function DocuCraftTab() {
                                           onError={(e) => console.error('[DocuCraft] Image load error:', scene.imageUrl, e)}
                                         />
                                       ) : (
-                                        <div className="docucraft-preview-empty">
-                                          <span>🖼️</span>
-                                          <span>No illustration yet</span>
+                                        <div className="docucraft-preview-empty" title={scene.error || undefined}>
+                                          <span>{scene.error ? '❌' : '🖼️'}</span>
+                                          <span style={{ color: scene.error ? '#ef4444' : 'inherit' }}>
+                                            {scene.error ? 'Generation Failed' : 'No illustration yet'}
+                                          </span>
                                         </div>
                                       )}
 
@@ -1570,7 +1637,7 @@ export function DocuCraftTab() {
           </>
         )}
         {/* Empty state when no script yet */}
-        {!script && activeTab !== 'history' && (
+        {!script && !isGeneratingScript && activeTab !== 'history' && (
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -2422,3 +2489,4 @@ export function DocuCraftTab() {
 
 
 
+ 

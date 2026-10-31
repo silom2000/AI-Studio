@@ -35,17 +35,8 @@ function getRandomUserAgent() {
 function getDesktopHeaders() {
     return {
         'User-Agent': getRandomUserAgent(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Cache-Control': 'max-age=0'
+        'Connection': 'keep-alive'
     };
 }
 
@@ -65,7 +56,7 @@ function extractAsin(input) {
     if (directMatch) return directMatch[1].toUpperCase();
 
     // 3. Any standalone 10-character ASIN token in the string (only if not preceded by shortlink domains)
-    const isShortUrl = /(?:link\.amazon|amzn\.(?:to|eu)|a\.co)\//i.test(clean);
+    const isShortUrl = /(?:link\.amazon|amzn\.(?:to|eu)|a\.co|amzlinks\.in)\//i.test(clean);
     if (!isShortUrl) {
         const token10Match = clean.match(/\b([B0-9][A-Z0-9]{9})\b/i);
         if (token10Match) return token10Match[1].toUpperCase();
@@ -75,36 +66,115 @@ function extractAsin(input) {
 }
 
 /**
- * Resolves shortlinks (amzn.to, amzn.eu, link.amazon, a.co) if necessary and extracts ASIN
+ * Generates single-character typographical/homoglyph variants (e.g. I <-> l, s <-> S, 0 <-> O)
+ * for cases where OCR, fonts, or user manual input mistook visual lookalikes in case-sensitive shortlinks.
+ */
+function getHomoglyphVariants(code) {
+    if (!code || typeof code !== 'string') return [];
+    const variants = new Set();
+    const charSwaps = {
+        'I': ['l', '1', 'i'],
+        'l': ['I', '1', 'L'],
+        '1': ['I', 'l'],
+        'i': ['l', 'I', '1'],
+        's': ['S', '5'],
+        'S': ['s', '5'],
+        '0': ['O', 'o'],
+        'O': ['0', 'o'],
+        'o': ['0', 'O']
+    };
+
+    for (let i = 0; i < code.length; i++) {
+        const ch = code[i];
+        if (charSwaps[ch]) {
+            for (const alt of charSwaps[ch]) {
+                variants.add(code.slice(0, i) + alt + code.slice(i + 1));
+            }
+        }
+    }
+    return Array.from(variants);
+}
+
+/**
+ * Follows HTTP 301/302 redirects hop-by-hop without downloading heavy target HTML pages,
+ * extracting ASIN directly from Location headers to avoid bot detection/503.
+ */
+async function traceShortlinkRedirects(targetUrl) {
+    let currentUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+    for (let hop = 0; hop < 6; hop++) {
+        try {
+            const resp = await axios.get(currentUrl, {
+                maxRedirects: 0,
+                headers: getDesktopHeaders(),
+                timeout: 5000,
+                validateStatus: () => true
+            });
+
+            if (resp.headers?.location) {
+                const loc = resp.headers.location;
+                console.log(`[AmazonSourcing] Hop ${hop} redirect -> ${loc}`);
+                const asin = extractAsin(loc);
+                if (asin) return { asin, finalUrl: loc };
+
+                if (!loc.startsWith('http')) {
+                    const u = new URL(currentUrl);
+                    currentUrl = `${u.protocol}//${u.host}${loc}`;
+                } else {
+                    currentUrl = loc;
+                }
+            } else {
+                if (resp.status === 200 && typeof resp.data === 'string') {
+                    const m = resp.data.match(/(?:\/dp\/|\/gp\/product\/)([B0-9][A-Z0-9]{8,9})/i);
+                    if (m) return { asin: m[1].toUpperCase(), finalUrl: currentUrl };
+                }
+                break;
+            }
+        } catch (e) {
+            console.warn(`[AmazonSourcing] Hop ${hop} error: ${e.message}`);
+            break;
+        }
+    }
+    return null;
+}
+
+/**
+ * Resolves shortlinks (amzn.to, amzn.eu, link.amazon, a.co) if necessary and extracts ASIN.
+ * Includes intelligent fallback for case-sensitive link.amazon tokens.
  */
 async function resolveUrlAndExtractAsin(input) {
     if (!input || typeof input !== 'string') return null;
     const clean = input.trim();
 
-    const shortDomains = ['amzn.to/', 'amzn.eu/', 'a.co/', 'link.amazon/'];
+    // 1. Direct ASIN or standard URL
+    const directAsin = extractAsin(clean);
+    if (directAsin) return directAsin;
+
+    const shortDomains = ['amzn.to/', 'amzn.eu/', 'a.co/', 'link.amazon/', 'amzlinks.in/', 'amzn.asia/'];
     const isShort = shortDomains.some(d => clean.toLowerCase().includes(d));
 
     if (isShort) {
-        try {
-            console.log(`[AmazonSourcing] Expanding shortlink redirect: ${clean}`);
-            const targetUrl = clean.startsWith('http') ? clean : `https://${clean}`;
-            const resp = await axios.get(targetUrl, {
-                maxRedirects: 10,
-                headers: getDesktopHeaders(),
-                timeout: 10000,
-                validateStatus: (s) => s < 400
-            });
-            const finalUrl = resp.request?.res?.responseUrl || resp.config?.url || '';
-            console.log(`[AmazonSourcing] Shortlink expanded to: ${finalUrl}`);
-            let asin = extractAsin(finalUrl);
-            if (asin) return asin;
-        } catch (e) {
-            console.warn(`[AmazonSourcing] Shortlink expansion note: ${e.message}`);
-            if (e.response?.headers?.location) {
-                const redir = e.response.headers.location;
-                console.log(`[AmazonSourcing] Location header found: ${redir}`);
-                let asin = extractAsin(redir);
-                if (asin) return asin;
+        console.log(`[AmazonSourcing] Expanding shortlink redirect: ${clean}`);
+        const traceRes = await traceShortlinkRedirects(clean);
+        if (traceRes?.asin) {
+            console.log(`[AmazonSourcing] Shortlink successfully resolved to ASIN: ${traceRes.asin}`);
+            return traceRes.asin;
+        }
+
+        // Fallback for link.amazon case-sensitive shortlinks
+        const shortMatch = clean.match(/link\.amazon\/([A-Za-z0-9_-]+)/i);
+        if (shortMatch) {
+            const rawCode = shortMatch[1];
+            const variants = getHomoglyphVariants(rawCode);
+            if (variants.length > 0) {
+                console.log(`[AmazonSourcing] Shortlink ${rawCode} failed direct resolution. Checking ${variants.length} visual/case variants...`);
+                for (const variant of variants) {
+                    const variantUrl = `https://link.amazon/${variant}`;
+                    const varRes = await traceShortlinkRedirects(variantUrl);
+                    if (varRes?.asin) {
+                        console.log(`[AmazonSourcing] Found matching variant '${variant}' -> ASIN ${varRes.asin}`);
+                        return varRes.asin;
+                    }
+                }
             }
         }
     }
@@ -227,9 +297,7 @@ async function scrapeViaHiddenBrowser(asin) {
                 cleanup(null);
             });
 
-            win.loadURL(`https://www.amazon.fr/dp/${asin}`, {
-                userAgent: getRandomUserAgent()
-            });
+            win.loadURL(`https://www.amazon.fr/dp/${asin}`);
         } catch (e) {
             clearTimeout(timeout);
             cleanup(null);
@@ -419,53 +487,71 @@ async function searchAmazonFrFallback(searchKeyword) {
  * Scrapes detailed product information from an Amazon.fr product page
  */
 async function scrapeProductPage(asin, candidate = null) {
-    const pageUrl = `https://www.amazon.fr/dp/${asin}`;
-    console.log(`[AmazonSourcing] Scraping product page: ${pageUrl}`);
-
-    let html = '';
-    try {
-        const resp = await axios.get(pageUrl, {
-            headers: getDesktopHeaders(),
-            timeout: 12000
-        });
-        if (resp.status === 200 && resp.data) {
-            html = resp.data;
-        }
-    } catch (e) {
-        console.warn(`[AmazonSourcing] Could not fetch product page directly: ${e.message}`);
-    }
-
+    const domains = ['amazon.fr', 'amazon.com', 'amazon.de', 'amazon.co.uk'];
     let title = candidate?.title || '';
     let img = candidate?.img || '';
-    let features = [];
+    let features = Array.isArray(candidate?.features) ? [...candidate.features] : [];
     let rating = candidate?.rating || 4.4;
 
-    if (html && !html.includes('validateCaptcha')) {
-        // 1. Title
-        const titleMatch = html.match(/<span[^>]*id="productTitle"[^>]*>([\s\S]*?)<\/span>/i);
-        if (titleMatch) {
-            title = titleMatch[1].trim();
+    for (const domain of domains) {
+        if (title && img && features.length > 0) break;
+        const pageUrl = `https://www.${domain}/dp/${asin}`;
+        console.log(`[AmazonSourcing] Scraping product page: ${pageUrl}`);
+
+        let html = '';
+        try {
+            const resp = await axios.get(pageUrl, {
+                headers: getDesktopHeaders(),
+                timeout: 10000,
+                validateStatus: (status) => status < 400
+            });
+            if (resp.status === 200 && resp.data) {
+                html = resp.data;
+            }
+        } catch (e) {
+            console.warn(`[AmazonSourcing] Could not fetch ${pageUrl}: ${e.message}`);
         }
 
-        // 2. High-res image
-        const hiResMatch = html.match(/data-old-hires="([^"]+)"/i) ||
-                           html.match(/"large":"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i) ||
-                           html.match(/data-a-dynamic-image="\{&quot;(https:\/\/m\.media-amazon\.com\/images\/I\/[^&]+)&quot;/i);
-        if (hiResMatch) {
-            img = getHighResImageUrl(hiResMatch[1]);
-        }
+        if (html && !html.includes('validateCaptcha') && !html.includes('api-services-support@amazon.com')) {
+            // 1. Title (prioritize French if available, fallback to global)
+            if (!title) {
+                const titleMatch = html.match(/<span[^>]*id="productTitle"[^>]*>([\s\S]*?)<\/span>/i);
+                if (titleMatch) {
+                    title = titleMatch[1].trim();
+                }
+            }
 
-        // 3. Bullet points (About this item)
-        const featureBlock = html.match(/<div[^>]*id="feature-bullets"[^>]*>([\s\S]*?)<\/div>/i);
-        if (featureBlock) {
-            const itemMatches = featureBlock[1].matchAll(/<span[^>]*class="a-list-item"[^>]*>([\s\S]*?)<\/span>/gi);
-            for (const m of itemMatches) {
-                const text = m[1].replace(/<[^>]+>/g, '').trim();
-                if (text && text.length > 10 && !text.includes('Amazon') && features.length < 4) {
-                    features.push(`✓ ${text.slice(0, 100)}`);
+            // 2. High-res image
+            if (!img) {
+                const hiResMatch = html.match(/data-old-hires="([^"]+)"/i) ||
+                                   html.match(/"large":"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i) ||
+                                   html.match(/data-a-dynamic-image="\{&quot;(https:\/\/m\.media-amazon\.com\/images\/I\/[^&]+)&quot;/i) ||
+                                   html.match(/"hiRes":"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i) ||
+                                   html.match(/src="(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i);
+                if (hiResMatch) {
+                    img = getHighResImageUrl(hiResMatch[1]);
+                }
+            }
+
+            // 3. Bullet points (About this item)
+            if (features.length === 0) {
+                const featureBlock = html.match(/<div[^>]*id="feature-bullets"[^>]*>([\s\S]*?)<\/div>/i);
+                if (featureBlock) {
+                    const itemMatches = featureBlock[1].matchAll(/<span[^>]*class="a-list-item"[^>]*>([\s\S]*?)<\/span>/gi);
+                    for (const m of itemMatches) {
+                        const text = m[1].replace(/<[^>]+>/g, '').trim();
+                        if (text && text.length > 10 && !text.includes('Amazon') && features.length < 4) {
+                            features.push(`✓ ${text.slice(0, 100)}`);
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // Always fallback image to Amazon's canonical CDN image if missing
+    if (!img) {
+        img = `https://m.media-amazon.com/images/P/${asin}.01._SCLZZZZZZZ_SX1500_.jpg`;
     }
 
     return {
@@ -751,6 +837,7 @@ async function sourceProductByUrlOrAsin(urlOrAsin, options = {}, onProgress = nu
 module.exports = {
     sourceProductForLifehack,
     sourceProductByUrlOrAsin,
+    resolveUrlAndExtractAsin,
     extractAsin,
     searchAmazonFrDirect,
     searchAmazonFrFallback,

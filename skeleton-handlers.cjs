@@ -101,6 +101,10 @@ const PIXAR_IMAGE_VARIANTS = [
     }
 ];
 
+// —— Genie Character Bible (Photorealistic 3D CGI) —————————————————————————
+const CHARACTER_BIBLE_GENIE_RAW = `Génie — a mature adult woman scientist in her late 20s, high-end photorealistic 3D CGI render. The character's face, hair, outfit, and all visual appearance details are defined 100% by the provided reference image — do NOT describe or invent any physical features. Expression: confident, enthusiastic, professional inventor energy. The image in reference_images shows her exact face and design — match it precisely.`;
+const CHARACTER_BIBLE_GENIE = `"${CHARACTER_BIBLE_GENIE_RAW}"`;
+
 // —— Psychology Character Bible (Pixar-style, видавший жизнь мужик-советчик) ——
 const CHARACTER_BIBLE_PSYCHOLOGIST = `"High-end 3D CGI animation style. A weathered, street-smart man in his late 50s who has seen everything life has to offer. Features: deep-set eyes with a penetrating, knowing gaze that misses nothing, a broad slightly crooked nose that's been broken at least once, prominent laugh lines and stubble that suggest decades of hard-won experience, salt-and-pepper unkempt hair, a wry half-smirk that says he already knows what you're going to say. Build: stocky and solid, the kind of man you don't argue with twice. Outfit: worn leather jacket over a simple dark shirt, no tie, sleeves sometimes rolled up — looks like someone who never needed to impress anyone. He gestures directly, speaks without sugarcoating, points at the camera like he's talking to an old friend who's making the same mistake for the third time. High-end 3D CGI render, moody dramatic side-lighting, 9:16 vertical portrait aspect ratio."`;
 
@@ -147,25 +151,109 @@ const PSYCH_VIDEO_VARIANTS = [
     }
 ];
 
+// —— Business Image Variants (Génie as business educator) ————————————————
+const BUSINESS_IMAGE_VARIANTS = [
+    {
+        id: 'A', name: 'Corporate Boardroom',
+        template: (character) => `${character}, medium shot, standing confidently at the head of a modern glass-walled corporate boardroom, large digital screen behind showing abstract business charts, warm golden ceiling spotlights, reflections in polished conference table, professional confident posture, cinematic 9:16 vertical framing, high-end photorealistic 3D CGI render`
+    },
+    {
+        id: 'B', name: 'Rooftop Skyline at Golden Hour',
+        template: (character) => `${character}, medium-wide shot, standing on a luxury rooftop terrace at golden hour, city skyline panorama behind with glowing skyscrapers, arms folded or one hand gesturing outward at the horizon, warm amber backlight creating dramatic rim lighting, confident visionary posture, cinematic 9:16 vertical portrait, high-end 3D CGI render`
+    },
+    {
+        id: 'C', name: 'Creative Co-Working Space',
+        template: (character) => `${character}, eye-level portrait, seated at a stylish wooden table in a cozy modern co-working café, latte and notebook visible, warm ambient lighting from Edison bulbs, bookshelves and plants in soft bokeh background, relaxed yet sharp expression, cinematic 9:16 composition, high-end 3D CGI render`
+    },
+    {
+        id: 'D', name: 'TED-Style Presentation Stage',
+        template: (character) => `${character}, wide-to-medium shot, standing center stage on a modern circular TED-style platform, dramatic red and warm stage lighting, large audience in darkened background (silhouettes), confident open-arms gesture addressing the crowd, sharp focus on character, cinematic 9:16, high-end 3D CGI render`
+    },
+    {
+        id: 'E', name: 'Macro Money & Strategy Focus',
+        template: (character, detail) => {
+            const subject = detail && detail.trim().length > 10
+                ? detail.trim()
+                : 'stacks of Euro banknotes, a golden key on a financial blueprint, or strategic chess pieces';
+            return `Extreme high-detail macro inspection shot, cinematic 9:16 vertical framing. In the sharp macro foreground: ${subject}. Just behind, standing at eye level with dramatic soft-bokeh focus: ${character} leaning in with an analytical sharp gaze, examining the strategic object with fascination. Cinematic warm lighting, rich textures, photorealistic 3D CGI render.`;
+        }
+    },
+    {
+        id: 'F', name: 'Dramatic Visionary Close-Up',
+        template: (character) => `${character}, extreme close-up ECU, subtle Dutch tilt, face filling 70% of the 9:16 frame, dramatic single sidelight creating sharp shadow patterns, warm amber key light from one side, background completely soft dark bokeh, sharp focus on eyes conveying strategic brilliance and determination, ultra-cinematic 3D CGI render`
+    },
+    {
+        id: 'G', name: 'Grand Library & Study',
+        template: (character) => `${character}, wide shot showing full environment, standing in a grand elegant private library with floor-to-ceiling bookshelves, warm reading lamps, atmospheric haze and volumetric light rays through tall windows, one hand resting on an open book on a mahogany desk, scholarly confident aura, 9:16 vertical portrait, ultra-detailed 3D CGI render`
+    },
+    {
+        id: 'H', name: 'Split Focus — Business Object',
+        template: (character, objectDetail) => {
+            const obj = objectDetail && objectDetail.trim().length > 5
+                ? objectDetail.trim()
+                : 'a miniature business model, golden scales, or architectural blueprint';
+            return `Split focus composition, 9:16 vertical portrait: in the sharp macro foreground at bottom-left — ${obj}, extreme close-up revealing texture and detail. In the sharp background center-right — ${character} standing at full height, equally sharp, looking directly at the camera with a confident strategic smile. Soft out-of-focus middle zone creates depth. Warm professional lighting. Photorealistic 3D CGI render.`;
+        }
+    }
+];
+
+const BUSINESS_IMAGE_BASE = `high-end photorealistic 3D CGI render, warm professional lighting, cinematic depth, rich golden and amber tones, sharp focus, detailed textures`;
+
+// —— Business Video Motion Variants ————————————————————————————————————
+const BUSINESS_VIDEO_VARIANTS = [
+    {
+        id: 'A', name: 'The Confident Educator',
+        template: `CAMERA MOVEMENT: Very subtle slow push-in over 8 seconds. CHARACTER ACTION: She speaks directly into camera with warm confident authority, using clear precise hand gestures — pointing at an invisible whiteboard, counting key points on fingers, making confident open-palm statements. Her face is centered, fully lit, mouth clearly visible throughout all 8 seconds for perfect lip-sync.`
+    },
+    {
+        id: 'B', name: 'The Strategic Reveal',
+        template: `CAMERA MOVEMENT: Stable framing with slow subtle push-in. CHARACTER ACTION: She leans forward slightly as she delivers the key business insight, one eyebrow raising, a sharp knowing smile forming — the look of someone who sees what others miss. She holds up one finger or makes a frame gesture, building suspense before the reveal. Face stays perfectly visible for lip-sync.`
+    },
+    {
+        id: 'C', name: 'The Empathetic Advisor',
+        template: `CAMERA MOVEMENT: Warm stable mid-shot. CHARACTER ACTION: She speaks with open palm gestures, warm encouraging expressions, nods empathetically as if understanding the viewer's business struggles. She then shifts to a sharper confident tone, pointing gently forward toward the viewer with an encouraging smile. Face remains centered and visible for lip-sync.`
+    },
+    {
+        id: 'D', name: 'The Dramatic Storyteller',
+        template: `CAMERA MOVEMENT: Gentle slow dolly in, building dramatic tension. CHARACTER ACTION: She uses theatrical hand gestures — sweeping motions building the metaphor, then pausing with both hands together before delivering the punchline insight. Her expression shifts from curious to triumphant as the business lesson clicks. Face stays visible for lip-sync throughout.`
+    },
+    {
+        id: 'E', name: 'Macro Insight Inspection',
+        template: `CAMERA MOVEMENT: Slow macro rack-focus from a sharp foreground business prop (golden key, chess piece, Euro banknotes, or miniature model) directly to the character behind it. CHARACTER ACTION: The scene begins tightly focused on the vivid business object in the immediate foreground. She leans into frame, points directly at the object with an analytical fascinated gesture, then looks straight at the camera with sharp knowing eyes as she delivers the key business mechanism. Face and mouth stay clearly visible for lip-sync.`
+    },
+    {
+        id: 'F', name: 'Crash Zoom — Business Revelation',
+        template: `CAMERA MOVEMENT: Rapid crash zoom in at the very start of the clip (0–1 second), then hold tight close-up for the remaining 7 seconds. The snap-zoom creates an immediate visual jolt of energy and authority. CHARACTER ACTION: She reacts to the sudden closeness with sharp confident eyes and a knowing strategic look, then settles into a direct authoritative address to the camera, counting a key point on her fingers or tapping her temple as she delivers the counter-intuitive business revelation. Face fills the upper half of the frame, mouth clearly visible for lip-sync throughout.`
+    },
+    {
+        id: 'G', name: 'Orbit Arc — Triumphant Conclusion',
+        template: `CAMERA MOVEMENT: Gentle slow arc of 20–30 degrees around the character over 8 seconds, camera staying at face level, subject remains centered in frame throughout the subtle arc. The background shifts slightly creating cinematic depth without extreme perspective changes. CHARACTER ACTION: She holds up a strategic prop or makes a decisive conclusive gesture with both hands, staying mostly front-facing to camera, wearing a wide triumphant smile and radiating proud visionary energy as she delivers the master principle. Face visible and lit at all times for clear lip-sync.`
+    },
+    {
+        id: 'H', name: 'Parallax Depth — Editorial Authority',
+        template: `CAMERA MOVEMENT: Slow lateral parallax slide over 8 seconds — camera drifts sideways so foreground elements (business books, golden scales, architectural models, glass awards) move faster than the background, creating cinematic depth separation through movement. CHARACTER ACTION: She stands still, centered in the mid-ground, speaking directly to camera with calm masterful authority. Her stable presence contrasts the moving world around her. She gestures with one hand naturally, nodding with strategic clarity. Face remains front-facing and fully lit for perfect lip-sync.`
+    }
+];
+
 const TALKING_OBJECT_IMAGE_LOCK = ``;
 
 // —— VEO Video Motion Variants ——————————————————————————————————————
 const PIXAR_VIDEO_VARIANTS = [
     {
         id: 'A', name: 'The Confident Inventor',
-        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands — holding up a small tool or notebook proudly, explaining the lifehack directly into the camera with a knowing clever smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Very subtle, slow push-in over 8 seconds. CHARACTER ACTION: She speaks with sharp enthusiastic energy, making confident gestures with her hands, explaining the insight directly into the camera with an engaging knowing smile. Her face is centered in frame, fully lit, mouth clearly visible throughout all 8 seconds.`
     },
     {
         id: 'B', name: 'The Eureka Moment',
-        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her expressive eyes light up with excitement, she taps her temple or raises one finger as if struck by a brilliant idea, then looks directly into the camera with a sharp knowing gaze as she reveals the secret trick. Her face stays front-facing and fully visible in the center of frame throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Slow dramatic push-in to a close-up. CHARACTER ACTION: Her expressive eyes light up with excitement, she gestures expressively as if struck by a brilliant idea, then looks directly into the camera with a sharp knowing gaze as she reveals the secret trick. Her face stays front-facing and fully visible in the center of frame throughout all 8 seconds.`
     },
     {
         id: 'C', name: 'The Hands-on Demonstration',
-        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: She holds up a household item or gadget with precise confident hands, enthusiastically demonstrating the trick step by step, then looks straight at the viewer with an encouraging assured smile. Her face is forward-facing, mouth clearly visible, centered in the upper third of the frame throughout all 8 seconds.`
+        template: `CAMERA MOVEMENT: Stable mid-shot. CHARACTER ACTION: Continuing seamlessly from the reference image, she demonstrates the concept with precise, confident hand gestures and expressive open palms, then looks straight at the viewer with an encouraging assured smile. Her face is forward-facing, mouth clearly visible, centered in the upper third of the frame throughout all 8 seconds.`
     },
     {
         id: 'D', name: 'The Direct Secret Revelation',
-        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if sharing an exclusive discovery, gesturing with calm playful confidence — perhaps tapping her notebook or pointing at something with curiosity — while maintaining steady direct eye contact with the viewer. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
+        template: `CAMERA MOVEMENT: Gentle slow dolly. CHARACTER ACTION: She leans slightly forward toward the camera as if sharing an exclusive discovery, gesturing with calm playful confidence, maintaining steady direct eye contact with the viewer. Her face fills the upper half of the frame, fully lit and front-facing for all 8 seconds.`
     },
     {
         id: 'E', name: 'Macro Problem Inspection & Revelation',
@@ -179,7 +267,7 @@ const PIXAR_VIDEO_VARIANTS = [
     {
         id: 'G', name: 'Subtle Arc — Triumphant Result',
         // Gentle 20-30° arc — keeps cinematic feel without causing visual artifacts in video generation
-        template: `CAMERA MOVEMENT: Gentle slow arc of 20–30 degrees around the character over 8 seconds, camera staying at face level, subject remains centered in frame throughout the subtle arc. The background shifts slightly creating cinematic depth without extreme perspective changes. CHARACTER ACTION: She holds up the finished result or product with both hands, staying mostly front-facing to camera, wearing a wide triumphant smile and radiating proud inventor energy. Face visible and lit at all times for clear lip-sync.`
+        template: `CAMERA MOVEMENT: Gentle slow arc of 20–30 degrees around the character over 8 seconds, camera staying at face level, subject remains centered in frame throughout the subtle arc. The background shifts slightly creating cinematic depth without extreme perspective changes. CHARACTER ACTION: She gestures triumphantly with open hands, presenting the validated result, staying mostly front-facing to camera, wearing a wide victorious smile and radiating proud energy. Face visible and lit at all times for clear lip-sync.`
     },
     {
         id: 'H', name: 'Parallax Depth — Editorial',
@@ -341,9 +429,9 @@ CONTENT SAFETY RULES (MANDATORY — TikTok Community Guidelines Compliance):
 - NEVER use the words: "health", "wellness", "diet", "lose weight", "calories", "fat loss", "skinny", "mental health", "therapy", "depression", "anxiety", "medication", "prescription", "cure", "heal", "doctor says", "research shows", "scientifically proven", "doctors don't want you to know".
 - NEVER make before/after body transformation claims.
 - NEVER reference controlled substances, pharmacies, or medical procedures.
-- ALWAYS frame content as: clever everyday tricks, smart life shortcuts, genius home hacks, kitchen efficiency, time-saving tips, productivity boosts — NOT health advice.
+- ALWAYS frame content as: clever everyday tricks, smart home lifehacks, kitchen efficiency, real household budget savings, product crash-tests — NOT health/medical advice.
 - Hashtags MUST NOT include: #health #wellness #diet #weightloss #fitness #mentalhealth #medical #doctor #nutrition #cleaneating #bodygoals.
-- Use instead: #lifehack #geniustrick #everydaytips #homehacks #smartliving #diytrick #kitchenhacks #organizationtips #productivityhack #timetips #smartideas
+- Hashtags MUST be in French and uniquely tailored to the specific household topic, French stores, and everyday solutions (e.g. #astucedegrandmere #bonplanfrance #actionfrance #nettoyagemaison #economiesauquotidien). NEVER use repetitive generic English tags like #lifehack #diytrick.
 `;
 
 // ── Real-time trend search via Tavily / Firecrawl / Web ──────────────────────
@@ -567,7 +655,10 @@ function sanitizePromptForImageSafety(prompt) {
         .replace(/\b(on skin|onto skin|on the skin)\b/gi, 'for skincare testing')
         .replace(/\b(naked|nude|undressed|lingerie|underwear|bikini|swimsuit)\b/gi, 'fully clothed')
         .replace(/\b(sexy|sensual|erotic|seductive)\b/gi, 'professional')
-        .replace(/\bcharming\b/gi, 'confident professional');
+        .replace(/\bcharming\b/gi, 'confident professional')
+        .replace(/\b(glowing\s+)?(golden\s+)?heart(\s+symbol)?\b/gi, 'diagnostic icon')
+        .replace(/\bwhispering\b/gi, 'speaking confidentially')
+        .replace(/\bwhisper\b/gi, 'confidential address');
 
     // 3. Age and character safety (avoid CHILD_SAFETY or ambiguity)
     p = p
@@ -634,12 +725,202 @@ function sanitizePromptForImageSafety(prompt) {
     return p;
 }
 
+// ── Multi-lingual Topic Domain Engine (Universal Expert Persona & Anti-Contamination System) ──
+const DOMAIN_DEFINITIONS = {
+    PSYCHOLOGY: {
+        id: 'PSYCHOLOGY',
+        name: 'Psychologie & Comportement Humain',
+        personaTitle: 'experte en psychologie comportementale et décryptage des relations humaines',
+        personaVoice: 'direct, bienveillant, perspicace et percutant, comme une amie psychologue qui décode les mécanismes invisibles sans jargon universitaire',
+        studioSetting: 'cabinet chaleureux et moderne, bibliothèque élégante avec des ouvrages de sciences cognitives, éclairage doux et intimiste, fauteuil confortable, bureau en bois clair',
+        visualProps: 'schéma cognitif sur carnet élégant, métaphores visuelles délicates, sablier design, miroir d\'introspection, tasse de thé fumante, tablette affichant un diagramme comportemental épuré',
+        culturalAnchors: 'situations concrètes du quotidien (au bureau, en couple, en famille, dîners entre amis, messages décryptés), expressions authentiques françaises ("charge mentale", "poser ses limites", "effet miroir", "biais invisible", "relations saines")',
+        forbiddenContent: 'STRICTLY FORBIDDEN: NEVER mention cleaning products (vinaigre blanc, bicarbonate, javel, calcaire, calcaire incrusté), discount stores (Action, Lidl, Castorama), hardware tools or household chores in this psychology video! Keep it 100% focused on human emotions, relationships, and mindsets.',
+        hashtags: '#psychologie #relationshumaines #mentalhealth #developpementpersonnel #emotions #bienetre',
+        archetypes: [
+            {
+                id: 'DECODEUR_PROFIL',
+                name: 'Décodeur de Comportement & Signaux Invisibles',
+                hookDirective: 'BEHAVIORAL SHOCK & HIDDEN SIGN HOOK: Start Scene 1 immediately with a counter-intuitive psychological tell or relationship dynamic in the first 2 seconds (e.g. "Si quelqu\'un fait ce geste précis quand vous parlez, ce n\'est pas de la timidité : c\'est un mécanisme de protection inconscient..." or "Voici la phrase anodine que 90% des personnes toxiques utilisent au début sans que vous ne remarquiez rien..."). ZERO generic greetings!',
+                narrativeArc: 'Behavioral shock hook -> The invisible emotional reflex explained -> Concrete everyday example -> The psychological mechanism behind it -> Actionable boundary / mental shift to protect oneself.',
+                tone: 'Perceptive, warm, sharp human behavior investigator'
+            },
+            {
+                id: 'PIEGE_MENTAL',
+                name: 'Le Piège Mental & La Libération Émotionnelle',
+                hookDirective: 'COGNITIVE TRAP HOOK: Start Scene 1 by exposing a widespread subconscious trap in the first 2 seconds (e.g. "Arrêtez d\'attendre que les autres changent pour vous sentir apaisé : votre cerveau vous joue un tour redoutable..." or "Pourquoi les personnes les plus empathiques attirent toujours le même schéma relationnel ? Voici la réponse scientifique..."). ZERO generic greetings!',
+                narrativeArc: 'Cognitive trap hook -> Why we fall into this loop -> The underlying psychological need (security, validation) -> The breakthrough perspective -> Practical exercise to break the loop.',
+                tone: 'Empathetic, illuminating, liberating mentor'
+            }
+        ]
+    },
+    BOTANY: {
+        id: 'BOTANY',
+        name: 'Botanique & Soin des Plantes',
+        personaTitle: 'experte passionnée en botanique, jardinage urbain et physiologie végétale',
+        personaVoice: 'enthousiaste, scientifique mais ultra-accessible, généreuse et précise, expliquant le langage secret des plantes',
+        studioSetting: 'véranda lumineuse ou atelier végétalisé verdoyant, étagères remplies de plantes luxuriantes (Monsteras, Ficus, Pothos), terrariums en verre, pots en terre cuite baignés de lumière naturelle',
+        visualProps: 'brumisateur en laiton élégant, ciseaux de bouturage professionnels, terreau drainant, éprouvette de bouture en eau, hygromètre de sol, pots en terre cuite',
+        culturalAnchors: 'jardineries françaises (Truffaut, Botanic), balcons parisiens ou jardins de ville, secrets de bouturage transmis ("bouturer dans l\'eau", "drainage des racines", "lumière indirecte")',
+        forbiddenContent: 'STRICTLY FORBIDDEN: NEVER mention bleach, corrosive chemicals, Linky electricity meters, or unrelated home electronics. Keep it 100% focused on plants, roots, leaves, and green life.',
+        hashtags: '#plantesvertes #botanique #urbanjungle #jardinage #conseilplante #monstera',
+        archetypes: [
+            {
+                id: 'SOS_PLANTE',
+                name: 'SOS Plante en Détresse / Sauvetage Express',
+                hookDirective: 'PLANT RESCUE HOOK: Start Scene 1 with an urgent visual plant emergency in the first 2 seconds (e.g. "Si les feuilles de votre Monstera deviennent molles ou jaunes, n\'arrosez surtout pas : vous êtes en train d\'étouffer les racines !" or "Votre plante perd ses feuilles ? Voici l\'erreur fatale commise par 8 personnes sur 10..."). ZERO generic greetings!',
+                narrativeArc: 'Urgent symptom hook -> The common fatal mistake -> Root diagnosis explained -> Step-by-step rescue method -> Spectacular recovery guarantee.',
+                tone: 'Passionate botanist, expert plant doctor'
+            },
+            {
+                id: 'SECRET_BOTANIQUE',
+                name: 'Secret de Jardinier & Multiplication Végétale',
+                hookDirective: 'BOTANICAL SECRET HOOK: Start Scene 1 with a surprising botanical multiplication or growth secret in the first 2 seconds (e.g. "Avec cette simple taille sous le nœud, vous pouvez transformer une seule branche en cinq nouvelles plantes en trois semaines..."). ZERO generic greetings!',
+                narrativeArc: 'Surprising growth hook -> The cellular secret of the plant -> Precise demonstration of the technique -> Substrate and light conditions -> Lush green proliferation.',
+                tone: 'Generous, curious green enthusiast, botanical mentor'
+            }
+        ]
+    },
+    HEALTH_BODY: {
+        id: 'HEALTH_BODY',
+        name: 'Santé, Corps & Posture',
+        personaTitle: 'experte en biomécanique, ergonomie du quotidien et physiologie du mouvement',
+        personaVoice: 'dynamique, rassurante, précise et pédagogue, transformant les douleurs du quotidien en mouvements libérateurs',
+        studioSetting: 'espace lumineux et épuré dédié au mouvement, parquet clair, modèle anatomique stylisé ou schéma postural, tapis ergonomique, lumière douce énergisante',
+        visualProps: 'schéma ergonomique de la colonne vertébrale, balle de massage en liège, coussin lombaire ergonomique, modèle articulaire souple',
+        culturalAnchors: 'journées de travail au bureau ou télétravail en France, trajets en transports, ostéopathie et kinésithérapie courante ("débloquer les cervicales", "télétravail sans douleur", "soulager les lombaires")',
+        forbiddenContent: 'STRICTLY FORBIDDEN: NEVER mention harsh cleaning detergents, kitchen degreasers, or discount shopping tricks. Keep it 100% focused on body alignment, posture, joints, and muscular wellbeing.',
+        hashtags: '#sante #posture #maldedos #ergonomie #etirements #bienetre',
+        archetypes: [
+            {
+                id: 'SOS_POSTURE',
+                name: 'SOS Posture & Soulagement Immédiat',
+                hookDirective: 'POSTURAL RELIEF HOOK: Start Scene 1 with an immediate physical relief promise in the first 2 seconds (e.g. "Si votre nuque ou vos épaules brûlent après huit heures devant l\'écran, arrêtez de vous craquer le cou : faites ce micromouvement de 30 secondes..." or "Cette mauvaise position assise compresse vos lombaires trois fois plus que la normale..."). ZERO generic greetings!',
+                narrativeArc: 'Physical pain hook -> The biomechanical compression explained -> Why standard stretching sometimes worsens tension -> The exact corrective micro-movement -> Immediate decompression felt.',
+                tone: 'Ergonomic specialist, caring body mechanics guide'
+            }
+        ]
+    },
+    TECH_DIGITAL: {
+        id: 'TECH_DIGITAL',
+        name: 'Tech, Smartphones & Astuces Digitales',
+        personaTitle: 'ingénieure tech, experte en optimisation numérique, smartphones et sécurité quotidienne',
+        personaVoice: 'affûtée, curieuse, ultra-technique mais limpide, décortiquant les algorithmes et les paramètres cachés',
+        studioSetting: 'bureau tech moderne et épuré, écran haute résolution affichant des visualisations logiques, éclairage d\'ambiance doux, station de travail minimaliste',
+        visualProps: 'smartphone haut de gamme en démonstration, tablette avec interface graphique, clé de sécurité élégante, schéma de flux réseau sur écran',
+        culturalAnchors: 'opérateurs français (Orange, Free, SFR, Bouygues), forfaits mobiles, box internet, protection des données personnelles (RGPD, cybersécurité)',
+        forbiddenContent: 'STRICTLY FORBIDDEN: NEVER mention laundry detergents, vinegar, or grand-mère recipes in this digital tech video. Keep it 100% focused on software, hardware, battery, and digital efficiency.',
+        hashtags: '#astucestech #iphone #android #smartphone #cybersecurite #optimisation',
+        archetypes: [
+            {
+                id: 'TECH_CACHE',
+                name: 'Paramètre Caché & Optimisation Système',
+                hookDirective: 'HIDDEN SETTING HOOK: Start Scene 1 with an unknown critical setting in the first 2 seconds (e.g. "Désactivez ce paramètre caché dans les réglages de votre smartphone dès maintenant : il draine votre batterie et vos données en arrière-plan..."). ZERO generic greetings!',
+                narrativeArc: 'Hidden setting hook -> Why manufacturers leave it on -> Exact menu navigation -> The dramatic gain (battery, speed, privacy) -> Final verdict.',
+                tone: 'Sharp tech insider, trusted digital optimizer'
+            }
+        ]
+    },
+    FINANCE_BUDGET: {
+        id: 'FINANCE_BUDGET',
+        name: 'Budget, Économies & Consommation',
+        personaTitle: 'enquêtrice financière, experte en optimisation du budget des ménages et démasquage des frais cachés',
+        personaVoice: 'pragmatique, perspicace, directe, traquant chaque centime gaspillé et révélant les marges abusives',
+        studioSetting: 'bureau d\'investigation financière contemporain, tableau blanc avec graphiques de dépenses, classeurs de budget transparents, calculatrice design',
+        visualProps: 'calculatrice design, billets et pièces en euros réels (20€, 10€, 2€), factures comparatives, graphiques d\'économies annuelles',
+        culturalAnchors: 'fournisseurs et réalités françaises (factures EDF, compteur Linky, banques en ligne, pouvoir d\'achat en France, supermarchés)',
+        forbiddenContent: 'STRICTLY FORBIDDEN: NEVER recommend illegal practices or non-existent euro banknotes (like 25€ or 15€). Use only official euro denominations.',
+        hashtags: '#budget #economies #pouvoirdachat #argent #bonplanfrance #financespersonnelles',
+        archetypes: [
+            {
+                id: 'BUDGET_FACTURES',
+                name: 'Budget Maison & Économies Réelles (EDF, Linky, Prix en €)',
+                hookDirective: 'FINANCIAL SHOCK & EXACT € HOOK: Start Scene 1 with a concrete shocking Euro figure within the first 2 seconds (e.g. "Cette mauvaise habitude vous coûte 140 euros par an sans que vous vous en rendiez compte..." or "Pourquoi continuer à payer ces frais bancaires invisibles quand un réglage prend deux minutes ?"). ZERO generic greetings!',
+                narrativeArc: 'Financial shock hook -> The invisible money leak explained -> Exact cost comparison in € -> The smart consumer calculation -> Total annual savings in €.',
+                tone: 'Pragmatic, savvy consumer advocate, direct budget optimizer'
+            },
+            {
+                id: 'DEMASQUEUR_ARNAQUE',
+                name: 'Démasqueur d\'Arnaques & Pièges Commerciaux',
+                hookDirective: 'EXPOSÉ & MARKETING TRAP HOOK: Start Scene 1 immediately by exposing a commercial trap, hidden surcharge, or deceptive marketing promise within the first 2 seconds. ZERO generic greetings!',
+                narrativeArc: 'Exposé hook with shocking price contrast -> How the commercial bait hooks consumers -> The breakdown unmasking the reality -> The smart alternative that costs 10x less in € -> Final consumer protection score.',
+                tone: 'Sharp, fearless consumer advocate, myth-buster protecting the everyday budget'
+            }
+        ]
+    },
+    HOUSEHOLD_CLEANING: {
+        id: 'HOUSEHOLD_CLEANING',
+        name: 'Maison, Entretien & Astuces Pratiques',
+        personaTitle: 'scientifique brillante, inventrice et enquêtrice passionnée par les secrets de la matière et de la maison',
+        personaVoice: 'pétillante, scientifique, complice et hyper-énergique, passionnée par les réactions chimiques du quotidien et les astuces ingénieuses',
+        studioSetting: 'laboratoire moderne chaleureux ou cuisine contemporaine avec plans de travail en bois clair, étagères de verrerie scientifique, ampoules Edison rétro',
+        visualProps: 'béchers en verre transparent montrant des réactions moussantes réelles, brosse rotative compacte, flacons doseurs gradués, microfibres de test',
+        culturalAnchors: 'magasins discount français (Action, Lidl, E.Leclerc), réalité de l\'eau calcaire en France, astuces de grand-mère vs méthode pro',
+        forbiddenContent: 'NEVER use toxic chemical mixes (never mix bleach and acid/vinegar). Keep recipes safe and physically sound.',
+        hashtags: '#actionfrance #bonplan #astucedegrandmere #calcaire #nettoyagemaison #economies',
+        archetypes: [
+            {
+                id: 'CRASH_TEST',
+                name: 'Crash-Test du Labo / Top ou Flop (Action, Lidl, Amazon)',
+                hookDirective: 'CRASH-TEST & INSTANT RESULT HOOK: Start Scene 1 immediately with the test result or bold experiment claim within the first 2 seconds. ZERO generic greetings!',
+                narrativeArc: 'Hook with instant result -> The test setup in lab/kitchen -> Reality vs Marketing claim -> Step-by-step experiment -> Honest verdict (Top ou Flop) + score out of 10.',
+                tone: 'Curious, investigative, blunt reviewer with high standards'
+            },
+            {
+                id: 'SOS_URGENCE',
+                name: 'SOS Urgence & Problème Choc (Anti-Calcaire, Taches, Canapés, Joints)',
+                hookDirective: 'CONTRARIAN WARNING / VISUAL DISASTER HOOK: Start Scene 1 with an urgent contrarian warning or extreme macro stain within the first 2 seconds. ZERO generic greetings!',
+                narrativeArc: 'The visual nightmare up-close -> Why standard remedies ruin materials -> The scientific/chemical principle (reaction) -> The exact molecular or mechanical solution -> Flawless new-like transformation.',
+                tone: 'Authoritative scientist, brilliant household troubleshooter'
+            },
+            {
+                id: 'DUEL_ASTUCES',
+                name: 'Duel : Astuce de Grand-Mère vs Méthode Pro / Gadget',
+                hookDirective: 'BATTLE / DUEL HOOK: Start Scene 1 with a direct face-off comparison within the first 2 seconds. ZERO generic greetings!',
+                narrativeArc: 'The duel setup -> Testing method A (homemade DIY) -> Limitations of method A -> Testing method B -> The ultimate winner and winning combo.',
+                tone: 'Fair, playful judge, efficiency obsessed'
+            }
+        ]
+    }
+};
+
+function detectTopicDomain(text) {
+    if (!text || typeof text !== 'string') {
+        return 'HOUSEHOLD_CLEANING';
+    }
+    const clean = text.toLowerCase();
+    if (/(?:psychol|relation|manipulat|toxique|comportement|estime|confiance|angoisse|anxi[eé]t|d[eé]press|trauma|narciss|hypersens|introvert|extravert|mental|inconscient|cerveau|cogniti|empath|personnalit|timid|culpabilit|jalous|attachement|pervers|manipul|психол|отношен|манипул|токсич|самооцен|тревож|депресс|травм|нарцисс|интроверт|экстраверт|эмпат|личность|психотип|вина|ревность|привязанност|мозг|нейро)/i.test(clean)) {
+        return 'PSYCHOLOGY';
+    }
+    if (/(?:sant[eé]|postur|ergonom|douleur|sommeil|vert[eè]bre|colonne|dos\b|cervical|lombar|muscl|articulation|respirat|fatigue|yeux|vision|alimentation|digestion|nutrition|посадк|осанк|эргоном|спин[аеыу]|поясниц|ше[яеию]|позвоноч|мышц|сустав|дыхан|сон\b|бессонниц|усталост|глаз|зрени|пищевар|здоров)/i.test(clean)) {
+        return 'HEALTH_BODY';
+    }
+    if (/(?:smartphon|iph|androi|applicat|logiciel|batterie|stockage|pirat|sécurit|securit|wifi|bluetooth|ordinateur|pc\b|mac\b|windows|mise à jour|cloud|mot de passe|paramètre|parametre|téléphon|box internet|fibre|routeur|смартфон|айфон|андроид|приложен|программ|батаре|памят|парол|безопасн|вайфай|настройк|телефон|компьютер|роутер)/i.test(clean)) {
+        return 'TECH_DIGITAL';
+    }
+    if (/(?:plante|botaniq|fleur|jardin|feuille|racine|terreau|arros|chloroph|monstera|orchidée|orchidee|ficus|pothos|succulent|cactus|boutur|rempot|engrais|parasite|puceron|champignon|horticult|végétal|vegetal|растен|ботан|цвет[оы]|сад\b|листь|корн[еи]|почв|полив|грунт|горшок|фикус|орхиде|черенк|пересад|удобрен|вредител|тля|грибок)/i.test(clean)) {
+        return 'BOTANY';
+    }
+    if (/(?:budget|factur|banqu|épargn|epargn|argent|dépens|depens|euro|edf|linky|abonn|impôt|impot|pouvoir d'achat|crédit|credit|frais|arnaqu|boulanger|supermarch|payer|co[uû]t|prix|payer|бюджет|счет|банк|деньг|рубл|трат|эконом|подписк|налог|кредит|расход|переплат|тариф|цен[аы])/i.test(clean)) {
+        return 'FINANCE_BUDGET';
+    }
+    return 'HOUSEHOLD_CLEANING';
+}
+
 /**
  * Universal normalizer for Studio scenes across all LLM models and output variations
  */
 function normalizeStudioScenes(parsed, topic, mode, langName) {
     let scenesArray = null;
-    let intro = (parsed && (parsed.intro || parsed.title || parsed.topic)) || topic;
+    const isGenericPlaceholder = (t) => !t || t === 'Screenshot Rules Reference' || t === 'Video Demonstration Reference' || (typeof t === 'string' && t.startsWith('Reference:'));
+    let intro = (parsed && (parsed.intro || parsed.title || parsed.topic)) || '';
+    if (isGenericPlaceholder(intro)) {
+        if (!isGenericPlaceholder(topic)) {
+            intro = topic;
+        } else {
+            intro = '';
+        }
+    }
 
     if (Array.isArray(parsed)) {
         scenesArray = parsed;
@@ -719,11 +1000,27 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
             }
         }
 
-        let character = (scene && (scene.character || scene.speaker || scene.character_name)) || (mode === 'objects' ? `Talking Object ${idx + 1}` : 'Presenter');
+        const defaultChar = mode === 'health' ? 'Génie' : (mode === 'psychology' ? 'The Psychologist' : (mode === 'business' ? 'Génie' : 'Presenter'));
+        let character = (scene && (scene.character || scene.speaker || scene.character_name)) || (mode === 'objects' ? `Talking Object ${idx + 1}` : defaultChar);
+        if ((mode === 'health' || mode === 'business') && (!character || character.toLowerCase() === 'presenter' || character.toLowerCase() === 'character')) {
+            character = 'Génie';
+        }
+        if (mode === 'psychology' && (!character || character.toLowerCase() === 'presenter' || character.toLowerCase() === 'character')) {
+            character = 'The Psychologist';
+        }
         let imageVariant = (scene && scene.imageVariant) || pickVariant(PIXAR_IMAGE_VARIANTS, idx).id;
         let videoVariant = (scene && scene.videoVariant) || pickVariant(PIXAR_VIDEO_VARIANTS, idx).id;
 
-        let rawImagePrompt = (scene && (scene.imagePrompt || scene.image_prompt || scene.description || scene.setting || scene.visual)) || `${character} in its natural environment`;
+        let rawImagePrompt = (scene && (scene.imagePrompt || scene.image_prompt || scene.description || scene.setting || scene.visual)) || '';
+        if (!rawImagePrompt) {
+            rawImagePrompt = mode === 'health'
+                ? `${CHARACTER_BIBLE_GENIE_RAW}, standing proudly in a warmly-lit inventor's workshop, inspecting tools and materials`
+                : mode === 'business'
+                ? `${CHARACTER_BIBLE_GENIE_RAW}, standing confidently in a modern boardroom with city skyline, presenting a business strategy`
+                : `${character} in its natural environment`;
+        } else if ((mode === 'health' || mode === 'business') && !rawImagePrompt.includes('Génie') && !rawImagePrompt.includes('Genie')) {
+            rawImagePrompt = `${CHARACTER_BIBLE_GENIE_RAW}, ${rawImagePrompt}`;
+        }
         let rawVideoPrompt = (scene && (scene.videoPrompt || scene.video_prompt || scene.motion || scene.animation)) || '';
 
         // Inject line into videoPrompt if template has placeholder
@@ -736,9 +1033,13 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
 
         const imgVar = mode === 'psychology'
             ? (PSYCH_IMAGE_VARIANTS.find(v => v.id === imageVariant) || PSYCH_IMAGE_VARIANTS[0])
+            : mode === 'business'
+            ? (BUSINESS_IMAGE_VARIANTS.find(v => v.id === imageVariant) || BUSINESS_IMAGE_VARIANTS[0])
             : (PIXAR_IMAGE_VARIANTS.find(v => v.id === imageVariant) || PIXAR_IMAGE_VARIANTS[0]);
         const vidVar = mode === 'psychology'
             ? (PSYCH_VIDEO_VARIANTS.find(v => v.id === videoVariant) || PSYCH_VIDEO_VARIANTS[0])
+            : mode === 'business'
+            ? (BUSINESS_VIDEO_VARIANTS.find(v => v.id === videoVariant) || BUSINESS_VIDEO_VARIANTS[0])
             : (PIXAR_VIDEO_VARIANTS.find(v => v.id === videoVariant) || PIXAR_VIDEO_VARIANTS[0]);
 
         const objectLock = mode === 'objects'
@@ -755,10 +1056,15 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
               `VOCAL QUALITIES: Deep, slightly hoarse timbre, deliberate pacing with meaningful pauses, dry sardonic wit underneath every word, speaks directly like he's calling you out personally. ` +
               `EMOTIONAL RANGE: Blunt and matter-of-fact when stating hard truths, faintly amused when pointing out human predictability, firm and almost impatient when giving advice — like a man who has no patience for excuses. ` +
               `REFERENCE: Think an older seasoned detective mixed with a street philosopher — someone whose advice you didn't ask for but absolutely needed.`
+            : mode === 'business'
+            ? `VOICE IDENTITY (MUST match exactly every scene): A single consistent adult woman's voice — confident, articulate, passionate, with a warm melodic timbre and engaging inflections that make every business insight feel like a thrilling revelation. ` +
+              `VOCAL QUALITIES: Clear soprano with natural authority, measured but dynamic pacing — building tension before each key insight, then delivering it with precision and contagious excitement. ` +
+              `EMOTIONAL RANGE: Curious and conspiratorial when setting up the metaphor, sharp and triumphant when revealing the hidden business truth, warm and encouraging when advising the viewer directly. ` +
+              `REFERENCE: Think a brilliant TED-talk speaker crossed with a charismatic business mentor — someone who makes complex models feel simple, vivid, and impossible to forget.`
             : `A professional character voice with clear articulation and expressive delivery`;
 
-        const imageBase = mode === 'psychology' ? PSYCH_IMAGE_BASE : PIXAR_IMAGE_BASE;
-        const referenceDirective = mode === 'health'
+        const imageBase = mode === 'psychology' ? PSYCH_IMAGE_BASE : (mode === 'business' ? BUSINESS_IMAGE_BASE : PIXAR_IMAGE_BASE);
+        const referenceDirective = (mode === 'health' || mode === 'business')
             ? ` The character's face, hair, and appearance strictly match the provided reference image.`
             : '';
         const isMacroInspection = imageVariant === 'E';
@@ -785,15 +1091,20 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
         finalImagePrompt = sanitizePromptForImageSafety(finalImagePrompt);
         // Clean bracketed emotion tags from spoken dialogue for video and speech synthesis
         const spokenLine = line.replace(/\[[^\]]+\]/g, '').replace(/\s{2,}/g, ' ').trim();
-        const cleanRawVideoPrompt = rawVideoPrompt.replace(/\[(excited|knowing|proudly|whispering|curious|direct|encouraging|playful|blunt|dry|sardonic|firm|impatient|wry|matter-of-fact)\]\s*/gi, '');
+        const cleanRawVideoPrompt = rawVideoPrompt.replace(/\[[a-zA-Z_\s-]+\]\s*/g, '');
 
         const isOutro = idx === scenesArray.length - 1;
         let templateToUse = vidVar.template;
         let processedRawVideoPrompt = cleanRawVideoPrompt;
 
+        // Ensure any embedded LIP-SYNC line matches the exact spokenLine word-for-word
+        if (/LIP-SYNC:\s*"[^"]*"/i.test(processedRawVideoPrompt)) {
+            processedRawVideoPrompt = processedRawVideoPrompt.replace(/LIP-SYNC:\s*"[^"]*"/gi, `LIP-SYNC: "${spokenLine}"`);
+        }
+
         if (isOutro && mode !== 'psychology') {
             // Dedicated stable camera/action template for Outro scene (no eureka temple-tapping)
-            templateToUse = `CAMERA MOVEMENT: Steady eye-level mid-shot with a subtle slow push-in. CHARACTER ACTION: She looks directly into the camera with a warm engaging smile, holding the product steadily at chest height or making an encouraging forward gesture toward the viewer with a friendly nod («link in bio»), guiding them with clear confidence. Her face stays centered and fully visible throughout all 8 seconds.`;
+            templateToUse = `CAMERA MOVEMENT: Steady eye-level mid-shot with a subtle slow push-in. CHARACTER ACTION: She looks directly into the camera with a warm engaging smile, making an encouraging forward gesture toward the viewer with an open palm and a friendly nod («link in bio» / call-to-action), guiding them with clear confidence. Her face stays centered and fully visible throughout all 8 seconds.`;
 
             // Sanitize finger counting in video prompts (causes severe AI hand deformities in diffusion video models)
             processedRawVideoPrompt = processedRawVideoPrompt
@@ -804,7 +1115,8 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
                 .replace(/\banimation\b/gi, '3D CGI render');
         }
 
-        const finalVideoPrompt = `${mode === 'psychology' ? 'Mood: raw, direct, street-wise, unflinching.' : PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${templateToUse} ${processedRawVideoPrompt} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${spokenLine}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
+        const noPhantomDirective = `STRICT: Seamless visual continuation from the reference image. The character's hands, clothes, and environment must match the reference image exactly — do NOT introduce or hallucinate new unreferenced handheld objects, electrical devices, or phantom tools.`;
+        const finalVideoPrompt = `${mode === 'psychology' ? 'Mood: raw, direct, street-wise, unflinching.' : PIXAR_VIDEO_STYLE} CHARACTER: ${character} — the animated protagonist, present throughout all 8 seconds. ${templateToUse} ${processedRawVideoPrompt} ${noPhantomDirective} AUDIO TRACK: ${voiceDesc} speaking in ${langName} language exactly: "${spokenLine}". LIP-SYNC: Accurate mouth movement synchronized to the audio.`;
 
         return {
             id: idx + 1,
@@ -818,9 +1130,72 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
         };
     });
 
+    if (!intro) {
+        if (processedScenes[0] && processedScenes[0].line) {
+            intro = processedScenes[0].line.replace(/\[[^\]]+\]/g, '').slice(0, 45).trim() + ' 💡';
+        } else {
+            intro = 'Astuce Révélée 💡';
+        }
+    }
+
+    let socialPost = (parsed && typeof parsed.socialPost === 'object') ? { ...parsed.socialPost } : null;
+    if (!socialPost) {
+        socialPost = {
+            title: intro,
+            description: '',
+            hashtags: ''
+        };
+    }
+    if (isGenericPlaceholder(socialPost.title)) {
+        socialPost.title = intro;
+    }
+
+    if (!socialPost.description || socialPost.description.includes('Découvrez cette astuce et dites-moi')) {
+        const detectedDomainKey = detectTopicDomain((topic || '') + ' ' + (intro || ''));
+        const domainDescriptions = {
+            PSYCHOLOGY: "Comprendre ce mécanisme invisible change vos relations. Et vous, avez-vous déjà vécu cette situation ? Dites-le moi en commentaire ! 👇",
+            BOTANY: "Ce geste simple sauve vos plantes en quelques jours. Et vous, quelle est votre astuce préférée ? Partagez en commentaire ! 👇",
+            HEALTH_BODY: "Adoptez ce réflexe pour soulager vos tensions au quotidien. Et vous, ressentez-vous cette gêne ? Dites-le moi en commentaire ! 👇",
+            TECH_DIGITAL: "Ce paramètre caché change tout sur votre smartphone. Vous connaissiez cette astuce ? Dites-le moi en commentaire ! 👇",
+            FINANCE_BUDGET: "Cette astuce vous évite de jeter de l'argent par les fenêtres. Vous faites aussi cette erreur ? Dites-le moi en commentaire ! 👇",
+            HOUSEHOLD_CLEANING: "Découvrez cette astuce et dites-moi en commentaire si vous la connaissiez ! 👇"
+        };
+        socialPost.description = domainDescriptions[detectedDomainKey] || domainDescriptions.HOUSEHOLD_CLEANING;
+    }
+
+    // Clean and validate French hashtags — eliminate any legacy English AI slop
+    let rawTags = (socialPost.hashtags || '').replace(/\([^)]*\)/g, '').replace(/\s{2,}/g, ' ').trim();
+    const isLegacyEnglish = /#(?:lifehack|geniustrick|everydaytips|homehacks|smartliving|diytrick|productivityhack|smartideas)\b/i.test(rawTags);
+
+    if (!rawTags || isLegacyEnglish || !rawTags.includes('#')) {
+        if (mode === 'business') {
+            const bizTopicTags = ['#entrepreneuriat', '#businessmodel', '#strategie', '#argent', '#succes', '#mindset'];
+            rawTags = bizTopicTags.join(' ');
+        } else {
+            const detectedDomainKey = detectTopicDomain((topic || '') + ' ' + (intro || ''));
+            const domainDef = DOMAIN_DEFINITIONS[detectedDomainKey];
+            const baseTags = domainDef ? domainDef.hashtags.split(' ') : ['#bonplan', '#systemed', '#faitmaison', '#economies'];
+            const frenchTopicTags = [...baseTags];
+            const lowerTopic = ((topic || '') + ' ' + (intro || '')).toLowerCase();
+            if (lowerTopic.includes('calcaire') || lowerTopic.includes('robinet') || lowerTopic.includes('vinaigre')) frenchTopicTags.unshift('#calcaire', '#anticalcaire');
+            if (lowerTopic.includes('nettoy') || lowerTopic.includes('propre') || lowerTopic.includes('menage')) frenchTopicTags.unshift('#nettoyagemaison', '#menage');
+            if (lowerTopic.includes('action') || lowerTopic.includes('magasin')) frenchTopicTags.unshift('#actionfrance', '#trouvaillesaction');
+            if (lowerTopic.includes('cuisine') || lowerTopic.includes('plat') || lowerTopic.includes('recette')) frenchTopicTags.unshift('#astucecuisine', '#cuisine');
+            if (lowerTopic.includes('linge') || lowerTopic.includes('machine') || lowerTopic.includes('vetement') || lowerTopic.includes('lave')) frenchTopicTags.unshift('#astucelinge', '#lavelinge');
+            if (lowerTopic.includes('jardin') || lowerTopic.includes('plante')) frenchTopicTags.unshift('#jardinage', '#plantes');
+            if (lowerTopic.includes('facture') || lowerTopic.includes('edf') || lowerTopic.includes('electricite')) frenchTopicTags.unshift('#factureedf', '#economiedenergie');
+            if (lowerTopic.includes('peau') || lowerTopic.includes('serum') || lowerTopic.includes('beaute') || lowerTopic.includes('creme')) frenchTopicTags.unshift('#soinvisage', '#beauteauquotidien');
+            if (lowerTopic.includes('arnaque') || lowerTopic.includes('piege') || lowerTopic.includes('marketing') || lowerTopic.includes('prix') || lowerTopic.includes('argent') || lowerTopic.includes('faux')) {
+                frenchTopicTags.unshift('#arnaque', '#piegemarketing', '#consommateur');
+            }
+            rawTags = Array.from(new Set(frenchTopicTags)).slice(0, 6).join(' ');
+        }
+    }
+    socialPost.hashtags = rawTags;
+
     return {
         intro,
-        socialPost: parsed?.socialPost,
+        socialPost,
         scenes: processedScenes
     };
 }
@@ -828,12 +1203,61 @@ function normalizeStudioScenes(parsed, topic, mode, langName) {
 /**
  * Fallback parser in case AI returns non-JSON or heavily broken text.
  * Strictly prevents JSON keys/syntax from ever leaking into dialogue lines.
+ * Retains character identity (Génie for health, The Psychologist for psychology),
+ * and recovers imagePrompt/videoPrompt from damaged JSON blocks whenever possible.
  */
 function fallbackExtractScenes(raw, topic, mode, langName) {
     if (!raw || typeof raw !== 'string') throw new Error("AI failed to generate structural script.");
 
-    // 1. If response contains JSON structures with "scenes" array or "line" fields,
-    // extract dialogue directly instead of parsing raw JSON syntax line-by-line!
+    // Strict guard against upstream policy refusal messages disguised as text
+    if (/(?:The prompt could not be submitted|violate Google's|sensitive words that violate|generative-ai\/use-policy|ai\.google\.dev\/gemini-api\/docs\/troubleshooting|Blocked by safety policy|Safety filter triggered)/i.test(raw)) {
+        throw new Error("ИИ заблокировал запрос по политике безопасности. Пожалуйста, измените формулировку темы или референса.");
+    }
+
+    const defaultChar = mode === 'health' ? 'Génie' : (mode === 'psychology' ? 'The Psychologist' : (mode === 'business' ? 'Génie' : 'Presenter'));
+
+    // 1. First attempt: recover full structured scene blocks ({ "id": ..., "line": ..., "imagePrompt": ... })
+    // Even if outer JSON braces or arrays are broken, individual scene objects are often well-formed.
+    const sceneBlockRegex = /\{[^{}]*"(?:line|dialogue|text)"\s*:[^{}]*\}/gs;
+    const recoveredScenes = [];
+    let blockMatch;
+    let blockIdx = 0;
+    while ((blockMatch = sceneBlockRegex.exec(raw)) !== null) {
+        const block = blockMatch[0];
+        const lineMatch = block.match(/"(?:line|dialogue|text)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+        if (!lineMatch) continue;
+        const lineText = lineMatch[1].replace(/\\"/g, '"').replace(/\\n/g, ' ').trim();
+        if (lineText.length < 5 || lineText.includes('":') || lineText.endsWith('{') || lineText.endsWith('[')) continue;
+
+        blockIdx++;
+        const charMatch = block.match(/"(?:character|speaker|character_name)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+        let charVal = charMatch ? charMatch[1].replace(/\\"/g, '"').trim() : defaultChar;
+        if (mode === 'health' && (!charVal || charVal.toLowerCase() === 'presenter' || charVal.toLowerCase() === 'character')) {
+            charVal = 'Génie';
+        }
+
+        const imgVarMatch = block.match(/"imageVariant"\s*:\s*"([A-I])"/i);
+        const vidVarMatch = block.match(/"videoVariant"\s*:\s*"([A-H])"/i);
+        const imgPromptMatch = block.match(/"(?:imagePrompt|image_prompt)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+        const vidPromptMatch = block.match(/"(?:videoPrompt|video_prompt)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+
+        recoveredScenes.push({
+            id: blockIdx,
+            character: mode === 'objects' ? `Talking Object ${blockIdx}` : charVal,
+            line: lineText,
+            imageVariant: imgVarMatch ? imgVarMatch[1] : undefined,
+            videoVariant: vidVarMatch ? vidVarMatch[1] : undefined,
+            imagePrompt: imgPromptMatch ? imgPromptMatch[1].replace(/\\"/g, '"').replace(/\\n/g, ' ').trim() : undefined,
+            videoPrompt: vidPromptMatch ? vidPromptMatch[1].replace(/\\"/g, '"').replace(/\\n/g, ' ').trim() : undefined
+        });
+    }
+
+    if (recoveredScenes.length >= 3) {
+        console.log(`[Studio] Recovered ${recoveredScenes.length} structured scenes with prompts from damaged JSON output.`);
+        return normalizeStudioScenes({ intro: topic, scenes: recoveredScenes }, topic, mode, langName);
+    }
+
+    // 2. Second attempt: extract dialogue lines directly from JSON key-values
     const jsonLines = [];
     const lineRegex = /"(?:line|dialogue|text)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g;
     let m;
@@ -847,13 +1271,13 @@ function fallbackExtractScenes(raw, topic, mode, langName) {
         console.log(`[Studio] Recovered ${jsonLines.length} dialogue lines from damaged JSON output.`);
         const scenes = jsonLines.map((line, idx) => ({
             id: idx + 1,
-            character: mode === 'objects' ? `Talking Object ${idx + 1}` : 'Presenter',
+            character: mode === 'objects' ? `Talking Object ${idx + 1}` : defaultChar,
             line: line
         }));
         return normalizeStudioScenes({ intro: topic, scenes }, topic, mode, langName);
     }
 
-    // 2. Otherwise plain text extraction — strictly filter out JSON keys, brackets and braces!
+    // 3. Otherwise plain text extraction — strictly filter out JSON keys, brackets and braces!
     const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const extractedLines = [];
     for (const l of lines) {
@@ -878,9 +1302,10 @@ function fallbackExtractScenes(raw, topic, mode, langName) {
         throw new Error("AI failed to generate structural script.");
     }
 
-    const scenes = extractedLines.slice(0, 6).map((line, idx) => ({
+    const maxFallbackScenes = mode === 'business' ? 25 : 14;
+    const scenes = extractedLines.slice(0, maxFallbackScenes).map((line, idx) => ({
         id: idx + 1,
-        character: mode === 'objects' ? `Talking Object ${idx + 1}` : 'Presenter',
+        character: mode === 'objects' ? `Talking Object ${idx + 1}` : defaultChar,
         line: line
     }));
 
@@ -932,7 +1357,13 @@ function saveStudioProjectPrompts(projectFolder, scriptData, mode, topic, langua
 
         // 3. Human-readable prompts.txt
         const promptsTxtPath = path.join(projectDir, 'prompts.txt');
-        const modeTitle = mode === 'health' ? 'AI PSYCHOTALK' : 'AI OBJECTWARS';
+        const modeTitle = mode === 'health'
+            ? 'AI GENIETALK'
+            : (mode === 'psychology'
+                ? 'AI PSYCHOLOGY'
+                : (mode === 'business'
+                    ? 'AI BUSINESSTALK'
+                    : 'AI OBJECTWARS'));
         let txtContent = `========================================================================\n`;
         txtContent += `${modeTitle} — GENERATION PROMPTS\n`;
         txtContent += `========================================================================\n`;
@@ -978,62 +1409,352 @@ function saveStudioProjectPrompts(projectFolder, scriptData, mode, topic, langua
 }
 
 /**
- * Builds 4 viral cover prompt variations following 100K_PromptGuide.md
- * (Curiosity Eureka, Before/After Split, Product Hero Showcase, Insider Secret).
+ * Dynamically generates 4 viral, context-adaptive 9:16 vertical TikTok/Shorts cover prompts
+ * using Gemini/LLM, picking 4 diverse archetypes from a rich library of 8 viral concepts.
+ * Tailors setting, props, French headline hook, and emotion directly to the actual video narrative.
  */
-function buildCoverPromptsFromGuide({ topic, amazonProduct, script }) {
-    let productDesc = '';
-    let productCode = '';
-    if (amazonProduct) {
-        productDesc = `Amazon product "${amazonProduct.title}" (${amazonProduct.category}): ${amazonProduct.quote || ''}. ${amazonProduct.verdict || ''}`;
-        productCode = `#${amazonProduct.code}`;
-    } else {
-        productDesc = topic || (script && script.intro) || 'Scientific home lifehack and cleaning transformation';
-        const match = (topic || '').match(/#(\d+)/);
-        if (match) productCode = `#${match[1]}`;
+async function generateSmartCoverPrompts({ topic, amazonProduct, script, mode, provider = 'gemini', event }) {
+    if (!ai || !ai.chat) return null;
+
+    let hookSnippet = '';
+    let sceneSummary = '';
+    if (script && script.scenes && script.scenes.length > 0) {
+        hookSnippet = (script.scenes[0].line || '').replace(/\[.*?\]/g, '').trim();
+        sceneSummary = script.scenes.slice(0, 6).map(s => `Scene ${s.id}: "${(s.line || '').replace(/\[.*?\]/g, '').trim()}"`).join('\n');
     }
 
-    const baseQuality = 'professional 8K character render, high-end photorealistic 3D CGI, cinematic 9:16 vertical framing, character appearance strictly from the provided reference image';
-    const baseNegative = 'NOT: plastic skin, mannequin, oversaturated, deformed fingers, extra limbs, blurry, dark murky, 2d cartoon';
-    const productFidelity = amazonProduct ? ' (exact physical match to the product reference image, authentic design and real-world proportions)' : '';
+    const hasAmazon = !!amazonProduct;
+    const amazonContext = hasAmazon
+        ? `REAL PHYSICAL AMAZON PRODUCT INCLUDED: "${amazonProduct.title}" (Code #${amazonProduct.code}, Category: ${amazonProduct.category}). Quote: "${amazonProduct.quote}". Feature this exact product in the hands of the character with its exact shape and label.`
+        : `NO COMMERCIAL PRODUCT: This video has NO commercial product.
+STRICT MANDATORY BAN: Do NOT invent random electronics, electrical shavers, hair clippers, vacuum cleaners, carpet cleaners, or cleaning spray bottles! Use ONLY the real narrative props and visual metaphors from the script (e.g. 5 miniature ponds diorama, scale weighing fish vs cash, golden trophy, poultry crate, digital price tag displaying '450 €', restaurant menu, cash banknotes, detective pinboard, Linky electric meter, etc.).`;
 
+    const systemPrompt = `You are a world-class creative director specializing in viral 9:16 vertical TikTok / YouTube Shorts thumbnail covers.
+Design 4 radically distinct, high-CTR, click-worthy cover concepts for a 9:16 vertical video featuring "Génie" — a 170cm tall adult woman scientist, investigator, and educator (high-end photorealistic 3D CGI render, appearance strictly from reference image).
+
+ARCHETYPE LIBRARY (Select 4 DIFFERENT archetypes from this list for maximum diversity and surprise):
+1. "investigation_board" (Детективное расследование) — Génie in her analytical workshop in front of a corkboard with interconnected photos, red yarn, and documents exposing the trick.
+2. "visual_paradox" (Визуальный парадокс) — A striking visual comparison or balance scale (e.g. weighing bait vs hidden cost, price tag comparison, miniature diorama).
+3. "dramatic_split" (Смысловой контраст) — Split composition showing the marketing illusion vs the brutal truth (e.g. "Ce qu'on vous promet" vs "Ce qu'on vous vend").
+4. "price_shock" (Ценовой шок / Скрытые траты) — Génie reacting with wide eyes in disbelief in front of an illuminated digital price tag or bill revealing how much viewers lose.
+5. "hero_metaphor" (Символ победы или метафора) — Génie holding the core symbolic physical prop from the story (e.g. golden trophy, miniature pond model, or Amazon product if specified) with a triumphant smirk.
+6. "insider_whisper" (Закрытый инсайд / Секретное досье) — Intimate 3/4 portrait, conspiratorial whisper or index finger to lips, holding a confidential blueprint or test report folder.
+7. "direct_warning" (Прямое предупреждение / Пойманы с поличным) — Génie pointing urgently at the camera with an eye-opening, direct address: "Vous vous faites avoir !".
+8. "lab_crashtest" (Краш-тест лаборатории) — Analytical testing workbench actively dissecting the mechanism with glowing diagnostic tools.
+
+STRICT DESIGN RULES:
+1. PROPS MUST MATCH THE SCRIPT: Use ONLY the real items, concepts, and metaphors from the script. Never insert random cleaning products, shavers, or appliances!
+2. SHORT FRENCH HOOK TEXT: Each cover must include a punchy, bold 2-4 word French headline (e.g. "L'ARNAQUE DES 5 ÉTANGS !", "450 € DANS LE VENT ?", "LE VRAI PIÈGE DÉVOILÉ", "OÙ VA VOTRE ARGENT ?"). Bold white typography with subtle drop shadow, placed in upper or lower third.
+3. CHARACTER CONSISTENCY: Always specify "Génie — a mature adult woman scientist in her late 20s, high-end photorealistic 3D CGI render, appearance strictly from reference image, full human height (170 cm), feet on the floor".
+4. COMPOSITION: Strict vertical 9:16 portrait orientation, cinematic dramatic lighting (warm amber key light, cool background bokeh), razor-sharp focus on the subject.
+
+Output format: Return ONLY a valid JSON array of 4 objects:
+[
+  {
+    "id": 0,
+    "styleId": "investigation_board",
+    "styleTitle": "Доска расследования",
+    "badge": "Расследование",
+    "description": "Краткое описание вирусного крючка на русском",
+    "hookText": "L'ARNAQUE DES 5 ÉTANGS",
+    "prompt": "STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. professional 8K character render, high-end photorealistic 3D CGI, cinematic 9:16 vertical framing, character appearance strictly from the provided reference image. Génie — a mature adult woman scientist in her late 20s, full human height (170 cm), feet on the floor. [Detailed scene description with specific props, setting, lighting, emotion]. BOLD LARGE CINEMATIC TEXT OVERLAY in French: \\"[hookText]\\" in large bold white sans-serif typography with subtle drop shadow, positioned in upper third of frame. STYLE: high-end 3D CGI render, photorealistic lighting and materials, warm studio lighting. NOT: plastic skin, mannequin, deformed fingers, extra limbs, blurry, dark murky, 2d cartoon, random tools, electrical shavers, cleaning bottles."
+  }
+]`;
+
+    const userPrompt = `Generate 4 viral cover prompts for:
+Mode: ${mode}
+Topic: "${topic}"
+Core Hook: "${hookSnippet}"
+Script Excerpt:
+${sceneSummary}
+
+${amazonContext}
+
+Ensure the 4 covers are completely distinct, have authentic French hooks, and feature ONLY the real props and themes from this specific video!`;
+
+    const raw = await ai.chat([
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+    ], true, provider);
+
+    const parsed = cleanAndParseJSON(raw);
+    if (Array.isArray(parsed) && parsed.length >= 4) {
+        return parsed.slice(0, 4).map((item, idx) => ({
+            id: idx,
+            styleId: item.styleId || `custom_${idx}`,
+            styleTitle: item.styleTitle || `Вариант #${idx + 1}`,
+            badge: item.badge || 'Обложка',
+            description: item.description || '',
+            hookText: item.hookText || '',
+            prompt: sanitizePromptForImageSafety(item.prompt)
+        }));
+    }
+    return null;
+}
+
+/**
+ * Robust parametric fallback if LLM cover generation is unavailable.
+ * Inspects topic and script to construct 4 context-adaptive viral covers
+ * with authentic French hooks and strictly matching props (NO random shavers or bottles!).
+ */
+function buildDynamicContextualCovers({ topic, amazonProduct, script, mode }) {
+    const baseQuality = 'professional 8K character render, high-end photorealistic 3D CGI, cinematic 9:16 vertical framing, character appearance strictly from the provided reference image';
+    const baseNegative = 'NOT: plastic skin, mannequin, oversaturated, deformed fingers, extra limbs, blurry, dark murky, 2d cartoon, random tools, electrical shavers, cleaning bottles';
+
+    const fullText = `${topic || ''} ${(script && script.intro) || ''} ${((script && script.scenes) || []).map(s => s.line || '').join(' ')}`.toLowerCase();
+
+    // Extract short French hook line from script or topic
+    let hookLine = '';
+    if (script && script.scenes && script.scenes.length > 0) {
+        hookLine = (script.scenes[0].line || '').replace(/\[.*?\]/g, '').trim();
+    } else if (topic) {
+        hookLine = topic;
+    }
+    const shortHook = hookLine.length > 50 ? hookLine.slice(0, 47) + '...' : hookLine;
+
+    // Detect domain
+    const isDebunkOrBusiness = mode === 'business' ||
+        fullText.includes('marketing') || fullText.includes('arnaque') || fullText.includes('piege') ||
+        fullText.includes('etang') || fullText.includes('profit') || fullText.includes('marge') ||
+        fullText.includes('prix') || fullText.includes('argent') || fullText.includes('client') ||
+        fullText.includes('vente') || fullText.includes('business') || fullText.includes('cout') ||
+        fullText.includes('raquer') || fullText.includes('pigeon');
+
+    const isEnergy = fullText.includes('linky') || fullText.includes('edf') ||
+        fullText.includes('electricite') || fullText.includes('facture') || fullText.includes('chauffage');
+
+    const isFood = fullText.includes('cuisine') || fullText.includes('recette') ||
+        fullText.includes('plat') || fullText.includes('aliment') || fullText.includes('frigo') || fullText.includes('manger');
+
+    const isCleaning = !amazonProduct && (fullText.includes('nettoy') || fullText.includes('tache') ||
+        fullText.includes('graisse') || fullText.includes('calcaire') || fullText.includes('propre'));
+
+    if (amazonProduct) {
+        const prodTitle = amazonProduct.title;
+        const prodCode = `#${amazonProduct.code}`;
+        return [
+            {
+                id: 0,
+                styleId: 'product_hero',
+                styleTitle: 'Герой Продукта',
+                badge: `Товар ${prodCode}`,
+                description: `Крупный план товара ${prodTitle} в руках Génie с размытым фоном лаборатории`,
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Extreme close foreground perspective, Sony A7R V 85mm GM f/1.4 look, ${baseQuality}. Génie stands at full height (170 cm) holding directly towards camera the authentic device: "${prodTitle}" (Amazon ${prodCode}) with prominent glowing badge "${prodCode}". Razor-sharp foreground focus with creamy bokeh. Génie winks playfully with a confident thumbs-up. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "LA PÉPITE DU LABO !" in white bold typography with golden glow. Studio commercial lighting, crisp rim light, luxury vibrant colors. ${baseNegative}.`
+            },
+            {
+                id: 1,
+                styleId: 'before_after',
+                styleTitle: 'Контраст До / После',
+                badge: 'До / После',
+                description: 'Разделенный экран: проблема слева и идеальный результат справа с товаром',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Dynamic Dutch angle 12 degrees split-frame composition, ${baseQuality}. On the left side: heavily stained problem area. On the right side: pristine, gleaming, miraculously clean transformation achieved with "${prodTitle}". Génie stands between them smiling proudly, pointing to the sparkling clean side. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "AVANT / APRÈS : LE CHOC !" in bold condensed typography. Razor-sharp micro-textures, glossy reflections. ${baseNegative}.`
+            },
+            {
+                id: 2,
+                styleId: 'eureka_discovery',
+                styleTitle: 'Шок-открытие',
+                badge: 'Любопытство',
+                description: 'Широко распахнутые глаза, восторг от найденного решения',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Close-up portrait, ${baseQuality}, looking straight into camera with mouth open and wide expressive eyes in absolute amazement, holding up "${prodTitle}" with sparkling highlight rays. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "ÇA MARCHE VRAIMENT !" in bold white typography with drop shadow. Dynamic volumetric light rays, warm amber key light, vibrant cool cyan bokeh background. ${baseNegative}.`
+            },
+            {
+                id: 3,
+                styleId: 'insider_tip',
+                styleTitle: 'Заговорщический секрет',
+                badge: 'Секрет инсайдера',
+                description: 'Таинственный жест «Тссс!», призыв узнать закрытый лайфхак',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Intimate eye-level portrait, ${baseQuality}. Génie leans forward towards viewer with her index finger gently held to her lips in a mysterious "shhh!" gesture, intense knowing eye contact, with "${prodTitle}" resting visibly on the counter next to her. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "LE SECRET DU FABRICANT" in bold italic typography. Cinematic moody lighting, warm golden hour highlights. ${baseNegative}.`
+            }
+        ].map(item => ({ ...item, prompt: sanitizePromptForImageSafety(item.prompt) }));
+    }
+
+    if (isDebunkOrBusiness) {
+        return [
+            {
+                id: 0,
+                styleId: 'investigation_board',
+                styleTitle: 'Доска расследования',
+                badge: 'Расследование',
+                description: 'Génie у доски улик с фото, красными нитями и схемой ловушки',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Génie stands at full adult height (170 cm) in her diagnostic investigation laboratory, turning toward camera with a sharp triumphant smirk. Behind her is a large forensic pinboard filled with connected photos of the trick, diagrams, price tags, and bright red interconnected threads linking the secret scam. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "L'ARNAQUE DÉVOILÉE !" displayed prominently in the upper third in large bold white sans-serif font with subtle dark drop shadow. Cinematic forensic investigation lighting, warm amber key light, cool background bokeh. ${baseNegative}.`
+            },
+            {
+                id: 1,
+                styleId: 'scale_paradox',
+                styleTitle: 'Весы истины: Приманка vs Цена',
+                badge: 'Визуальный парадокс',
+                description: 'Сравнительные весы: символическая приманка против скрытой переплаты',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Eye-level composition. In the immediate sharp foreground sits an antique brass balance scale on a clean lab worktable. On one pan sits a golden symbolic trophy or fish; on the other pan sits a massive stack of shiny 2 € coins and realistic 50 € banknotes tipping the scale dramatically. Behind the scale, Génie leans forward with wide knowing eyes, tapping her temple in a clever eureka gesture. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "OÙ VA VOTRE ARGENT ?" in bold condensed white font with glowing amber edges. Razor-sharp macro textures, dramatic lighting. ${baseNegative}.`
+            },
+            {
+                id: 2,
+                styleId: 'price_shock',
+                styleTitle: 'Шок-цена: 450 € в год',
+                badge: 'Скрытые траты',
+                description: 'Крупный план светящегося ценника и шокированная Génie',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Macro rack-focus framing. In the sharp foreground, an oversized glowing digital price display shows "450 €" with a warning icon. In soft bokeh behind it, Génie raises both hands in genuine disbelief, jaw slightly dropped, looking straight into the lens. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "450 € PERDUS PAR AN ?" rendered in bold white italic typography across the top third. High-tech laboratory atmosphere with subtle neon accents, warm volumetric lighting. ${baseNegative}.`
+            },
+            {
+                id: 3,
+                styleId: 'secret_dossier',
+                styleTitle: 'Секретное досье инсайдера',
+                badge: 'Закрытый секрет',
+                description: 'Génie с секретной папкой схемы и доверительным взглядом',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Intimate eye-level 3/4 portrait. Génie leans conspiratorially toward the viewer, one index finger raised to her lips in a "shhh!" secret gesture, while her other hand holds a sleek confidential dossier stamped "CONFIDENTIEL". Warm amber desk lamp casts cinematic Venetian blind shadows across the scene. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "CE QU'ILS VOUS CACHENT" in bold condensed white typography with golden glow. Moody high-end editorial lighting. ${baseNegative}.`
+            }
+        ].map(item => ({ ...item, prompt: sanitizePromptForImageSafety(item.prompt) }));
+    }
+
+    if (isEnergy) {
+        return [
+            {
+                id: 0,
+                styleId: 'meter_shock',
+                styleTitle: 'Шок счетчика Linky',
+                badge: 'Энерго-шок',
+                description: 'Génie рядом со счетчиком Linky и светящимися цифрами переплаты',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Génie stands beside an illuminated green Linky electricity meter displaying high numbers in glowing digital font, her eyes wide in disbelief pointing at the meter. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "LE PIÈGE DU COMPTEUR LINKY" in bold white sans-serif font with neon green glow. Diagnostic laboratory setting, crisp rim light. ${baseNegative}.`
+            },
+            {
+                id: 1,
+                styleId: 'bill_contrast',
+                styleTitle: 'Контраст счетов EDF',
+                badge: 'До / После',
+                description: 'Огромный счет слева и уменьшенный в 3 раза справа',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Split-frame composition, ${baseQuality}. On left: massive inflated electricity bill with red warning markers. On right: tiny slashed bill with green savings checkmark. Génie in center gives a confident thumbs-up. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "DIVISEZ VOTRE FACTURE !" in bold white typography. ${baseNegative}.`
+            },
+            {
+                id: 2,
+                styleId: 'thermal_scanner',
+                styleTitle: 'Тепловизор и утечки',
+                badge: 'Краш-тест',
+                description: 'Génie с тепловизором показывает скрытые утечки тепла и денег',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Génie points a high-tech diagnostic thermal scanner at a glowing heat map showing energy leaks. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "VOTRE ARGENT S'ENVOLE !" with glowing cyan and orange thermal accents. High-tech analytical look. ${baseNegative}.`
+            },
+            {
+                id: 3,
+                styleId: 'insider_breaker',
+                styleTitle: 'Секретный тумблер',
+                badge: 'Секрет инсайдера',
+                description: 'Génie показывает скрытую настройку или переключатель',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Intimate portrait, Génie gestures toward an electrical circuit panel pointing at one specific hidden toggle with a knowing conspiratorial wink. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "LE RÉGLAGE SECRET D'EDF" in bold condensed white font. ${baseNegative}.`
+            }
+        ].map(item => ({ ...item, prompt: sanitizePromptForImageSafety(item.prompt) }));
+    }
+
+    if (isFood) {
+        return [
+            {
+                id: 0,
+                styleId: 'food_science',
+                styleTitle: 'Пищевой эксперимент',
+                badge: 'Наука на кухне',
+                description: 'Génie за столом лаборатории тестирует популярный кулинарный миф',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Génie stands in a bright modern test kitchen laboratory, examining fresh ingredients under an illuminated magnifying glass with wide excited eyes. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "NE JETEZ PLUS ÇA !" in bold white typography. Warm appetizing studio lighting. ${baseNegative}.`
+            },
+            {
+                id: 1,
+                styleId: 'food_contrast',
+                styleTitle: 'Свежесть vs Порча',
+                badge: 'До / После',
+                description: 'Слева испорченный продукт, справа идеально сохраненный свежий',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Split-frame composition, ${baseQuality}. On left: spoiled wilted food item. On right: crisp vibrant fresh food kept with the secret method. Génie points proudly to the fresh side. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "FRAIS PENDANT 1 MOIS !" in bold typography. ${baseNegative}.`
+            },
+            {
+                id: 2,
+                styleId: 'hero_ingredient',
+                styleTitle: 'Секретный ингредиент',
+                badge: 'Герой кухни',
+                description: 'Макро-фокус на простом домашнем средстве с реакцией Génie',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Snorkel macro lens, ${baseQuality}. A glass jar with simple natural kitchen ingredient in sharp macro focus, Génie in soft bokeh behind it raising one finger with eureka smile. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "L'INGRÉDIENT MAGIQUE" in bold typography. ${baseNegative}.`
+            },
+            {
+                id: 3,
+                styleId: 'chef_secret',
+                styleTitle: 'Секрет шеф-поваров',
+                badge: 'Закрытый трюк',
+                description: 'Génie с заговорщическим жестом у кухонного стола',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Intimate portrait, ${baseQuality}. Génie leans forward over culinary marble counter with finger to lips in "shhh!" pose, glowing copper pans in background. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "L'ASTUCE DU CHEF" in bold white condensed font. ${baseNegative}.`
+            }
+        ].map(item => ({ ...item, prompt: sanitizePromptForImageSafety(item.prompt) }));
+    }
+
+    if (isCleaning) {
+        return [
+            {
+                id: 0,
+                styleId: 'stain_miracle',
+                styleTitle: 'Шок-преображение',
+                badge: 'Чудо-чистка',
+                description: 'Невероятное мгновенное удаление застарелого нагара или пятна',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. ${baseQuality}. Génie in clean test kitchen holds a previously burnt ruined pan, now showing a pristine gleaming half with sparkling reflections, mouth open in amazed smile. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "MÊME BRÛLÉ ÇA PART !" in bold typography. Razor-sharp textures, glossy highlights. ${baseNegative}.`
+            },
+            {
+                id: 1,
+                styleId: 'clean_split',
+                styleTitle: 'Контраст До / После',
+                badge: 'До / После',
+                description: 'Грязь слева и сияющий блеск справа',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Dynamic split-frame Dutch angle, ${baseQuality}. Heavily stained grease on left vs gleaming white pristine surface on right. Génie stands between them pointing proudly to clean side. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "SANS FROTTER !" in bold typography. ${baseNegative}.`
+            },
+            {
+                id: 2,
+                styleId: 'diy_reaction',
+                styleTitle: 'Шипящая реакция DIY',
+                badge: 'Химия дома',
+                description: 'Génie показывает шипящую белую пену простого домашнего средства',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Macro close-up, ${baseQuality}. A glass bowl with foaming sparkling natural DIY mixture, Génie behind it smiling excitedly with wide eyes. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "LE MÉLANGE QUI DÉCAPE" in bold typography. ${baseNegative}.`
+            },
+            {
+                id: 3,
+                styleId: 'insider_cleaner',
+                styleTitle: 'Секретная формула',
+                badge: 'Секрет чистоты',
+                description: 'Таинственный жест «Тссс!», призыв узнать закрытый метод уборки',
+                prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Intimate portrait, ${baseQuality}. Génie with index finger to lips in mysterious "shhh!" gesture beside a gleaming clean kitchen counter with warm ambient lighting. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "L'ASTUCE DE GRAND-MÈRE" in bold typography. ${baseNegative}.`
+            }
+        ].map(item => ({ ...item, prompt: sanitizePromptForImageSafety(item.prompt) }));
+    }
+
+    // Default: Science investigation & lifehack discovery
     return [
         {
             id: 0,
-            styleId: 'eureka',
-            styleTitle: 'Шок-открытие',
-            badge: 'Любопытство (Curiosity Gap)',
-            description: 'Крупный план с широко распахнутыми глазами и светящейся реакцией',
-            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Close-up portrait (Leica M11 50mm Summilux f/1.4 look), ${baseQuality}, looking straight into camera with mouth open and wide expressive eyes in absolute amazement, holding up ${productDesc}${productFidelity} with foaming sparkling reaction and glowing discovery. Dynamic volumetric light rays, softbox at 45 degrees, warm amber subsurface scattering on face, vibrant cool cyan bokeh background of modern research laboratory. High editorial contrast. ${baseNegative}.`
+            styleId: 'eureka_discovery',
+            styleTitle: 'Шок-открытие лаборатории',
+            badge: 'Открытие',
+            description: 'Génie с широко распахнутыми глазами и найденным решением',
+            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Close-up portrait, ${baseQuality}. Génie looks straight into camera with mouth open and wide expressive eyes in absolute discovery, hands raised in eureka moment in front of glowing diagnostic lab displays. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "${shortHook || 'LA DÉCOUVERTE DU SIÈCLE !'}" in large bold white sans-serif font. Dynamic volumetric lighting. ${baseNegative}.`
         },
         {
             id: 1,
-            styleId: 'before_after',
-            styleTitle: 'Контраст До / После',
-            badge: 'До / После (Visual Proof)',
-            description: 'Разделенный экран: безнадежная грязь слева и сияющий результат справа',
-            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Dynamic Dutch angle 12 degrees split-frame composition, ${baseQuality}. On the left side: heavily stained ruined surface and dirty problem area. On the right side: pristine, gleaming, miraculously clean transformation achieved with ${productDesc}${productFidelity}. Génie stands between them smiling proudly, pointing to the sparkling clean side. Razor-sharp micro-textures, glossy reflections, clean editorial fashion lighting, 3D pop. ${baseNegative}.`
+            styleId: 'visual_proof',
+            styleTitle: 'Сравнительный тест',
+            badge: 'Краш-тест',
+            description: 'Разделенный экран: неработающий метод vs гениальное решение',
+            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Split-frame composition, ${baseQuality}. On left: failed frustrating attempt. On right: effortless brilliant success. Génie points confidently to the winning side with a knowing smirk. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "NE FAITES PLUS CETTE ERREUR !" in bold condensed typography. ${baseNegative}.`
         },
         {
             id: 2,
-            styleId: 'product_hero',
-            styleTitle: 'Герой Продукта',
-            badge: productCode ? `Товар ${productCode} (Product Hero)` : 'Герой Продукта (Hero Showcase)',
-            description: 'Фокус на товаре или инструменте крупным планом с кодом в руках',
-            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Snorkel lens extreme close foreground perspective, Sony A7R V 85mm GM f/1.4, ${baseQuality}. Holding directly towards camera the hero cleaning device or tool: ${productDesc}${productFidelity}${productCode ? ` with prominent glowing badge "${productCode}"` : ''}. Razor-sharp foreground focus with creamy bokeh. Génie in the background winks playfully and gives a confident thumbs-up. Studio commercial lighting, crisp rim light separating subject, luxury vibrant colors. ${baseNegative}.`
+            styleId: 'paradox_prop',
+            styleTitle: 'Визуальный парадокс',
+            badge: 'Парадокс',
+            description: 'Génie держит в руках ключевой предмет или метафору из ролика',
+            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Eye-level portrait, ${baseQuality}. Génie holds an illuminated demonstration object related to the topic at chest level, examining it with fascinated analytical expression. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "COMMENT C'EST POSSIBLE ?" in bold typography. Warm studio lighting. ${baseNegative}.`
         },
         {
             id: 3,
             styleId: 'insider_secret',
             styleTitle: 'Заговорщический секрет',
-            badge: 'Секрет (Insider Hook)',
-            description: 'Таинственный жест «Тссс!», призыв узнать закрытый лайфхак',
-            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Intimate eye-level 3/4 angle portrait, ${baseQuality}. Génie leans forward towards viewer with her index finger gently held to her lips in a mysterious "shhh! don't tell anyone this secret" gesture, intense knowing eye contact, with ${productDesc}${productFidelity} resting visibly on the counter next to her. Cinematic moody lighting, dramatic subtle Venetian blind shadow pattern across skin, warm golden hour highlights, mysterious laboratory background with glowing jars and bokeh balls. High curiosity trigger. ${baseNegative}.`
+            badge: 'Секрет',
+            description: 'Таинственный жест «Тссс!», призыв узнать закрытый инсайд',
+            prompt: `STRICT VERTICAL 9:16 PORTRAIT ORIENTATION FOR TIKTOK COVER. Intimate portrait, ${baseQuality}. Génie leans forward towards viewer with her index finger gently held to her lips in a mysterious "shhh!" gesture, intense knowing eye contact in warm moody laboratory. BOLD LARGE CINEMATIC TEXT OVERLAY in French: "CE QUE PERSONNE NE DIT" in bold typography with golden glow. ${baseNegative}.`
         }
-    ].map(item => ({
-        ...item,
-        prompt: sanitizePromptForImageSafety(item.prompt)
-    }));
+    ].map(item => ({ ...item, prompt: sanitizePromptForImageSafety(item.prompt) }));
+}
+
+function buildCoverPromptsFromGuide(params) {
+    return buildDynamicContextualCovers(params);
 }
 
 function registerSkeletonHandlers(ipcMain) {
@@ -1387,7 +2108,9 @@ For EACH scene (exactly 6), generate following JSON:
 
             // Strip bracketed emotion tags from spoken dialogue and lip-sync instructions (so models don't speak them aloud)
             promptToUse = promptToUse
-                .replace(/\[(excited|knowing|proudly|whispering|curious|direct|encouraging|playful|blunt|dry|sardonic|firm|impatient|wry|matter-of-fact)\]\s*/gi, '')
+                .replace(/\[(excited|knowing|proudly|whispering|confidential|curious|direct|encouraging|playful|blunt|dry|sardonic|firm|impatient|wry|matter-of-fact|shocked|strategic)\]\s*/gi, '')
+                .replace(/\b(glowing\s+)?(golden\s+)?heart(\s+symbol)?\b/gi, 'diagnostic icon')
+                .replace(/\bwhispering\b/gi, 'speaking confidentially')
                 .replace(/\s{2,}/g, ' ');
 
             // Sanitize finger counting in video prompts (causes severe AI hand deformities in diffusion video models)
@@ -1612,9 +2335,21 @@ Extracted Points:
                 }
             ]);
 
-            console.log(`[Studio Screenshot] OCR result extracted (${visionResponse.length} chars): "${visionResponse.slice(0, 150)}..."`);
+            if (!visionResponse || visionResponse.trim().length < 15 || /(?:The prompt could not be submitted|violate Google's|sensitive words|generative-ai\/use-policy|Blocked by safety policy)/i.test(visionResponse)) {
+                throw new Error("Модель отклонила изображение по соображениям безопасности или не смогла распознать текст. Пожалуйста, введите тему вручную.");
+            }
+
+            // Extract main theme if present in OCR structure
+            let mainTheme = '';
+            const themeMatch = visionResponse.match(/Main Theme:\s*([^\n\r]+)/i);
+            if (themeMatch && themeMatch[1]) {
+                mainTheme = themeMatch[1].replace(/^[\[\(]|[\)\]]$/g, '').trim();
+            }
+
+            console.log(`[Studio Screenshot] OCR result extracted (${visionResponse.length} chars, theme="${mainTheme}"): "${visionResponse.slice(0, 150)}..."`);
             return {
-                text: visionResponse
+                text: visionResponse,
+                mainTheme
             };
         } catch (err) {
             console.error(`[Studio Screenshot] Vision OCR failed:`, err.message);
@@ -2040,18 +2775,23 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
 
         // Determine actual lifehack topic for Amazon sourcing (NOT generic placeholders!)
         let sourcingTopic = '';
-        if (topic && topic !== 'Video Demonstration Reference' && topic !== 'Screenshot Rules Reference') {
+        if (topic && topic !== 'Video Demonstration Reference' && topic !== 'Screenshot Rules Reference' && !topic.startsWith('Reference:')) {
             sourcingTopic = topic;
         } else if (localVideoData && localVideoData.combinedSummary) {
             sourcingTopic = localVideoData.combinedSummary;
-        } else if (screenshotData && screenshotData.text) {
-            sourcingTopic = screenshotData.text;
+        } else if (screenshotData && (screenshotData.mainTheme || screenshotData.text)) {
+            sourcingTopic = screenshotData.mainTheme || screenshotData.text;
         } else if (refData && refData.transcript) {
             sourcingTopic = refData.transcript;
         }
 
+        // ── Domain Detection for Universal Expert Engine (Adaptive Persona for Génie) ──
+        const detectedDomainKey = detectTopicDomain(sourcingTopic);
+        const detectedDomain = DOMAIN_DEFINITIONS[detectedDomainKey] || DOMAIN_DEFINITIONS.HOUSEHOLD_CLEANING;
+
         // Autonomous Amazon Product Sourcing (Reverse Sourcing Engine)
-        if (!effectiveAmazonProduct && autoSourceAmazon && sourcingTopic && sourcingTopic.trim().length > 5 && mode === 'health') {
+        // Strictly restricted to HOUSEHOLD_CLEANING unless explicitly requested by user (prevents carpet cleaner recommendations on psychology/botany)
+        if (!effectiveAmazonProduct && autoSourceAmazon && sourcingTopic && sourcingTopic.trim().length > 5 && mode === 'health' && detectedDomainKey === 'HOUSEHOLD_CLEANING') {
             try {
                 if (event && event.sender) {
                     event.sender.send('studio-progress', { status: '🔍 ИИ анализирует тему лайфхака и ищет усиливающий товар на Amazon.fr...', progress: 65 });
@@ -2068,14 +2808,151 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             }
         }
 
-        if (event && event.sender) {
-            event.sender.send('studio-progress', { status: mode === 'psychology' ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...' : '✍️ ИИ пишет сценарий вирусных лайфхаков для Génie — учёной-изобретательницы...', progress: 70 });
+        // ── Domain-Specific Content Archetypes & Variable Timing Engine ──
+        const domainArchetypes = detectedDomain.archetypes && detectedDomain.archetypes.length > 0
+            ? detectedDomain.archetypes
+            : DOMAIN_DEFINITIONS.HOUSEHOLD_CLEANING.archetypes;
+
+        let selectedArchetype = domainArchetypes[Math.floor(Math.random() * domainArchetypes.length)];
+        // Smart selection: if the sourcing topic or reference is about business tricks, commercial bait, marketing, subscriptions or scams, prioritize DEMASQUEUR_ARNAQUE if present
+        if (sourcingTopic && /(?:marketing|business|pi[eè]ge|arnaque|vente|client|argent|mod[eè]le|app[aâ]t|abonnement|forfait|gratuit|crochet|commercial|pigeon|tarifs?|co[uû]te?)/i.test(sourcingTopic)) {
+            const debunkerArchetype = domainArchetypes.find(a => a.id === 'DEMASQUEUR_ARNAQUE');
+            if (debunkerArchetype) selectedArchetype = debunkerArchetype;
         }
+
+        // ── Dynamic Amazon Product Angles (Prevents repetitive "Arrêtez de..." warnings; introduces product early in Scene 3) ──
+        const AMAZON_PRODUCT_ANGLES = [
+            {
+                id: 'REALTIME_CRASH_TEST',
+                name: 'Crash-Test 24h & Résultat en Direct',
+                hookDirective: 'DIRECT EXPERIMENT / 24H TEST HOOK: Start Scene 1 with a concrete real-time test result within the first 2 seconds (e.g. "J\'ai branché cet appareil toute la nuit à côté de la vitre la plus trempée de la maison : regardez ce réservoir ce matin !", or "Test en direct au labo : voilà exactement ce que cet outil a réussi à extraire en 10 minutes chrono."). ZERO generic greetings or repetitive "Arrêtez de..." warnings!',
+                narrativeArc: 'Hook with test result -> Why conventional fixes fail -> Unveiling the device as the test candidate in Scene 3 -> Live demonstration & mechanism in action -> Sensor / diagnostic proof -> Final verdict and 3-step bio funnel.'
+            },
+            {
+                id: 'PRICE_ACOUSTIC_CONTRAST',
+                name: 'Contraste Prix & Efficacité (Disruption)',
+                hookDirective: 'CONTRAST & PRICE DISRUPTION HOOK: Start Scene 1 by contrasting expensive bulky gear with this compact alternative in the first 2 seconds (e.g. "Les gros appareils professionnels coûtent cent cinquante euros et font un bruit de tracteur : j\'ai voulu vérifier si cette version compacte à petit prix faisait le même travail en silence...", or "Pourquoi dépenser une fortune quand un outil aussi ingénieux règle le problème pour une fraction du prix ?"). ZERO generic greetings!',
+                narrativeArc: 'Price/noise contrast hook -> The problem with heavy gear -> Presenting the compact candidate in Scene 3 -> Hands-on stress test -> Real-world efficiency & sound check -> Final verdict and 3-step bio funnel.'
+            },
+            {
+                id: 'MEASUREMENT_SENSOR_SHOCK',
+                name: 'Choc Diagnostic & Mesure Chiffrée',
+                hookDirective: 'SCIENTIFIC MEASUREMENT & SENSOR SHOCK HOOK: Start Scene 1 with a concrete diagnostic number or extreme meter reading in the first 2 seconds (e.g. "Soixante-dix-huit pour cent d\'humidité mesurée dans cette chambre ce matin : voici le test que j\'ai mené pour faire chuter ce chiffre sans chauffer dans le vide...", or "Regardez ce niveau de saleté ou d\'humidité incrustée : on lance le test en laboratoire !"). ZERO generic greetings!',
+                narrativeArc: 'Sensor reading hook -> The invisible damage caused -> Putting the tool to work in Scene 3 -> Visual extraction / transformation -> The scientific measurement after -> Final verdict and 3-step bio funnel.'
+            },
+            {
+                id: 'MYTH_VS_TOOL_DUEL',
+                name: 'Duel : Effort Manuel vs Outil Spécialisé',
+                hookDirective: 'DUEL / MANUAL EFFORT HOOK: Start Scene 1 with a direct face-off between exhausting manual scrubbing and this smart tool in the first 2 seconds (e.g. "Frotter pendant une heure avec un chiffon et du vinaigre, ou laisser tourner cet outil : qui gagne vraiment ?", or "Les astuces de grand-mère suffisent-elles vraiment, ou cet outil change-t-il la donne ? On teste sans filtre !"). ZERO generic greetings!',
+                narrativeArc: 'Duel hook -> The physical limits of manual elbow grease -> Introducing the tool challenger in Scene 3 -> Side-by-side performance test -> Time and energy saved -> Final verdict and 3-step bio funnel.'
+            }
+        ];
+
+        const selectedAmazonAngle = effectiveAmazonProduct
+            ? AMAZON_PRODUCT_ANGLES[Math.floor(Math.random() * AMAZON_PRODUCT_ANGLES.length)]
+            : null;
+
+        // Dynamic scene count to break robotic 63s footprint:
+        let targetSceneCount;
+        if (isShort) {
+            targetSceneCount = Math.floor(Math.random() * 3) + 4; // 4, 5, or 6 scenes (32-48s)
+        } else if (mode === 'business') {
+            // Business education needs more scenes for deep metaphor analysis: 18-25 scenes (144-200s)
+            targetSceneCount = Math.floor(Math.random() * 8) + 18;
+        } else {
+            // High RPM long format: 10, 11, 12, 13, or 14 scenes (80-115s)
+            targetSceneCount = Math.floor(Math.random() * 5) + 10;
+        }
+
+        const activeArchetypeName = effectiveAmazonProduct ? `Amazon Test: ${selectedAmazonAngle.name}` : selectedArchetype.name;
+        console.log(`[Studio] Mode: ${mode} | Domain: ${detectedDomain.name} | Archetype: ${activeArchetypeName} | Target Scenes: ${targetSceneCount} (~${targetSceneCount * 8}s)`);
+
+        if (event && event.sender) {
+            event.sender.send('studio-progress', {
+                status: mode === 'psychology'
+                    ? '✍️ ИИ пишет сценарий для Психолога, видавшего жизнь...'
+                    : mode === 'business'
+                    ? `✍️ Génie [Business Education] пишет сценарий (${targetSceneCount} сцен, ~${targetSceneCount * 8}с)...`
+                    : (effectiveAmazonProduct
+                        ? `✍️ Génie [Test Amazon #${effectiveAmazonProduct.code}: ${selectedAmazonAngle.name}] пишет сценарий (${targetSceneCount} сцен)...`
+                        : `✍️ Génie [${detectedDomain.name} — ${selectedArchetype.name}] пишет сценарий (${targetSceneCount} сцен, ~${targetSceneCount * 8}с)...`),
+                progress: 70
+            });
+        }
+
+        // Geo-localization context for currency, idioms, stores, and cultural references across all modes
+        const GEO_CONTEXT = {
+            'French': {
+                currency: 'euros (€)',
+                currencyExamples: '1,99 €, 4,50 €, 10 €, 20 €, 50 €, 100 €, 140 € par an, deux millions d\'euros',
+                banknotes: '5 €, 10 €, 20 €, 50 €, 100 €, 200 €, 500 € (NEVER invent 25 € or 15 € banknotes!)',
+                coins: '1 €, 2 €, 50c, 20c, 10c, 5c, 2c, 1c',
+                region: 'France, Belgium, Switzerland',
+                stores: 'Action, E.Leclerc, Lidl, Carrefour, Leroy Merlin, Castorama',
+                consumerIdioms: 'Use authentic French consumer & debunker phrasing: "se faire pigeonner" (being scammed/overcharged), "arnaque marketing", "piège à sous", "faux bon plan", "ils vous font raquer", "payer dans le vent", "marge cachée", "système D", "pépite", "prix gonflé", "astuce de grand-mère", "sans se casser le dos"',
+                idioms: 'Use natural French business idioms: "le client décroche" (not "le client fuit"), "chiffre d\'affaires", "marge bénéficiaire", "lever des fonds", "business angel", "rentabilité"',
+                businessIdioms: 'Use natural French business idioms: "le client décroche" (not "le client fuit"), "chiffre d\'affaires", "marge bénéficiaire", "lever des fonds", "business angel", "rentabilité"'
+            },
+            'Spanish': {
+                currency: 'euros (€)',
+                currencyExamples: '1,99 €, 4,50 €, 10 €, 20 €, 50 €, 100 €, 140 € al año, dos millones de euros',
+                banknotes: '5 €, 10 €, 20 €, 50 €, 100 €, 200 €, 500 € (NEVER invent 25 € or 15 € banknotes!)',
+                coins: '1 €, 2 €, 50c, 20c, 10c, 5c, 2c, 1c',
+                region: 'Spain, Latin America',
+                stores: 'Mercadona, Lidl, Carrefour, Leroy Merlin, El Corte Inglés',
+                consumerIdioms: 'Use authentic Spanish consumer phrasing: "dar gato por liebre", "timo publicitario", "sacacuartos", "falso chollo", "te cobran de más", "truco casero", "ahorro real"',
+                idioms: 'Use natural Spanish business idioms: "el cliente se va" (not literal translations), "facturación", "margen de beneficio", "levantar capital", "rentabilidad"',
+                businessIdioms: 'Use natural Spanish business idioms: "el cliente se va" (not literal translations), "facturación", "margen de beneficio", "levantar capital", "rentabilidad"'
+            },
+            'German': {
+                currency: 'euros (€)',
+                currencyExamples: '1,99 €, 4,50 €, 10 €, 20 €, 50 €, 100 €, 140 € pro Jahr, zwei Millionen Euro',
+                banknotes: '5 €, 10 €, 20 €, 50 €, 100 €, 200 €, 500 € (NEVER invent 25 € or 15 € banknotes!)',
+                coins: '1 €, 2 €, 50c, 20c, 10c, 5c, 2c, 1c',
+                region: 'Germany, Austria, Switzerland',
+                stores: 'Aldi, Lidl, Rewe, Edeka, Bauhaus, Action',
+                consumerIdioms: 'Use authentic German consumer phrasing: "Geldmacherei", "Mogelpackung", "Marketingfalle", "echter Spartipp", "Haushaltstrick", "Geld zum Fenster rauswerfen"',
+                idioms: 'Use natural German business idioms: "der Kunde springt ab", "Umsatz", "Gewinnmarge", "Kapital beschaffen", "Rentabilität"',
+                businessIdioms: 'Use natural German business idioms: "der Kunde springt ab", "Umsatz", "Gewinnmarge", "Kapital beschaffen", "Rentabilität"'
+            },
+            'Polish': {
+                currency: 'Polish złoty (zł / PLN)',
+                currencyExamples: '9,99 zł, 20 zł, 50 zł, 100 zł, 600 zł rocznie, dwa miliony złotych',
+                banknotes: '10 zł, 20 zł, 50 zł, 100 zł, 200 zł, 500 zł',
+                coins: '1 zł, 2 zł, 5 zł, 50 gr, 20 gr, 10 gr, 5 gr, 2 gr, 1 gr',
+                region: 'Poland',
+                stores: 'Biedronka, Lidl, Żabka, Castorama, Action',
+                consumerIdioms: 'Use authentic Polish consumer phrasing: "nabieranie ludzi", "marketingowa ściema", "wyciąganie kasy", "prawdziwa perełka", "sprytny patent", "domowy trik"',
+                idioms: 'Use natural Polish business idioms: "klient rezygnuje", "obrót", "marża", "pozyskać kapitał", "rentowność"',
+                businessIdioms: 'Use natural Polish business idioms: "klient rezygnuje", "obrót", "marża", "pozyskać kapitał", "rentowność"'
+            },
+            'Russian': {
+                currency: 'Russian rubles (₽)',
+                currencyExamples: '199 ₽, 450 ₽, 1 000 ₽, 2 000 ₽, 5 000 ₽, 14 000 ₽ в год, два миллиона рублей',
+                banknotes: '50 ₽, 100 ₽, 200 ₽, 500 ₽, 1 000 ₽, 2 000 ₽, 5 000 ₽',
+                coins: '1 ₽, 2 ₽, 5 ₽, 10 ₽',
+                region: 'Russia, CIS',
+                stores: 'Wildberries, Ozon, Леруа Мерлен, Фикс Прайс, Сбер, Магнит',
+                consumerIdioms: 'Use authentic Russian consumer phrasing: "развод на деньги", "маркетинговая ловушка", "пустая трата", "рабочий лайфхак", "настоящая находка", "копеечный способ"',
+                idioms: 'Use natural Russian business idioms: "клиент уходит" / "клиент отваливается", "выручка", "маржинальность", "привлечь инвестиции", "окупаемость"',
+                businessIdioms: 'Use natural Russian business idioms: "клиент уходит" / "клиент отваливается", "выручка", "маржинальность", "привлечь инвестиции", "окупаемость"'
+            },
+            'English': {
+                currency: 'US dollars ($) or British pounds (£)',
+                currencyExamples: '$1.99, $4.50, $10, $20, $50, $100, $140 per year, two million dollars',
+                banknotes: '$1, $2, $5, $10, $20, $50, $100 (or £5, £10, £20, £50)',
+                coins: '1¢, 5¢, 10¢, 25¢, 50¢, $1 (or 1p, 2p, 5p, 10p, 20p, 50p, £1, £2)',
+                region: 'USA, UK',
+                stores: 'Walmart, Target, Home Depot, Dollar Tree, Amazon',
+                consumerIdioms: 'Use authentic English consumer phrasing: "rip-off", "marketing trap", "money pit", "hidden cost", "genius lifehack", "budget saver", "game changer"',
+                idioms: 'Use natural English business idioms: "the customer churns", "revenue", "profit margin", "raise capital", "ROI"',
+                businessIdioms: 'Use natural English business idioms: "the customer churns", "revenue", "profit margin", "raise capital", "ROI"'
+            }
+        };
+        const geo = GEO_CONTEXT[langName] || GEO_CONTEXT['French'];
 
         let systemInstruction = "";
         let userPrompt = "";
-
-        const CHARACTER_BIBLE_GENIE = `"Génie — a mature adult woman scientist in her late 20s, high-end photorealistic 3D CGI render. The character's face, hair, outfit, and all visual appearance details are defined 100% by the provided reference image — do NOT describe or invent any physical features. Expression: confident, enthusiastic, professional inventor energy. The image in reference_images shows her exact face and design — match it precisely."`;
 
         if (mode === 'psychology') {
             systemInstruction = `You are a Master Viral Scriptwriter specialized in raw, street-smart psychology and human behavior.
@@ -2163,118 +3040,140 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
               ]
             }`;
         } else if (mode === 'health') {
-            systemInstruction = `You are a Master Viral Hook Scriptwriter and world-class creator of viral lifehacks and clever everyday genius tricks.
-            You write scripts that feel vibrant, delightfully clever, and hyper-viral — every line unpacks a genius everyday trick, household hack, time-saver, or mind-blowing daily solution.
+            systemInstruction = `You are a Master Viral Hook Scriptwriter and world-class creator of viral, high-retention videos and actionable expert knowledge.
+            You write scripts that feel vibrant, delightfully clever, and hyper-viral — every line delivers authentic domain expertise, witty observations, and practical value.
 
             ${TIKTOK_SAFETY_DIRECTIVE}
+
+            TOPIC DOMAIN: ${detectedDomain.name}
+            EXPERT PERSONA: Génie is an ${detectedDomain.personaTitle}.
+            TONE & VOICE IDENTITY: ${effectiveAmazonProduct ? 'Investigative, hands-on crash-tester, pragmatic & objective reviewer' : detectedDomain.personaVoice}
+
+            SELECTED CONTENT ARCHETYPE: "${effectiveAmazonProduct ? selectedAmazonAngle.name : selectedArchetype.name}"
+            NARRATIVE ARC: ${effectiveAmazonProduct ? selectedAmazonAngle.narrativeArc : selectedArchetype.narrativeArc}
+            TONE: ${effectiveAmazonProduct ? 'Investigative, hands-on crash-tester, pragmatic & objective reviewer' : selectedArchetype.tone}
+
+            MANDATORY FRANCE GEO-ANCHORS & REAL-WORLD CONTEXT (CRITICAL FOR HIGH RPM & EU/FR TARGETING):
+            - You MUST anchor the dialogue in real everyday life (France, Belgium, Switzerland) to ensure high retention and top RPM.
+            - Authentic domain anchors: ${detectedDomain.culturalAnchors}
+
+            DOMAIN BOUNDARIES & NEGATIVE CONSTRAINTS (STRICT ANTI-CROSS-CONTAMINATION):
+            - ${detectedDomain.forbiddenContent}
+
+            GEO-LOCALIZATION & REFERENCE ADAPTATION (CRITICAL WHEN ADAPTING EXTERNAL VIDEOS):
+            - When adapting material from reference videos, transcripts, or screenshots from other countries (Ukraine, Russia, USA, etc.):
+              * FOREIGN CURRENCIES MUST BE CONVERTED: If the source mentions Ukrainian hryvnias (грн), Russian rubles (₽), US dollars ($), etc., NEVER repeat them! Convert all monetary amounts into the target currency: ${geo.currency} (${geo.currencyExamples}).
+              * NO 1:1 NUMERICAL COPYING (CRITICAL): NEVER simply change the currency sign while keeping the number! "25 hryvnias" or "25 rubles" is NOT "25 euros"! 25 UAH is ~0,55 €! Convert monetary figures to realistic European economic values based on purchasing power:
+                - Cheap/symbolic entry ticket or fee → 2 €, 5 €, or at most a 10 € / 20 € pass.
+                - Routine grocery or household hack → 1,50 €, 2,99 €, 4,50 €.
+                - Moderate purchase/service → 15 €, 20 €, 50 €.
+                - Substantial expense/trap → 80 €, 150 €, 300 €.
+              * OFFICIAL BANKNOTE DENOMINATIONS ONLY:
+                - In the Eurozone, official banknotes ONLY exist in: ${geo.banknotes}. Coins exist in: ${geo.coins}.
+                - There is NO 25 € banknote! There is NO 15 € banknote! There is NO 30 € banknote!
+                - If the dialogue mentions banknotes or cash, use REAL denominations: e.g. "un billet de 20 €", "un billet de 10 €", "une pièce de 2 €", "des billets de 50 €".
+              * REAL-WORLD CURRENCY IN IMAGE & VIDEO PROMPTS (CRITICAL FOR DIFFUSION MODELS):
+                - In imagePrompt and videoPrompt, NEVER request non-existent banknotes or fake money (e.g. NEVER write 'marked 25 €' on a banknote or scale pan)! AI diffusion models will render fake, absurd currency notes.
+                - When illustrating cash or pricing on a scale, counter, or display, specify REAL currency objects:
+                  * "a crisp blue 20 € banknote"
+                  * "a green 100 € banknote"
+                  * "shiny 2 € and 1 € coins"
+                  * "an admission ticket marked 'ENTRÉE'" or "a VIP pass marked 'PASS'" (without fictional denomination numbers)
+                  * "an illuminated digital price tag displaying '1,99 €'" or "'19,99 €'"
+              * FOREIGN SLANG & IDIOMS: Do NOT translate foreign slang literally! Semantically adapt it into authentic ${langName} expressions:
+                - Russian/Ukrainian "клиент сливается" → "le client décroche" / "le client s'en va"
+                - "развод на деньги" / "лохотрон" → "une arnaque totale" / "un vrai piège à sous"
+                - "впаривают" → "ils vous refourguent" / "ils vous font payer"
+                - "навар" → "leur marge cachée" / "leur profit"
+                - "подсадить на абонентку" → "vous enfermer dans un abonnement"
+                - "лайфхак на коленке" → "un pur système D"
+              * ${geo.consumerIdioms}
+              * FOREIGN STORES & BRANDS: Replace foreign stores (ATB, Pyaterochka, Silpo, etc.) with local equivalents (${geo.stores}) or universally known brands.
+              * PRESERVE AMAZON INTEGRATION: If an Amazon product is active (${effectiveAmazonProduct ? `#${effectiveAmazonProduct.code}: ${effectiveAmazonProduct.title}` : 'none'}), all Amazon crash-test directives and the outro funnel MUST remain strictly intact.
 
             CRITICAL RULES:
             1. ALL dialogue for "line", "intro", "character" MUST be in ${langName}.
             2. "imagePrompt" and "videoPrompt" MUST be written EXCLUSIVELY in English.
             3. "videoPrompt" MUST contain the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line]. NO TRUNCATION. NO '...'.
             4. CHARACTER APPEARANCE — USE TEXT DESCRIPTION (CRITICAL FOR GOOGLE FLOW MODELS):
-               - Always start the imagePrompt with the CHARACTER BIBLE exactly as written below — include her physical description, because the image model uses the text as the primary character spec:
+               - Always start the imagePrompt with the CHARACTER BIBLE exactly as written below:
                - CHARACTER BIBLE: ${CHARACTER_BIBLE_GENIE}
                - After the CHARACTER BIBLE, describe: her action, gesture, facial expression, and the scene environment.
                - The reference image in reference_images is provided as a secondary style hint, but the TEXT description is the primary anchor for character consistency.
-            5. THE CONCEPT: The narrator delivers transformative, brilliant lifehacks, household shortcuts, smart cleaning/organizing secrets, and everyday wisdom directly to the viewer with charisma and confident authority.
-            6. CLEVER LIFEHACK & PRACTICAL EXPERTISE:
-               - She addresses everyday frustrations: stubborn stains, cable mess, bad smells, kitchen struggles, wasted money, inefficient routines.
-               - She reveals simple, accessible solutions using common household items with wit, excitement, and clear logic.
+            5. THE CONCEPT & VOICE IDENTITY (CRITICAL FOR VIRAL RETENTION):
+               - Génie is a brilliant, high-energy woman expert (${detectedDomain.personaTitle}) who speaks directly to the viewer like a savvy, trusted friend and authentic authority in her domain.
+               - STRICT FIRST-PERSON & DIRECT ADDRESS: Génie ALWAYS speaks as "Je" or "On" and addresses the viewer directly as "tu" or "vous".
+               - NEVER REFER TO HERSELF IN THE THIRD PERSON (STRICT BAN): NEVER write "le génie reste calme", "un vrai génie fait ceci", "l'esprit brillant". It sounds bizarre, arrogant, and robotic.
+               - STRICT BAN ON PSEUDO-PHILOSOPHY & MORALIZING CLICHÉS: NEVER write patronizing, moralizing, or pseudo-philosophical filler (e.g. "Les vrais esprits brillants restent modestes", "Vos proches vous prendront pour une originale incomprise", "L'illusion de la perfection"). Every single line must be 100% concrete, practical, energetic, and grounded in real-world mechanisms, human behavior, physical facts, or exact figures!
+               - RAPID PACING — NO HOARDING THE PROBLEM: NEVER spend 3 or 4 scenes repeating warnings or scaring the viewer! Scenes 1 and 2 cover the hook and conventional mistake. By Scene 3 at the very latest, you MUST already unveil the smart solution, active insight, or core mechanism!
+            6. HOOK REQUIREMENT — RESULT IN FIRST 2 SECONDS (MANDATORY IN SCENE 1):
+               - ${effectiveAmazonProduct ? selectedAmazonAngle.hookDirective : selectedArchetype.hookDirective}
+               - NO slow hellos, NO "Bonjour tout le monde", NO "Bienvenue sur ma chaîne". Start immediately in media res!
             7. IMAGE STYLE, ENVIRONMENT VARIETY & COHERENCE:
                - Every "imagePrompt" MUST start with: ${CHARACTER_BIBLE_GENIE}, followed by the specific location and her physical action.
-               - **SMART LOCATION SELECTION (match location to lifehack topic)**:
-                 * 🏠 INDOOR — kitchen hack, cleaning, organizing, cooking, stain removal → cozy modern kitchen, pantry shelves, bright laundry room, living room, organized closet
-                 * 🔬 LAB / WORKSHOP — chemistry trick, science hack, DIY gadget → inventor's workshop with workbenches, craft desk, home lab with Edison bulbs
-                 * 🌿 OUTDOOR / GARDEN — gardening, plants, soil, watering, pest control, outdoor cleaning, yard maintenance → sunlit garden with green plants behind her, vegetable patch, greenhouse, flower bed, sunny backyard patio, outdoor terrace
-                 * 🛒 LIFESTYLE / MARKET — money-saving, shopping trick, food storage → outdoor farmer's market, open-air terrace, balcony garden
-                 * 💻 DESK / STUDY — productivity, organization, digital hacks → colorful study desk, home office nook
-               - **Visual Environment Variety**: Rotate environments across scenes based on the lifehack topic to maintain high visual retention.
+               - **DOMAIN STUDIO SETTING**: ${detectedDomain.studioSetting}
+               - **ACTIVE VISUAL PROPS**: ${detectedDomain.visualProps}
+               - Génie MUST actively handle, point at, or inspect these props with intense, analytical, or triumphant expressions — never stand empty-handed in passive poses!
+               - **Visual Environment Variety**: Rotate camera angles and environments across scenes (Macro inspection, Mid-shot demonstration, Wide view, Triumph result arc).
                - **Character Consistency**: Do NOT describe clothes or features; reference image guarantees consistency.
                - **IP SAFETY (CRITICAL)**: NEVER use political symbols, military uniforms, real brand logos, celebrity likenesses, or any copyrighted imagery in imagePrompt or videoPrompt. Use only neutral, everyday objects and environments.
                - **CHARACTER SCALE & GROUND POSITION (CRITICAL — PREVENTS MINIATURIZATION)**:
-                 * Standard shots: The character ALWAYS stands at FULL HUMAN HEIGHT on the floor, ground, or grass — she is NEVER placed on, inside, or alongside objects at the same scale (which makes her look tiny). Props, lab items, food, or household objects are either: (a) held in her hand, OR (b) placed on a counter/table/shelf/ground clearly behind her.
+                 * Standard shots: The character ALWAYS stands at FULL HUMAN HEIGHT on the floor or ground — she is NEVER placed on, inside, or alongside objects at the same scale. Props are either: (a) held in her hand, OR (b) placed on a counter/table/shelf/desk clearly behind or beside her.
                  * Macro Inspection Shots (Variant E in Scene 1 or Scene 2): If the scene highlights the disaster/problem, use a cinematic inspection composition: The physical problem itself is in the SHARP FOREGROUND MACRO FOCUS, while the character leans in right behind it at natural human height, closely examining it with dramatic analytical expressions.
-            8. CHARACTER ACTING & MOTION COHERENCE (CRITICAL FOR IMAGE-TO-VIDEO):
-               - **Image-to-Video Animation Alignment**: The videoPrompt MUST animate the exact starting pose and environment described in imagePrompt. DO NOT introduce motions that contradict the image.
-               - **Gestures & Presence**: Describe energetic, expressive gestures (e.g., pointing up with eureka excitement, proudly holding up household items or gadgets, nodding with knowing satisfaction).
-               - **Hook Variety (Scene 1)**: Start with a powerful eye-to-eye address, leaning into the camera with an intriguing, mind-blowing lifehack revelation.
-               - **VISUAL PROBLEM EMPHASIS (MANDATORY IN SCENE 1 OR SCENE 2)**:
-                 * At least ONE of the first two scenes (Scene 1 or Scene 2) MUST feature a clear visual depiction of the real problem relevant to the topic (e.g. if skincare/pores: show visible dullness or enlarged pores; if cleaning: show the dark stain on fabric; if gardening: show the damaged plant). DO NOT show random unrelated bugs or dirt! The viewer MUST visually see the exact pain point immediately!
-            9. Each "line" must include an emotion tag: [excited], [knowing], [proudly], [whispering], [curious], [direct], [encouraging], [playful], etc.
-            10. 🎬 DRAMATIC ARC & DIALOGUE LENGTH (8 SECONDS PER CLIP):
+            8. CHARACTER ACTING & MOTION COHERENCE:
+               - Image-to-Video Animation Alignment: videoPrompt MUST animate the exact starting pose and environment described in imagePrompt.
+               - Gestures: Expressive hands, holding up relevant domain props, inspecting surfaces or materials up-close, pointing with excitement, confident nods.
+            9. Each "line" must include an emotion tag: [excited], [knowing], [proudly], [confidential], [curious], [direct], [encouraging], [playful], [shocked], etc.
+            9.5. EMOTION-TO-EXPRESSION MAPPING (CRITICAL FOR REALISTIC ACTING IN videoPrompt):
+               - [shocked] → wide eyes, jaw slightly dropped, hands raised in genuine disbelief
+               - [knowing] → sharp conspiratorial half-smile, eyebrow arched, slow knowing nod to camera
+               - [curious] → leaning in close, eyes narrowed in focused inspection, tilted head
+               - [excited] → sparkling eyes, energetic smile, dynamic open-palm gesture
+               - [direct] → firm eye contact, pointed finger emphasizing the warning, determined expression
+               - [proudly] → head held high, radiant triumphant smile, presenting the result
+               - [confidential] → conspiratorial lean toward camera, hand cupped slightly, intense eyes
+               - [playful] → cheeky smirk, teasing head tilt, playful wink or shrug
+               Use these EXACT expressions in the videoPrompt CHARACTER ACTION for each scene — do NOT default to generic smiling.
+            10. 🎬 DURATION & DIALOGUE LENGTH (8 SECONDS PER CLIP):
                 Each video clip is 8 seconds. Dialogue should naturally fill the 8 seconds with smooth, lively speech (recommended: 18-22 words per scene, avoiding empty pauses).
-
-                ${isShort ? `
-                📍 DURATION MODE: FAST 30-SECOND TIKTOK SHORT (EXACTLY 4-5 SCENES):
-                - Scene 1 — THE HOOK & EVERYDAY PAIN POINT (18-22 words): Call out a frustrating daily mistake or common problem.
-                - Scene 2 — THE WHY & THE SECRET (18-22 words): Why standard ways fail and the unexpected smart principle behind it.
-                - Scene 3 — THE GENIUS LIFEHACK REVELATION (18-22 words): The exact step-by-step trick to solve it effortlessly.
-                - Scene 4 — THE PRO TIP / RESULT (18-22 words): The immediate magical result and bonus convenience.
-                - Scene 5 — THE MIC-DROP & CTA (18-22 words): Final witty takeaway + natural call to follow/save for more secrets.
-                ` : `
-                📍 DURATION MODE: FULL 8-SCENE FORMAT (EXACTLY 8 SCENES):
-                - Scene 1 — HOOK & PROBLEM (18-22 words): High-energy opening calling out a common everyday struggle.
-                - Scene 2 — THE COMMON MISTAKE (18-22 words): What almost everyone does wrong.
-                - Scene 3 — STEP 1: PREPARATION (18-22 words): The simple item you need that everyone has at home.
-                - Scene 4 — STEP 2: THE GENIUS TRICK (18-22 words): The secret method in action.
-                - Scene 5 — THE MAGIC RESULT (18-22 words): Seeing the instant transformation/fix.
-                - Scene 6 — EXTRA PRO TIP (18-22 words): A bonus nuance to make it last longer.
-                - Scene 7 — TIME & MONEY SAVED (18-22 words): Why you'll never do it the old way again.
-                - Scene 8 — CLOSING & CTA (18-22 words): Final clever punchline + subscribe for more smart hacks.
-                `}
-
-            11. DENSE CONTENT & CHARISMATIC WISDOM:
-                 * NO filler words, NO non-verbal laughs or sound pauses.
-                 * Natural dialogue pacing: aim for 18-22 words per scene to keep the viewer engaged throughout the whole 8 seconds.
-                 * Génie speaks directly to the viewer with enthusiastic charisma, clarity, and contagious confidence.
-
-            12. EMOTIONAL PENDULUM (RETENTION TECHNIQUE — MANDATORY):
-                 Alternate scenes between TENSION phrases and RELIEF phrases to maximize viewer retention.
-                 TENSION phrases (raise curiosity/suspense) — use in odd scenes:
-                   "Но не всё так просто...", "Внимательные зрители могут заметить...", "И при всём при этом...",
-                   "Обратите особое внимание на...", "И это ещё не всё...", "Но будьте готовы к тому, что...",
-                   "Почему же?", "Наоборот...", "Согласитесь, что...", "А что делать если?"
-                 RELIEF phrases (resolve tension, give hope) — use in even scenes:
-                   "Не стоит отчаиваться!", "Как всегда, есть и хорошие новости!", "Решив этот вопрос, вы сможете...",
-                   "Эта проблема легко решается.", "К нашей радости...", "Очевидно, что...",
-                   "Конечно, есть и светлая сторона!", "Как же выйти из этой ситуации?", "А вот сейчас самое важное!"
-                 RULE: Each scene's "line" must naturally embed one such phrase or its equivalent in ${langName}.
+                Total script length: EXACTLY ${targetSceneCount} scenes (approx. ${targetSceneCount * 8} seconds).
+            11. EMOTIONAL PENDULUM & CURIOSITY BRIDGES (MAXIMUM RETENTION):
+                - Alternate scenes between TENSION (discovering a hidden trap/mistake) and RELIEF/TRIUMPH (the brilliant chemical reaction/result).
+                - RETENTION CURIOSITY BRIDGES: At key transitions, end or begin scenes with micro-cliffhangers that compel the viewer to watch the next 8-second clip (e.g. "...mais attention au piège que 90% des gens commettent : ", "...ce qui se passe ensuite va vous scotcher : regardez bien.", "...voici le détail crucial qui change absolument tout : ").
             ${effectiveAmazonProduct ? `
-            13. 🛒 MANDATORY OUTRO & CTA FOR AMAZON SHOWCASE PRODUCT #${effectiveAmazonProduct.code} ("${effectiveAmazonProduct.title}"):
-                 - The FINAL SCENE (Scene ${isShort ? '5' : '8'}) is the Outro Call-To-Action.
-                 - Génie MUST deliver a crystal-clear, friendly, high-converting 3-step action funnel that any viewer can immediately follow:
-                   PART 1 [bio link]:   Direct imperative verb → click the link in bio or profile.
-                   PART 2 [code + OK]:  Enter the code ${effectiveAmazonProduct.code} and press OK (clear, intuitive and frictionless).
-                   PART 3 [Amazon]:     Direct arrival on Amazon to order the product.
-                 - In ${langName} (especially French for @bertranna), use this proven viral formula:
-                   ✅ "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
-                   ✅ "Va sur le lien dans mon profil, tape le code ${effectiveAmazonProduct.code} et appuie sur OK — ça t'emmène direct sur Amazon !"
-                   ✅ "Ouvre le lien en bio, tape le code ${effectiveAmazonProduct.code} sur le clavier et clique sur OK pour aller direct sur Amazon !"
-                   ✅ "Le lien est dans ma bio : tape le code ${effectiveAmazonProduct.code}, appuie sur OK et retrouve-le directement sur Amazon !"
-                   ❌ STRICTLY FORBIDDEN: Any bracketed emotion tags like [direct], [excited], etc. in the line or dialogue!
-                   ❌ STRICTLY FORBIDDEN: Splitting PART 2 across two sentences.
-                 - Dialogue length: STRICTLY 18-22 words, natural conversational pace filling the 8-second video clip without rushing or truncating.
-                 - Example French Outro line: "${amazonManager.getRandomCta(effectiveAmazonProduct.code)}"
-                 - OUTRO VIDEO PROMPT & VISUAL ACTING RULES (CRITICAL FOR STABILITY):
-                   * Camera: Steady eye-level mid-shot with a subtle slow push-in or slow arc (Variant C, A, or G).
-                   * Character Action: Génie holds the featured product (${effectiveAmazonProduct.title}) steadily at chest height in one hand, presenting it clearly. With her other hand, she points directly and warmly forward at the camera with an encouraging smile and nod («lien en bio»), directly endorsing the product and guiding the viewer clearly.
-                   * STRICTLY FORBIDDEN IN VIDEO PROMPT: NO counting on fingers 1, 2, 3 (causes severe AI hand/finger deformities!), NO tapping temple, NO rapid changing hand poses. Use "High-end 3D CGI render", NEVER "animation".
-            14. 🎯 STRICT 50/50 NARRATIVE FORMULA (MANDATORY WHEN AN AMAZON PRODUCT IS PRESENT):
-                 - 🛑 BLOCK 1: SCENES 1 TO 4 — 100% PURE LIFEHACK (ABSOLUTELY ZERO PRODUCT MENTION!):
-                   * Scenes 1, 2, 3, and 4 MUST focus EXCLUSIVELY on the lifehack itself: the common daily struggle, the mistake people make, the exact concrete DIY recipe / ingredients / method / biological principle, and how the reaction/trick works in real time.
-                   * STRICT RESTRICTION: There must be ABSOLUTELY NO MENTION of any commercial product, Amazon, gadgets, or tools in Scenes 1 to 4! The viewer must receive 100% genuine, viral, generous expert value from Bertranna.
-                 - 🚀 BLOCK 2: SCENES 5 TO 7 — THE PIVOT: "TO EASE YOUR EFFORTS, I RECOMMEND..."
-                   * Scene 5 is THE TURNING POINT: The DIY trick works, but doing the physical scrubbing/watching by hand is exhausting. Bertranna pivots with empathy: "Pour vous épargner cet effort et vous faciliter la vie, je vous recommande d'utiliser..." and introduces the Amazon tool (${effectiveAmazonProduct.title}).
-                   * Scene 6 explains why this tool solves the manual exhaustion (ergonomics, high speed, telescopic handle, convenience).
-                   * Scene 7 highlights the triumphant synergy: the smart lifehack + this physical tool = flawless result in minutes without back pain or fatigue.
-                 - 🏁 BLOCK 3: SCENE 8 — OUTRO CTA: Génie guides the viewer through 3 simple steps: (1) click the link in bio → (2) enter code #${effectiveAmazonProduct.code} and press OK → (3) arrive directly on Amazon to order.` : ''}`;
+            12. 🛒 DYNAMIC PRODUCT CRASH-TEST ARCHITECTURE (PRODUCT #${effectiveAmazonProduct.code}: "${effectiveAmazonProduct.title}"):
+                 - THIS VIDEO IS AN EXCITING HANDS-ON PRODUCT TEST-DRIVE (MythBusters / Laboratory Crash-Test style), NOT a repetitive theoretical lecture!
+                 - The product (${effectiveAmazonProduct.title}) is the central STAR of the investigation and MUST be introduced EARLY in Scene 3!
+                 - DYNAMIC NARRATIVE ARC:
+                   * Scene 1: Instant Hook & bold experiment result or claim (${selectedAmazonAngle.hookDirective}).
+                   * Scene 2: Why manual remedies (rags, chemical traps from Action, running heating full blast on EDF) fail or worsen the damage.
+                   * Scene 3: Unveiling ${effectiveAmazonProduct.title} as the lab test subject and candidate.
+                   * Scenes 4 to 6: Physical demonstration of how it works in real-time (motor, extraction, filtration, decibel level, ergonomics).
+                   * Scenes 7 to 9: Real-world measurements (sensor readings, volume extracted, side-by-side surface comparison, energy consumption).
+                   * Scenes 10 to ${targetSceneCount - 2}: Comparison with bulky/expensive alternatives + durability & maintenance pro-tips.
+                   * Scene ${targetSceneCount - 1}: Final honest scoring and triumphant verdict by Génie.
+                   * Scene ${targetSceneCount}: Outro 3-step action funnel: (1) click link in bio -> (2) enter code #${effectiveAmazonProduct.code} and press OK -> (3) arrive directly on Amazon to order.
+                 - Outro line rule: Strictly 18-22 words, natural conversational pace, NO bracketed emotion tags.
+                 - Outro phrasing variations:
+                   * "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
+                   * "Retrouve la référence exacte sur mon labo : lien en bio, code ${effectiveAmazonProduct.code} puis OK pour aller direct sur Amazon !"
+                   * "Tous les détails et le produit sont en bio : entre le code ${effectiveAmazonProduct.code}, clique sur OK et tu arrives sur Amazon !"
+                   * "Si tu veux ce résultat chez toi, le lien est dans mon profil : tape ${effectiveAmazonProduct.code}, clique sur OK et commande sur Amazon !"` : `
+            12. 🏁 OUTRO & CALL TO ACTION (NO PRODUCT):
+                 - The FINAL SCENE (Scene ${targetSceneCount}) delivers a memorable punchline + call to follow/comment:
+                 * "Sauvegarde cette vidéo, dis-moi en commentaire si tu as déjà vécu ça — et abonne-toi pour d'autres décryptages !"
+                 * "Partage cette vidéo à un proche qui en a besoin — et retrouve tous mes conseils et analyses sur mon profil !"
+                 * "Dis-moi en commentaire quel sujet tu veux voir ensuite — et abonne-toi pour ne rater aucun décryptage !"
+                 Strictly 18-22 words.`}
+            `;
 
             const effectiveTopic = localVideoData
                 ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
                 : (screenshotData
-                    ? `Lifehack Rules/Tricks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
-                    : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
+                    ? (screenshotData.mainTheme
+                        ? `Extracted Topic: "${screenshotData.mainTheme}". Details: "${screenshotData.text.slice(0, 500)}..."`
+                        : `Rules & Insights extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`)
+                    : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : (topic || detectedDomain.name)));
 
             const amazonProductContext = effectiveAmazonProduct ? `
 🛒 TARGET AMAZON SHOWCASE PRODUCT #${effectiveAmazonProduct.code}:
@@ -2283,106 +3182,230 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
 - Clever Method / Lifehack: ${effectiveAmazonProduct.hackMethod || effectiveAmazonProduct.verdict}
 - Scientific Principle: ${effectiveAmazonProduct.verdict}
 - Key Highlights: ${Array.isArray(effectiveAmazonProduct.features) ? effectiveAmazonProduct.features.join('; ') : ''}
-- Role of the Product: Smart physical amplifier introduced in Scene 5 to ease manual effort (ABSOLUTELY ZERO MENTION in Scenes 1-4!).
-- MANDATORY OUTRO REQUIREMENT: Scene ${isShort ? '5' : '8'} MUST guide the viewer through 3 clear steps in ${langName}: (1) click the link in bio → (2) enter code #${effectiveAmazonProduct.code} and press OK → (3) you arrive directly on Amazon to purchase the product.\n` : '';
+- Integration: Introduce as the lab test candidate in Scene 3, demonstrate live through real measurements and side-by-side test, then conclude with verdict and bio funnel.
+- Final Scene ${targetSceneCount} Outro: 3-step bio funnel (link in bio -> code #${effectiveAmazonProduct.code} + OK -> Amazon).\n` : '';
 
-            userPrompt = `Create a viral short LIFEHACK & SMART TIPS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
+            userPrompt = `Create a viral ${effectiveAmazonProduct ? selectedAmazonAngle.name.toUpperCase() : selectedArchetype.name.toUpperCase()} video script with EXACTLY ${targetSceneCount} scenes for: "${effectiveTopic}".
+                        Domain: ${detectedDomain.name} (${detectedDomain.personaTitle})
                         ${amazonProductContext}
-                        ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR THE INVENTOR IN ${langName.toUpperCase()}:\n""" \n${localVideoData.combinedSummary}\n"""\n` : ''}
-                        ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT LIFEHACKS, RULES, OR TIPS FOR THE INVENTOR IN ${langName.toUpperCase()}:\n""" \n${screenshotData.text}\n"""\n` : ''}
-                        ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR THE INVENTOR IN ${langName.toUpperCase()}):\n""" \n${refData.transcript}\n"""\n` : ''}
-                        The narrator is a brilliant mature adult woman inventor and scientist in her late twenties, whose appearance is defined entirely by the provided reference image, delivering mind-blowing everyday lifehacks and practical secrets.
+                        ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT CONTENT FOR GÉNIE IN ${langName.toUpperCase()}:\n""" \n${localVideoData.combinedSummary}\n"""\n` : ''}
+                        ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT RULES FOR GÉNIE IN ${langName.toUpperCase()}:\n""" \n${screenshotData.text}\n"""\n` : ''}
+                        ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS FOR GÉNIE IN ${langName.toUpperCase()}):\n""" \n${refData.transcript}\n"""\n` : ''}
+                        The narrator is Génie — a brilliant, charismatic mature adult woman expert in her late twenties, whose appearance is defined entirely by the provided reference image.
 
-            DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
+            MANDATORY SCENE STRUCTURE (EXACTLY ${targetSceneCount} SCENES, 18-22 WORDS PER SCENE):
             ${effectiveAmazonProduct ? `
-            📍 50/50 LIFEHACK-FIRST FORMAT (EXACTLY ${isShort ? '5' : '8'} SCENES):
-            ${isShort ? `
-            - Scene 1 (HOOK & PAIN — 18-22 words): The daily struggle. ZERO product mention!
-            - Scene 2 (CONCRETE DIY TRICK — 18-22 words): Specific recipe/ingredients/method. ZERO product mention!
-            - Scene 3 (THE PIVOT — 18-22 words): Natural transition to the product. IMPORTANT: Do NOT always use the same bridge phrase. Randomly pick ONE unique approach from this list and adapt it naturally to the topic:
-              • "J'ai testé des dizaines de solutions — celle-ci est de loin la meilleure..."
-              • "Le hack marche, mais pour un résultat pro sans effort, il te faut..."
-              • "Personnellement, après avoir tout essayé, voici mon arme secrète..."
-              • "Les pros utilisent exactement cet outil — et maintenant toi aussi..."
-              • "Si tu veux le résultat parfait en 10 secondes chrono, c'est simple..."
-              • "La vraie astuce que personne ne te dit ? C'est cet outil qui change tout..."
-              (introducing ${effectiveAmazonProduct.title}).
-            - Scene 4 (RESULT & RELIEF — 18-22 words): Flawless result without fatigue.
-            - Scene 5 (OUTRO CTA — 18-22 words): Crystal-clear 3-step action funnel:
-              "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
-              (or "Va sur le lien dans mon profil, tape le code ${effectiveAmazonProduct.code} et appuie sur OK — ça t'emmène direct sur Amazon !").
-              Strictly 18-22 words. NO bracketed emotion tags.
+            - Scene 1 (INSTANT HOOK & EXPERIMENT PROVOCATION in first 2 seconds): ${selectedAmazonAngle.hookDirective}
+            - Scene 2 (THE FAILURE OF CHEAP HACKS & HIDDEN COST): Why towels, chemical traps from Action, or heating waste money and fail against the problem. End with a curiosity bridge to Scene 3.
+            - Scene 3 (THE LAB CANDIDATE UNVEILED): Génie introduces ${effectiveAmazonProduct.title} as the compact test candidate to solve this effortlessly.
+            - Scenes 4 to 6 (HANDS-ON LIVE DEMO & MECHANISM): How the device works in real time — motor, absorption, filtration, quietness, ergonomics.
+            - Scenes 7 to 9 (REAL MEASUREMENTS & VISUAL PROOF): The 24h test result, sensor/hygrometer drop, exact volume collected, crystal-clear surface.
+            - Scene 10 to ${targetSceneCount - 2} (COMPARISON & PRO SECRET): Contrast with 150€ noisy gear, low energy consumption in cents, maintenance tip.
+            - Scene ${targetSceneCount - 1} (TRIUMPHANT VERDICT & LAB SCORE): Final enthusiastic verdict, rating out of 10.
+            - Scene ${targetSceneCount} (OUTRO BIO FUNNEL): 3-step action funnel with code #${effectiveAmazonProduct.code} to order on Amazon. Strictly 18-22 words, NO bracketed emotion tags.
             ` : `
-            - Scene 1 (HOOK & EVERYDAY PAIN — 18-22 words): Sharp callout of everyday pain/frustration. ZERO product mention!
-            - Scene 2 (THE MISTAKE / WRONG WAY — 18-22 words): Why ordinary ways fail, waste money or damage health/materials. ZERO product mention!
-            - Scene 3 (CONCRETE DIY INGREDIENTS / METHOD — 18-22 words): The exact, concrete ingredients, recipe, or physical setup (name specific items/proportions). ZERO product mention!
-            - Scene 4 (THE LIFEHACK IN ACTION — 18-22 words): The scientific/practical reaction working in real time. 100% pure lifehack demonstration. ZERO product mention!
-            - Scene 5 (THE PIVOT — 18-22 words): Natural transition to the product. IMPORTANT: Do NOT use the same bridge phrase every time. Randomly pick ONE unique approach from this list and adapt it naturally to the topic:
-              • "Le hack marche, mais frotter à la main, c'est épuisant — voici ce qui change tout..."
-              • "J'ai testé des dizaines de produits pour ça — un seul m'a vraiment convaincue..."
-              • "Les pros ne font jamais ça à la main — leur secret, c'est exactement cet outil..."
-              • "Si tu veux le même résultat en 10 secondes sans effort, voici mon arme secrète..."
-              • "Personnellement, depuis que j'ai découvert ça, je ne reviens plus en arrière..."
-              • "La version simple et rapide de cette astuce ? Elle tient en un seul outil..."
-              (introducing ${effectiveAmazonProduct.title}).
-            - Scene 6 (ERGONOMICS & HOW THE TOOL AMPLIFIES THE HACK — 18-22 words): Specific features solving manual fatigue (telescopic handle, high-speed motor, self-adhesive strip, etc.).
-            - Scene 7 (TRIUMPHANT SYNERGY — 18-22 words): The combined victory: cheap clever trick + smart tool = perfect result in minutes with zero back pain or tiredness!
-            - Scene 8 (OUTRO CTA — 18-22 words): Crystal-clear 3-step call-to-action. VARY the phrasing — pick one style:
-              • "Clique sur le lien en bio, entre le code ${effectiveAmazonProduct.code} et appuie sur OK — tu arrives direct sur Amazon pour commander !"
-              • "Va sur le lien dans mon profil, tape le code ${effectiveAmazonProduct.code} et appuie sur OK — ça t'emmène direct sur Amazon !"
-              • "Ouvre le lien en bio, tape le code ${effectiveAmazonProduct.code} sur le clavier et clique sur OK pour aller direct sur Amazon !"
-              • "Le lien est dans ma bio : tape le code ${effectiveAmazonProduct.code}, appuie sur OK et retrouve-le directement sur Amazon !"
-              Strictly 18-22 words. NO bracketed emotion tags.
-            `}
-            ` : `
-            ${isShort ? `
-            - Scene 1 (HOOK & PROBLEM): 18-22 words.
-            - Scene 2 (THE WHY): 18-22 words.
-            - Scene 3 (THE GENIUS HACK): 18-22 words.
-            - Scene 4 (PRO TIP & RESULT): 18-22 words.
-            - Scene 5 (MIC-DROP & CTA): 18-22 words. End with a punchy mic-drop AND a soft storefront CTA. Vary phrasing — pick one style:
-              • "Sauvegarde, abonne-toi — et retrouve tous mes outils testés sur mon labo en bio !"
-              • "Partage à quelqu'un qui galère avec ça — et découvre mes outils préférés en bio !"
-              • "Abonne-toi pour une astuce par jour — mes outils favoris sont en bio, jette un œil !"
-            ` : `
-            - Scene 1 (HOOK & PROBLEM): 18-22 words.
-            - Scene 2 (THE COMMON MISTAKE): 18-22 words.
-            - Scene 3 (STEP 1: PREPARATION): 18-22 words.
-            - Scene 4 (STEP 2: THE GENIUS TRICK): 18-22 words.
-            - Scene 5 (THE MAGIC RESULT): 18-22 words.
-            - Scene 6 (EXTRA PRO TIP): 18-22 words.
-            - Scene 7 (TIME & MONEY SAVED): 18-22 words.
-            - Scene 8 (CLOSING & CTA): 18-22 words. End with a memorable closing AND a soft storefront CTA. Vary phrasing — pick one style:
-              • "Sauvegarde cette astuce — et retrouve tous mes outils testés et approuvés sur mon labo en bio !"
-              • "Abonne-toi pour d'autres secrets de génie — mes outils préférés t'attendent en bio !"
-              • "Partage cette vidéo et dis-moi en commentaire si ça a marché — plus d'astuces et d'outils en bio !"
-            `}
+            - Scene 1 (INSTANT HOOK in first 2 seconds): ${selectedArchetype.hookDirective}
+            - Scene 2 (THE CONVENTIONAL MISTAKE OR TRAP): Why common habits, standard products, or conventional wisdom fail or worsen the issue. End with a curiosity bridge to Scene 3.
+            - Scene 3 (THE SOLUTION / SECRET UNVEILED): Immediately reveal the smart technique, hero method, tool, or cognitive shift. ZERO delay or philosophical fluff!
+            - Scene 4 (THE UNDERLYING MECHANISM): Explain in clear, dynamic terms why this works (scientific principle, physical reaction, psychological reflex, or factual reality).
+            - Scenes 5 to ${targetSceneCount - 3} (HANDS-ON ACTION & DEMONSTRATION): Follow the narrative arc of ${selectedArchetype.name} (${selectedArchetype.narrativeArc}) adapted specifically to "${effectiveTopic}" — concrete steps, precise examples, real-time testing and active handling.
+            - Scene ${targetSceneCount - 2} (THE DRAMATIC PROOF / BEFORE-AFTER): Visual or behavioral evidence of success, clear transformation, or test result.
+            - Scene ${targetSceneCount - 1} (IMPACT & PRO TIP): Concrete real-world benefit or savings, plus an insider pro-tip to sustain the result.
+            - Scene ${targetSceneCount} (FINAL VERDICT & ENGAGEMENT CTA): Final score / punchline + invite viewers to test and share their experience in comments. Strictly 18-22 words.
             `}
 
-            Rotate Variants (A, B, C, D, E, F, G, H) for each scene. Prefer F, G, H for climax/reveal/result scenes (Scenes 5-8) for cinematic impact. VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable demonstration, D=gentle dolly, E=macro rack-focus (problem reveal), F=crash zoom for impact, G=subtle arc (triumphant result), H=parallax lateral slide (editorial).
-            IMPORTANT: For Scene 1 or Scene 2, actively use imageVariant "E" and videoVariant "E" to highlight the physical problem, pests, or stains up-close!
+            Rotate Camera Variants (A, B, C, D, E, F, G, H) for each scene. Use E or F for Scene 1 or 2 for high visual impact! VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable demonstration, D=gentle dolly, E=macro rack-focus, F=crash zoom, G=subtle arc (triumph), H=parallax lateral slide.
 
             Output JSON:
             {
-              "intro": "Viral Title",
+              "intro": "Viral French Title with emoji (tailored to ${detectedDomain.name})",
               "socialPost": {
-                "title": "Title with emoji",
-                "description": "Engaging, curiosity-driven description for tiktok/reels — frame as clever trick or genius shortcut, NOT health/medical advice",
-                "hashtags": "SAFE hashtags only: #lifehack #geniustrick #everydaytips #homehacks #smartliving #diytrick #kitchenhacks #organizationtips #productivityhack #smartideas — NEVER use: #health #wellness #diet #fitness #weightloss #mentalhealth #medical"
+                "title": "Punchy French title with emoji",
+                "description": "Engaging French description ending with a question to drive comments (e.g. 'Et vous, avez-vous déjà vécu cette situation ? Dites-le moi en commentaire ! 👇')",
+                "hashtags": "${detectedDomain.hashtags}"
               },
               "scenes": [
                 {
                   "id": 1,
-                  "character": "The Inventor",
+                  "character": "Génie",
                   "line": "Dialogue in ${langName} [emotion]",
                   "imageVariant": "E",
                   "videoVariant": "E",
-                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. In the sharp foreground macro focus: vivid physical problem (e.g. slimy garden slugs chewing leaves, cracked textures, or dark stubborn fabric stains). In soft bokeh behind it, Génie leans in at adult height inspecting it with shock/intrigue. Describe the detailed scene.",
-                  "videoPrompt": "(In English) High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Slow rack-focus from foreground problem to Génie pointing and addressing the camera. LIP-SYNC: \"[line]\""
+                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. In the sharp foreground macro focus: vivid physical problem, subtle emotional tell, or astonishing result. In soft bokeh behind it, Génie leans in at adult height inspecting it with intense expression. Describe the environment.",
+                  "videoPrompt": "(In English) High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Slow rack-focus from foreground to Génie pointing and addressing camera. LIP-SYNC: \"[line]\""
+                }
+              ]
+            }`;
+        } else if (mode === 'business') {
+            // ── BUSINESS EDUCATION MODE: Génie teaches business models through metaphors ──
+            const BUSINESS_ARCHETYPES = [
+                {
+                    id: 'METAPHOR_STORY',
+                    name: 'Метафора из жизни → Бизнес-модель',
+                    hookDirective: 'METAPHOR HOOK: Start Scene 1 with a vivid everyday metaphor that unexpectedly reveals a business model in the first 2 seconds (e.g. "Imagine a fishing lake that charges nothing at the entrance but makes you pay for every fish you catch — that IS the freemium business model…"). ZERO generic greetings!',
+                    narrativeArc: 'Vivid metaphor hook → Setup: the everyday situation everyone knows → The hidden business mechanism inside it → Real-world company using this exact model → Numbers and proof → Counter-intuitive twist → Actionable takeaway.',
+                    tone: 'Curious storyteller, connecting the dots between everyday life and business genius'
+                },
+                {
+                    id: 'CONTRARIAN_TRUTH',
+                    name: 'Контринтуитивная правда о бизнесе',
+                    hookDirective: 'CONTRARIAN HOOK: Start Scene 1 with a bold contrarian statement that challenges conventional business wisdom in the first 2 seconds (e.g. "The most profitable companies in the world lose money on purpose on their main product — here is why that makes them billionaires…"). ZERO generic greetings!',
+                    narrativeArc: 'Bold contrarian claim → Why everyone thinks the opposite → The hidden logic → Real company example → How the numbers actually work → Why most people get this wrong → The principle you can steal.',
+                    tone: 'Confident contrarian, revealing hidden business logic with authority'
+                },
+                {
+                    id: 'CASE_STUDY_DISSECTION',
+                    name: 'Разбор: Как X Зарабатывает Миллионы',
+                    hookDirective: 'CASE STUDY HOOK: Start Scene 1 with a shocking revenue number or business fact about a known company in the first 2 seconds (e.g. "IKEA makes more money selling meatballs than furniture in some countries — and their genius is not in cooking…"). ZERO generic greetings!',
+                    narrativeArc: 'Shocking business fact → The company everyone knows → The invisible revenue engine behind it → Step-by-step breakdown of the model → Why competitors cannot copy it easily → The transferable principle → How to apply it at any scale.',
+                    tone: 'Analytical investigator, dissecting business machines with surgical precision'
+                },
+                {
+                    id: 'MONEY_PSYCHOLOGY',
+                    name: 'Психология денег и решений',
+                    hookDirective: 'PSYCHOLOGY OF MONEY HOOK: Start Scene 1 with a provocative psychological insight about money or business decisions in the first 2 seconds (e.g. "Your brain is wired to lose money — here is the exact cognitive trap that costs entrepreneurs millions every year…"). ZERO generic greetings!',
+                    narrativeArc: 'Provocative psychological claim → The cognitive bias or trap explained → Why smart people still fall for it → Real business disaster example → The counter-strategy → How top entrepreneurs think differently → Your mental framework upgrade.',
+                    tone: 'Insightful psychologist of business, revealing invisible mental traps'
+                }
+            ];
+
+            const selectedBizArchetype = BUSINESS_ARCHETYPES[Math.floor(Math.random() * BUSINESS_ARCHETYPES.length)];
+            console.log(`[Studio] Business Archetype: ${selectedBizArchetype.name}`);
+
+            const effectiveTopic = localVideoData
+                ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
+                : (screenshotData
+                    ? `Business insights extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
+                    : (refData ? `Business education from reference video: "${refData.transcript.slice(0, 700)}..."` : topic));
+
+            systemInstruction = `You are a Master Viral Scriptwriter specialized in business education through vivid metaphors, real-world case studies, and counter-intuitive business insights.
+            You write scripts delivered by Génie — a brilliant, charismatic woman scientist-educator who makes complex business models crystal clear through everyday analogies.
+
+            SELECTED CONTENT ARCHETYPE: "${selectedBizArchetype.name}"
+            NARRATIVE ARC: ${selectedBizArchetype.narrativeArc}
+            TONE: ${selectedBizArchetype.tone}
+
+            CRITICAL RULES:
+            1. ALL dialogue for "line", "intro", "character" MUST be in ${langName}.
+            2. "imagePrompt" and "videoPrompt" MUST be written EXCLUSIVELY in English.
+            3. "videoPrompt" MUST contain the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line].
+            4. CHARACTER BIBLE (ALWAYS COPY-PASTE INTO PROMPTS):
+               ${CHARACTER_BIBLE_GENIE}
+            5. THE CONCEPT: Génie explains business models, revenue strategies, and entrepreneurial psychology through vivid real-life metaphors and surprising case studies. She makes MBA-level concepts accessible to anyone.
+            6. TONE & VOICE:
+               - Confident, enthusiastic, TED-talk energy. Speaks like a passionate professor who makes every student lean forward.
+               - Uses vivid metaphors from everyday life (fishing, cooking, games, nature) to explain business mechanisms.
+               - Mix of intellectual depth and playful curiosity. Short punchy revelations.
+               - Second-person "you" to engage directly. Rhetorical questions that make viewers think.
+            7. CONTENT — BUSINESS TOPICS:
+               - Business models (freemium, loss-leader, razor-blade, subscription, platform, franchise).
+               - Revenue psychology (anchoring, decoy pricing, scarcity, social proof, sunk cost).
+               - Case studies of iconic companies (IKEA, Apple, McDonald's, Costco, Amazon, etc.).
+               - Counter-intuitive business truths that challenge conventional wisdom.
+               - Entrepreneurial mindset and decision-making frameworks.
+            8. NO AMAZON PRODUCTS. NO HEALTH LIFEHACKS. This is pure business education content.
+            8.5. GEO-LOCALIZATION & CULTURAL ADAPTATION (CRITICAL):
+               - The reference material may use currencies, slang, or cultural references from ANY country (Ukrainian hryvnias, Russian rubles, American dollars, etc.).
+               - You MUST convert ALL monetary values to the TARGET AUDIENCE currency: ${geo.currency}.
+               - Currency format examples: ${geo.currencyExamples}.
+               - Target audience region: ${geo.region}.
+               - NO 1:1 NUMERICAL COPYING (CRITICAL): NEVER simply change the currency sign while keeping the number! "25 гривен" ≠ "25 euros"! 25 UAH is ~0,55 €. Convert to a realistic European price point based on purchasing power (e.g. cheap ticket = 2 € or 5 €; standard fee = 10 € or 20 €; major investment = 2 000 € or 5 000 €).
+               - OFFICIAL REAL-WORLD BANKNOTE DENOMINATIONS: Euro banknotes ONLY exist in: ${geo.banknotes}. Coins in: ${geo.coins}. There is NO 25 € banknote! There is NO 15 € banknote! When mentioning cash or bills, use only real denominations (e.g. 5 €, 10 €, 20 €, 50 €, 100 €).
+               - REAL CURRENCY PROPS IN IMAGE PROMPTS: In imagePrompt, NEVER ask for non-existent banknotes or tickets with fake denominations on scales (e.g. NEVER write 'marked 25 €' on a banknote or scale pan). Diffusion models will draw absurd fake bills! Instead write: "a crisp blue 20 € banknote", "a 2 € coin", or "an admission ticket marked 'VIP'".
+               - When the source uses slang or idioms (e.g. Russian "клиент сливается", "навар", "подсадить на крючок"), do NOT translate literally — find the natural idiomatic equivalent in ${langName}.
+               - ${geo.idioms}
+               - When the source references local companies, banks, or stores, replace with equivalents known to the target audience (${geo.stores}) — or use universally known brands (McDonald's, Apple, IKEA).
+               - NEVER leave source-language currency symbols, company names, or untranslated slang in the final ${langName} dialogue.
+            9. IMAGE STYLE (PROFESSIONAL & CINEMATIC):
+               - Every "imagePrompt" MUST start with Character Bible, followed by professional business locations (modern boardroom, rooftop with city skyline, co-working space, TED-style stage).
+               - Atmosphere: warm professional lighting, golden/amber tones, cinematic depth, sharp focus.
+               - IP SAFETY: No real people, no brand logos, no political symbols.
+            10. CHARACTER ACTING (CRITICAL):
+               - Confident gestures: pointing at invisible whiteboard, counting on fingers, opening palms to reveal insight.
+               - Image-to-Video alignment: videoPrompt MUST start from the exact pose in imagePrompt.
+            10.5. VISUAL METAPHOR PROPS (CRITICAL FOR ENGAGEMENT):
+               - If the business content uses metaphors (lakes, fishing, cooking, games), the imagePrompt MUST include related visual props — miniature models, holographic diagrams, or physical objects that illustrate the metaphor.
+               - Example: for a fishing lake business model → tiny illuminated glass aquariums on the desk, miniature fishing rods, holographic water charts.
+               - Example: for a razor-blade model → oversized prop razor and blade, one golden and one free, held as demonstration pieces.
+               - Génie MUST interact with these props — holding, pointing at, examining them — not just stand in empty boardrooms.
+               - This transforms abstract business concepts into visually compelling, shareable thumbnails.
+            11. Each "line" must include an emotion tag: [confident], [curious], [revealing], [passionate], [surprised], [strategic], [emphatic], [playful].
+            11.5. EMOTION-TO-EXPRESSION MAPPING (for videoPrompt):
+               - [confident] → steady direct gaze, chin slightly lifted, calm authoritative smile
+               - [curious] → head tilted slightly, one eyebrow raised, eyes wide with fascination
+               - [revealing] → dramatic pause, then sharp knowing look, finger pointing upward
+               - [passionate] → leaning forward, both hands gesturing expansively, eyes sparkling
+               - [surprised] → genuine wide-eyed reaction, mouth slightly open, then knowing nod
+               - [strategic] → narrowed eyes, slight head nod, fingers steepled or tapping temple
+               - [emphatic] → palm pressing forward toward camera, firm jaw, unwavering eye contact
+               - [playful] → mischievous half-smile, tilted head, conspiratorial wink or side-glance
+               Use these EXACT expressions in the videoPrompt CHARACTER ACTION for each scene — do NOT default to "warm confident authority" every time.
+            12. DIALOGUE LENGTH (CRITICAL — 8 SECONDS PER CLIP): Each "line" MUST contain EXACTLY 18-22 words. Count them. If a line exceeds 22 words, SPLIT it into two scenes. If under 18 words, add vivid detail. This is non-negotiable — longer lines will NOT fit in the 8-second clip and will be rejected. Business concepts MUST be compressed into punchy single sentences, NOT explanations.
+
+                ${isShort ? `
+                📍 FAST 30-SECOND FORMAT (4-6 SCENES):
+                - Scene 1 — THE METAPHOR HOOK (18-22 words): Vivid everyday metaphor that IS a business model.
+                - Scene 2 — THE HIDDEN MECHANISM (18-22 words): How the money actually flows.
+                - Scene 3 — THE REAL-WORLD PROOF (18-22 words): Company or entrepreneur using this exact model.
+                - Scene 4 — THE COUNTER-INTUITIVE TWIST (18-22 words): Why this works against common sense.
+                - Scene 5 — THE TAKEAWAY (18-22 words): The principle you can apply today.
+                ` : `
+                📍 FULL ${targetSceneCount}-SCENE FORMAT (DEEP BUSINESS EDUCATION):
+                - Scene 1 — THE HOOK & METAPHOR (18-22 words): ${selectedBizArchetype.hookDirective}
+                - Scene 2 — SETTING THE STAGE (18-22 words): The everyday situation everyone recognizes.
+                - Scene 3 — THE FIRST BUSINESS MODEL (18-22 words): How model #1 works under the hood.
+                - Scene 4 — WHY IT WORKS (18-22 words): The psychological or economic mechanism behind model #1.
+                - Scene 5 — TRANSITION TO MODEL #2 (18-22 words): Pivot to the next variation with a contrast.
+                - Scene 6 — MODEL #2 DEEP DIVE (18-22 words): The hidden revenue engine of model #2.
+                - Scene 7 — THE REVEAL (18-22 words): The counter-intuitive truth behind model #2.
+                - Scene 8 — TRANSITION TO MODEL #3 (18-22 words): Pivot with a provocative question.
+                - Scene 9 — MODEL #3 MECHANICS (18-22 words): How model #3 monetizes differently.
+                - Scene 10 — REAL-WORLD PROOF (18-22 words): A known company using this exact approach.
+                - Scene 11 — TRANSITION TO MODEL #4 (18-22 words): Connecting the dots between models.
+                - Scene 12 — MODEL #4 BREAKDOWN (18-22 words): The loss-leader or platform play.
+                - Scene 13 — THE NUMBERS (18-22 words): Revenue, margins, or growth that prove it works.
+                - Scene 14 — TRANSITION TO MODEL #5 (18-22 words): The final, most advanced variation.
+                - Scene 15 — MODEL #5 DEEP DIVE (18-22 words): The scaling or franchise mechanism.
+                - Scene 16 — THE MASTER PATTERN (18-22 words): The universal principle connecting all models.
+                - Scene 17 — THE COUNTER-INTUITIVE TWIST (18-22 words): Why profit is never where you expect.
+                - Scene 18 — THE MENTAL FRAMEWORK (18-22 words): The 3 pillars (client, value, profit).
+                - Scenes 19-${targetSceneCount} — CLOSING & CTA (18-22 words each): Final actionable insight + engagement call to action.
+                `}`;
+
+            userPrompt = `Create a viral business education script with EXACTLY ${targetSceneCount} scenes for: "${effectiveTopic}".
+            ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS — ADAPT THIS BUSINESS CONTENT FOR GÉNIE IN ${langName.toUpperCase()}:\n"""\n${localVideoData.combinedSummary}\n"""\n` : ''}
+            ${screenshotData ? `\nSCREENSHOT CONTENT — ADAPT THESE BUSINESS INSIGHTS FOR GÉNIE IN ${langName.toUpperCase()}:\n"""\n${screenshotData.text}\n"""\n` : ''}
+            ${refData ? `\nREFERENCE VIDEO TRANSCRIPT — ADAPT THIS BUSINESS EDUCATION FOR GÉNIE IN ${langName.toUpperCase()}:\n"""\n${refData.transcript}\n"""\n` : ''}
+            The narrator is Génie — a brilliant, charismatic mature adult woman scientist-educator in her late twenties, whose appearance is defined entirely by the provided reference image.
+            She explains business models through vivid metaphors and real-world case studies with TED-talk energy and infectious curiosity.
+
+            ARCHETYPE: ${selectedBizArchetype.name}
+            DIALOGUE: 18-22 words per scene. Confident. Vivid metaphors. Second-person "you". No corporate jargon.
+
+            Rotate Camera Variants (A, B, C, D, E, F, G, H) for each scene. VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=confident educator gesture, D=gentle dolly, E=macro detail shot, F=dramatic reveal, G=orbit arc, H=split diopter.
+
+            Output JSON:
+            {
+              "intro": "[VIRAL TITLE — provocative business insight with emoji]",
+              "socialPost": {
+                "title": "Catchy title with emoji",
+                "description": "Engaging description for tiktok/reels about this business insight",
+                "hashtags": "#business #entrepreneur #businessmodel #startup #money (5-7 UNIQUE hashtags tailored to this exact business topic in ${langName})"
+              },
+              "scenes": [
+                {
+                  "id": 1,
+                  "character": "Génie",
+                  "line": "Dialogue in ${langName} [emotion]",
+                  "imageVariant": "A",
+                  "videoVariant": "A",
+                  "imagePrompt": "(In English) [PASTE CHARACTER BIBLE HERE]. Describe the professional business location, warm lighting, and her confident educator posture.",
+                  "videoPrompt": "(In English) High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Confident gestures: pointing, counting on fingers, opening palms. LIP-SYNC: \\"[line]\\""
                 }
               ]
             }`;
         } else {
+            // Fallback for generic modes — also uses variable scenes, French geo-anchors, and dynamic tags
             systemInstruction = `You are a Master Viral Hook Scriptwriter specialized in lifehacks, smart household secrets & daily productivity.
             You write scripts that feel alive — every line has energy, practical ingenuity, personality, and purpose.
 
@@ -2391,56 +3414,10 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
             2. "imagePrompt" and "videoPrompt" MUST be written EXCLUSIVELY in English.
             3. "videoPrompt" MUST include the EXACT FULL DIALOGUE word-for-word from "line" using the placeholder [line].
             4. CHARACTER APPEARANCE (STRICTLY FROM REFERENCE IMAGE):
-               - NEVER describe the character's facial features, age, body, hairstyle, or clothing in imagePrompt.
-               - Her entire visual appearance is determined 100% by the provided reference image.
-               - Simply refer to her as "The character from the reference image".
-               - Focus imagePrompt strictly on: her action, gesture, facial expression, and the scene environment.
-            5. THE CONCEPT: The narrator explains practical lifehacks and clever household tricks with irresistible energy and charm.
-            6. PRACTICAL CLEVERNESS:
-               - She sees through everyday household struggles, clutter, kitchen issues, and daily inefficiencies.
-            7. IMAGE STYLE, ENVIRONMENT VARIETY & COHERENCE:
-               - Every "imagePrompt" MUST start with: "The character from the reference image, high-end 3D CGI render, photorealistic lighting, cinematic 9:16 vertical framing", followed by the specific location and the physical interaction.
-               - **SMART LOCATION SELECTION (match location to lifehack topic)**:
-                 * 🏠 INDOOR — kitchen hacks, cleaning, organizing, cooking → modern kitchen, pantry, living room, organized closet
-                 * 🔬 LAB / WORKSHOP — DIY, science tricks → inventor's workshop, craft desk
-                 * 🌿 OUTDOOR / GARDEN — gardening, plants, soil, yard maintenance → sunlit garden, veggie patch, greenhouse, sunny backyard patio, outdoor terrace
-                 * 💻 DESK / STUDY — productivity, digital hacks → study desk, home office
-               - **Visual Environment Variety**: Vary the background micro-environments across scenes based on the story topic.
-               - **Character Consistency**: Do NOT describe clothes or features; reference image guarantees consistency.
-               - **IP SAFETY (CRITICAL)**: NEVER use political symbols, military uniforms, real brand logos, celebrity likenesses, or any copyrighted imagery in imagePrompt or videoPrompt. Use only neutral, everyday objects and environments.
-               - **CHARACTER SCALE & GROUND POSITION (CRITICAL — PREVENTS MINIATURIZATION)**: The character ALWAYS stands at FULL HUMAN HEIGHT on the floor, ground, or grass. She is NEVER placed on, inside, or at the same horizontal level as table/counter objects (which makes her look tiny). Props and items are either held in her hand OR clearly positioned on a surface that is in the background. She dominates the vertical frame as a full-size person.
-            8. **STRICT BACKGROUND/HABITAT RULE**: Place the scene in the logical, real-world environment that matches the lifehack topic — indoor OR outdoor as appropriate.
-            9. CHARACTER ACTING & MOTION COHERENCE (CRITICAL FOR IMAGE-TO-VIDEO):
-               - **Image-to-Video Animation Alignment**: The videoPrompt MUST animate the exact starting pose, outfit, and object described in imagePrompt.
-               - **Object Physics & Continuity**: Explicitly describe actions clearly with confident, expressive gestures.
-               - **Hook Variety (Scene 1)**: Randomly choose a dynamic opening style for Scene 1.
-            10. Each "line" must include an emotion tag: [excited], [knowing], [proudly], [curious], [direct], [encouraging], etc.
-            11. 🎬 DRAMATIC ARC & DIALOGUE LENGTH (8 SECONDS PER CLIP):
-                Each video clip is 8 seconds. Dialogue should naturally fill the 8 seconds with smooth, lively speech (recommended: 18-22 words per scene, avoiding empty pauses).
-
-                ${isShort ? `
-                📍 DURATION MODE: FAST 30-SECOND TIKTOK SHORT (EXACTLY 4-5 SCENES):
-                - Scene 1 — THE HOOK & INTRIGUE (18-22 words)
-                - Scene 2 — THE PROBLEM & COMMON MISTAKE (18-22 words)
-                - Scene 3 — THE REVELATION / LIFEHACK (18-22 words)
-                - Scene 4 — THE PRACTICAL TIP (18-22 words)
-                - Scene 5 — THE MIC-DROP & CTA (18-22 words)
-                ` : `
-                📍 DURATION MODE: FULL 8-SCENE FORMAT (EXACTLY 8 SCENES):
-                - Scene 1 — HOOK & PROBLEM (18-22 words)
-                - Scene 2 — THE COMMON MISTAKE (18-22 words)
-                - Scene 3 — STEP 1: PREPARATION (18-22 words)
-                - Scene 4 — STEP 2: THE GENIUS TRICK (18-22 words)
-                - Scene 5 — THE MAGIC RESULT (18-22 words)
-                - Scene 6 — EXTRA PRO TIP (18-22 words)
-                - Scene 7 — TIME & MONEY SAVED (18-22 words)
-                - Scene 8 — CLOSING & CTA (18-22 words)
-                `}
-
-            12. DENSE CONTENT & VIRAL STYLE:
-                 * NO filler words, NO non-verbal laughs.
-                 * Natural dialogue pacing: aim for 18-22 words per scene to keep the viewer engaged throughout the whole 8 seconds.
-                 * Génie speaks directly to the viewer with a playful, self-assured, and brilliant inventor tone.`;
+               - Never describe facial features or clothes; refer to her as "The character from the reference image".
+            5. HOOK: Result or surprise in the first 2 seconds!
+            6. GEO-ANCHORS: Include French context (Action, Leclerc, EDF, prices in €).
+            7. Total script length: EXACTLY ${targetSceneCount} scenes (18-22 words per scene).`;
 
             const effectiveTopic = localVideoData
                 ? `Uploaded Video Material: "${localVideoData.combinedSummary.slice(0, 700)}..."`
@@ -2448,59 +3425,8 @@ Provide a clear, dense summary of the exact lifehack/trick demonstrated in the v
                     ? `Rules/Lifehacks extracted from screenshot: "${screenshotData.text.slice(0, 500)}..."`
                     : (refData ? `Story from reference video: "${refData.transcript.slice(0, 500)}..."` : topic));
 
-            userPrompt = `Create a viral short LIFEHACK & PRACTICAL TRICKS script with EXACTLY ${isShort ? '5' : '8'} scenes for: "${effectiveTopic}".
-                        ${localVideoData ? `\nUPLOADED VIDEO ANALYSIS (SPEECH & VISUAL DEMONSTRATION) — ADAPT THIS EXACT LIFEHACK, DEMO AND TRICK FOR THE INVENTOR IN ${langName.toUpperCase()}:\n""" \n${localVideoData.combinedSummary}\n"""\n` : ''}
-                        ${screenshotData ? `\nSCREENSHOT CONTENT (OCR & RULES) — ADAPT THESE EXACT RULES OR LIFEHACKS FOR THE INVENTOR IN ${langName.toUpperCase()}:\n""" \n${screenshotData.text}\n"""\n` : ''}
-                        ${refData ? `\nREFERENCE VIDEO TRANSCRIPT (ADAPT THIS EXACT STORY, HOOKS, LIFEHACKS AND CONCLUSION FOR THE INVENTOR IN ${langName.toUpperCase()}):\n""" \n${refData.transcript}\n"""\n` : ''}
-                        The narrator is a brilliant adult woman inventor and scientist in her late twenties who explains the lifehack with humor and sparkling ingenuity. Do not make the object talk.
-
-            DIALOGUE LENGTH GUIDELINES (NATURAL 18-22 WORDS PER SCENE):
-            ${isShort ? `
-            - Scene 1 (HOOK & INTRIGUE): 18-22 words.
-            - Scene 2 (PROBLEM & MISTAKE): 18-22 words.
-            - Scene 3 (REVELATION): 18-22 words.
-            - Scene 4 (PRACTICAL TIP): 18-22 words.
-            - Scene 5 (MIC-DROP & CTA): 18-22 words. End with a punchy mic-drop AND a soft storefront CTA. Vary phrasing — pick one style:
-              • "Sauvegarde, abonne-toi — et retrouve tous mes outils testés sur mon labo en bio !"
-              • "Partage à quelqu'un qui galère avec ça — et découvre mes outils préférés en bio !"
-              • "Abonne-toi pour une astuce par jour — mes outils favoris sont en bio, jette un œil !"
-            ` : `
-            - Scene 1 (HOOK & PROBLEM): 18-22 words.
-            - Scene 2 (THE COMMON MISTAKE): 18-22 words.
-            - Scene 3 (STEP 1: PREPARATION): 18-22 words.
-            - Scene 4 (STEP 2: THE GENIUS TRICK): 18-22 words.
-            - Scene 5 (THE MAGIC RESULT): 18-22 words.
-            - Scene 6 (EXTRA PRO TIP): 18-22 words.
-            - Scene 7 (TIME & MONEY SAVED): 18-22 words.
-            - Scene 8 (CLOSING & CTA): 18-22 words. End with a memorable closing AND a soft storefront CTA. Vary phrasing — pick one style:
-              • "Sauvegarde cette astuce — et retrouve tous mes outils testés et approuvés sur mon labo en bio !"
-              • "Abonne-toi pour d'autres secrets de génie — mes outils préférés t'attendent en bio !"
-              • "Partage cette vidéo et dis-moi en commentaire si ça a marché — plus d'astuces et d'outils en bio !"
-            `}
-
-            Rotate Variants (A, B, C, D, E, F, G, H) for each scene. Prefer F, G, H for climax/result scenes (Scenes 5-8). VIDEO VARIANT GUIDE: A=subtle push-in, B=slow dramatic push-in, C=stable mid-shot, D=gentle dolly, E=macro rack-focus, F=crash zoom, G=subtle arc (triumph), H=parallax lateral slide.
-            IMPORTANT: Use imageVariant "E" and videoVariant "E" for Scene 1 or Scene 2 to visually reveal the problem, pest, or damage in the foreground!
-
-            Output JSON:
-            {
-              "intro": "Viral Title",
-              "socialPost": {
-                "title": "Title with emoji",
-                "description": "Engaging description for tiktok/reels",
-                "hashtags": "#tag1 #tag2 #tag3"
-              },
-              "scenes": [
-                {
-                  "id": 1,
-                  "character": "The Inventor",
-                  "line": "Dialogue in ${langName} [emotion]",
-                  "imageVariant": "E",
-                  "videoVariant": "E",
-                  "imagePrompt": "In English: [PASTE CHARACTER BIBLE HERE]. In sharp foreground: the physical problem or pest up-close. In background bokeh: Génie inspecting the disaster. Describe the environment.",
-                  "videoPrompt": "In English: High-end 3D CGI. Describe the animation starting from the exact pose in imagePrompt. Animate rack focus from problem to character explaining. LIP-SYNC: \"[line]\""
-                }
-              ]
-            }`;
+            userPrompt = `Create a viral practical lifehack script with EXACTLY ${targetSceneCount} scenes for: "${effectiveTopic}".
+            Output JSON with "intro", "socialPost" (with 5-7 unique French hashtags), and "scenes" (array of ${targetSceneCount} scenes).`;
         }
 
         const raw = await ai.chat([
@@ -2558,11 +3484,26 @@ ${JSON.stringify(linesForReview, null, 2)}`;
                 if (Array.isArray(reviewParsed)) {
                     const reviewMap = {};
                     reviewParsed.forEach(r => { if (r.id && r.line) reviewMap[r.id] = r.line; });
-                    scriptData.scenes = scriptData.scenes.map(s => ({
-                        ...s,
-                        line: reviewMap[s.id] || s.line
-                    }));
-                    console.log('[Studio] Phonetics review applied to', Object.keys(reviewMap).length, 'scenes');
+                    scriptData.scenes = scriptData.scenes.map(s => {
+                        const newLine = reviewMap[s.id] || s.line;
+                        let newVideoPrompt = s.videoPrompt || '';
+                        if (reviewMap[s.id] && s.line && newVideoPrompt) {
+                            const oldClean = s.line.replace(/\[.*?\]/g, '').trim();
+                            const newClean = newLine.replace(/\[.*?\]/g, '').trim();
+                            if (oldClean && newClean && oldClean !== newClean) {
+                                newVideoPrompt = newVideoPrompt
+                                    .replace(`speaking in ${langName} language exactly: "${oldClean}"`, `speaking in ${langName} language exactly: "${newClean}"`)
+                                    .replace(`speaking in French language exactly: "${oldClean}"`, `speaking in French language exactly: "${newClean}"`)
+                                    .replace(`LIP-SYNC: "${oldClean}"`, `LIP-SYNC: "${newClean}"`);
+                            }
+                        }
+                        return {
+                            ...s,
+                            line: newLine,
+                            videoPrompt: newVideoPrompt
+                        };
+                    });
+                    console.log('[Studio] Phonetics review applied and synchronized with video prompts for', Object.keys(reviewMap).length, 'scenes');
                 }
             } catch (reviewErr) {
                 console.warn('[Studio] Phonetics review failed (using original lines):', reviewErr.message);
@@ -2694,7 +3635,7 @@ ${JSON.stringify(linesForReview, null, 2)}`;
     });
 
     // ── Video Covers / Thumbnails Generation (100K_PromptGuide formula) ────────
-    ipcMain.handle('studio-generate-covers', async (event, { projectFolder, topic, amazonProduct, script, imageModel }) => {
+    ipcMain.handle('studio-generate-covers', async (event, { projectFolder, topic, amazonProduct, script, imageModel, mode }) => {
         try {
             const skeletonDir = path.join(__dirname, 'SkeletonShorts');
             if (!fs.existsSync(skeletonDir)) fs.mkdirSync(skeletonDir, { recursive: true });
@@ -2718,7 +3659,37 @@ ${JSON.stringify(linesForReview, null, 2)}`;
                 if (match) effectiveAmazonProduct = amazonManager.getByCode(match[1]);
             }
 
-            const coverTemplates = buildCoverPromptsFromGuide({ topic, amazonProduct: effectiveAmazonProduct, script });
+            // Dynamic LLM-driven viral cover prompts (8 archetypes, authentic French hook text, narrative-aware props)
+            event.sender.send('studio-covers-progress', {
+                status: 'analyzing',
+                message: 'AI анализирует контекст сценария и подбирает вирусные архетипы...'
+            });
+
+            let coverTemplates = null;
+            try {
+                coverTemplates = await generateSmartCoverPrompts({
+                    topic,
+                    amazonProduct: effectiveAmazonProduct,
+                    script,
+                    mode,
+                    event
+                });
+                if (coverTemplates && coverTemplates.length >= 4) {
+                    console.log(`[Studio Covers] Generated 4 smart dynamic cover prompts via AI.`);
+                }
+            } catch (smartErr) {
+                console.warn('[Studio Covers] Dynamic AI cover generation failed, using contextual fallback:', smartErr.message);
+            }
+
+            if (!coverTemplates || coverTemplates.length < 4) {
+                coverTemplates = buildDynamicContextualCovers({
+                    topic,
+                    amazonProduct: effectiveAmazonProduct,
+                    script,
+                    mode
+                });
+                console.log(`[Studio Covers] Generated 4 contextual fallback cover prompts.`);
+            }
             const cleanModel = imageModel ? imageModel.replace('freepik-', '') : 'nano_banana_2';
 
             // Reference image 1: Génie (Face & character consistency)

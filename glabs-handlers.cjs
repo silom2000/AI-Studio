@@ -270,13 +270,26 @@ const generateImageViaGLabs = async (options = {}) => {
         let result = null;
         const primaryModel = model && model !== 'openai' && model !== 'gpt_image' && model !== 'openai_image' ? model : 'nano_banana_2';
 
-        try {
-            result = await executeImageAttempt(primaryModel, 1, 1);
-        } catch (err) {
-            console.warn(`[G-Labs IMG] Model (${primaryModel}) failed: ${err.message}`);
+        let attempts = 0;
+        const maxImageAttempts = 3;
+
+        while (attempts < maxImageAttempts) {
+            attempts++;
+            try {
+                result = await executeImageAttempt(primaryModel, attempts, maxImageAttempts);
+                break; // Успешно, выходим из цикла
+            } catch (err) {
+                console.warn(`[G-Labs IMG] Model (${primaryModel}) attempt ${attempts}/${maxImageAttempts} failed: ${err.message}`);
+                if (attempts >= maxImageAttempts) {
+                    console.warn(`[G-Labs IMG] All attempts failed for scene ${sceneIndex + 1}.`);
+                } else {
+                    console.log(`[G-Labs IMG] Waiting 10 seconds before retry...`);
+                    await new Promise(r => setTimeout(r, 10000));
+                }
+            }
         }
 
-        // If the single attempt failed: do not crash the queue/task, return empty list so the scene is skipped gracefully
+        // If all attempts failed: do not crash the queue/task, return empty list so the scene is skipped gracefully
         if (!result || !result.results || result.results.length === 0) {
             console.warn(`[G-Labs IMG] All image generation attempts failed for scene ${sceneIndex + 1}. Skipping image generation for this scene.`);
             return [];
@@ -384,25 +397,40 @@ const generateVideoViaGLabs = async (options = {}) => {
 
         console.log(`[G-Labs VID Int] Request: model=${bodyData.model || model} mode=${bodyData.mode} video_length=${bodyData.video_length} res=${JSON.stringify(bodyData.resolution)} remove_logo=${bodyData.remove_logo}`);
 
-        const { statusCode, text } = await gLabsRequest(requestEndpoint, {
-            method: 'POST',
-            body: JSON.stringify(bodyData),
-        });
+        let attempts = 0;
+        const maxAttempts = 3;
 
-        if (statusCode !== 202 && statusCode !== 200) {
-            throw new Error(`G-Labs video generate failed (${statusCode}): ${text}`);
+        while (attempts < maxAttempts) {
+            attempts++;
+            try {
+                const { statusCode, text } = await gLabsRequest(requestEndpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(bodyData),
+                });
+
+                if (statusCode !== 202 && statusCode !== 200) {
+                    throw new Error(`G-Labs video generate failed (${statusCode}): ${text}`);
+                }
+
+                const taskId = JSON.parse(text).task_id;
+                console.log(`[G-Labs VID Int] Task created: ${taskId} (Attempt ${attempts}/${maxAttempts})`);
+
+                const result = await pollTask(taskId, onProgress, 180); // Video takes longer
+
+                const fileUrl = result.results[0];
+                const destPath = path.join(baseDir, `scene_${sceneIndex + 1}_${Date.now()}.mp4`);
+                await downloadGLabsFile(fileUrl, destPath);
+
+                return destPath; // Return absolute local path for backend
+            } catch (err) {
+                console.warn(`[G-Labs VID Int] Generation attempt ${attempts}/${maxAttempts} failed: ${err.message}`);
+                if (attempts >= maxAttempts) {
+                    throw err; // Перебрасываем ошибку, если попытки исчерпаны
+                }
+                console.log(`[G-Labs VID Int] Waiting 15 seconds before retry...`);
+                await new Promise(r => setTimeout(r, 15000));
+            }
         }
-
-        const taskId = JSON.parse(text).task_id;
-        console.log(`[G-Labs VID Int] Task created: ${taskId}`);
-
-        const result = await pollTask(taskId, onProgress, 180); // Video takes longer
-
-        const fileUrl = result.results[0];
-        const destPath = path.join(baseDir, `scene_${sceneIndex + 1}_${Date.now()}.mp4`);
-        await downloadGLabsFile(fileUrl, destPath);
-
-        return destPath; // Return absolute local path for backend
     });
 };
 

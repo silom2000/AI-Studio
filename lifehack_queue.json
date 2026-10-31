@@ -1,75 +1,53 @@
 [
   {
     "id": 1,
-    "title": "Faire disparaître un suçon avec du Vicks",
-    "description": "Appliquez une noisette de pommade mentholée sur un suçon pour stimuler la circulation sanguine et estomper rapidement la marque.",
-    "topicForLlm": "How to fade and remove a hickey quickly using menthol vapor rub",
-    "category": "other",
-    "source": "uploaded video",
+    "title": "Arrêter l'alcool pour débloquer la perte de poids",
+    "description": "Éliminez l'alcool de votre alimentation pour lever le blocage métabolique qui empêche le corps de brûler les graisses efficacement.",
+    "topicForLlm": "How cutting out alcohol removes the metabolic block that prevents fat burning and weight loss",
+    "category": "food",
+    "source": "https://www.instagram.com/reels/DeC9O_iAT0T/",
     "status": "used",
-    "createdAt": "2026-10-07T09:45:31.434Z",
-    "usedAt": "2026-10-07T09:45:31.454Z"
+    "createdAt": "2026-10-31T10:40:04.168Z",
+    "usedAt": "2026-10-31T10:40:04.199Z"
   },
   {
     "id": 2,
-    "title": "Repousser les moustiques la nuit avec du baume mentholé",
-    "description": "Appliquez du Vicks sur vos poignets et chevilles avant de dormir pour éloigner naturellement les moustiques grâce à sa forte odeur.",
-    "topicForLlm": "How to use menthol balm as a natural mosquito repellent on wrists and ankles",
+    "title": "Améliorer son sommeil et son stress en stoppant l'alcool",
+    "description": "Restaurez vos phases de sommeil paradoxal (REM) et évitez les pics de cortisol néfastes en supprimant les boissons alcoolisées.",
+    "topicForLlm": "How eliminating alcohol restores restorative REM sleep cycles and prevents post-drinking cortisol spikes",
     "category": "other",
-    "source": "uploaded video",
-    "status": "used",
-    "createdAt": "2026-10-07T09:45:31.434Z",
-    "usedAt": "2026-10-07T09:48:54.659Z"
+    "source": "https://www.instagram.com/reels/DeC9O_iAT0T/",
+    "status": "pending",
+    "createdAt": "2026-10-31T10:40:04.168Z"
   },
   {
     "id": 3,
-    "title": "Réparer les talons secs et fendillés en une semaine",
-    "description": "Étalez du baume au menthol sur vos talons chaque soir et enfilez des chaussettes épaisses pour retrouver des pieds doux et lisses.",
-    "topicForLlm": "How to heal dry and cracked heels using menthol vapor rub and socks overnight",
+    "title": "Préserver le volume de son cerveau en éliminant l'alcool",
+    "description": "Protégez votre matière blanche et grise du rétrécissement prématuré causé par la toxicité de l'alcool pour conserver une cognition optimale.",
+    "topicForLlm": "How giving up alcohol protects brain health by preventing the shrinkage of gray and white matter",
     "category": "other",
-    "source": "uploaded video",
-    "status": "used",
-    "createdAt": "2026-10-07T09:45:31.434Z",
-    "usedAt": "2026-10-07T09:51:08.560Z"
+    "source": "https://www.instagram.com/reels/DeC9O_iAT0T/",
+    "status": "pending",
+    "createdAt": "2026-10-31T10:40:04.168Z"
   },
   {
     "id": 4,
-    "title": "Empêcher son chat de faire ses griffes sur le canapé",
-    "description": "Déposez une petite quantité de Vicks sur les zones griffées du canapé pour dissuader votre chat grâce à l'odeur mentholée qu'il déteste.",
-    "topicForLlm": "How to stop cats from scratching furniture using menthol balm as a scent deterrent",
+    "title": "Gagner jusqu'à 15 ans d'espérance de vie sans alcool",
+    "description": "Augmentez significativement votre longévité et protégez vos cellules en arrêtant la consommation régulière d'une substance cancérigène.",
+    "topicForLlm": "How abstaining from alcohol can increase your lifespan by up to 15 years and lower cancer risk",
     "category": "other",
-    "source": "uploaded video",
+    "source": "https://www.instagram.com/reels/DeC9O_iAT0T/",
     "status": "pending",
-    "createdAt": "2026-10-07T09:45:31.434Z"
+    "createdAt": "2026-10-31T10:40:04.168Z"
   },
   {
     "id": 5,
-    "title": "Soulager un mal de tête grâce au menthol",
-    "description": "Massez doucement vos tempes et votre front avec du Vicks en mouvements circulaires pour apaiser la tension et dissiper les céphalées.",
-    "topicForLlm": "How to relieve tension headaches by massaging menthol balm onto temples and forehead",
+    "title": "La règle de guérison par élimination des toxines",
+    "description": "Adoptez ce principe ancestral de santé consistant à d'abord supprimer ce qui agresse l'organisme avant de chercher à le soigner.",
+    "topicForLlm": "How to jumpstart bodily healing using the ancient principle of eliminating harmful toxins before adding supplements or remedies",
     "category": "other",
-    "source": "uploaded video",
+    "source": "https://www.instagram.com/reels/DeC9O_iAT0T/",
     "status": "pending",
-    "createdAt": "2026-10-07T09:45:31.434Z"
-  },
-  {
-    "id": 6,
-    "title": "Éliminer la moisissure des joints avec le percarbonate de soude",
-    "description": "Remplacez le vinaigre et le bicarbonate inefficaces par un mélange de percarbonate de soude, liquide vaisselle et eau chaude pour dissoudre la moisissure des joints grâce à l'oxygène actif.",
-    "topicForLlm": "How to effectively remove mold from bathroom tile grout using sodium percarbonate and hot water",
-    "category": "cleaning",
-    "source": "uploaded video",
-    "status": "pending",
-    "createdAt": "2026-10-07T09:48:54.632Z"
-  },
-  {
-    "id": 7,
-    "title": "Éliminer la moisissure des joints avec du percarbonate de soude",
-    "description": "Remplacez le vinaigre et la javel par un mélange de percarbonate de soude, d'eau chaude et de liquide vaisselle pour dissoudre efficacement la moisissure des joints grâce à l'oxygène actif en seulement 20 minutes.",
-    "topicForLlm": "How to eliminate stubborn mold from bathroom tile grout using sodium percarbonate, hot water, and dish soap",
-    "category": "cleaning",
-    "source": "uploaded video",
-    "status": "pending",
-    "createdAt": "2026-10-07T09:51:08.536Z"
+    "createdAt": "2026-10-31T10:40:04.168Z"
   }
 ]

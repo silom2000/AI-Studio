@@ -199,10 +199,10 @@ export interface IElectronAPI {
   timelapseAssemble: (subFolder?: string, projectTitle?: string) => Promise<string>,
 
   // Studio Tabs
-  studioGenerateIdeas: (mode: 'health' | 'objects' | 'psychology', language: string, provider?: string) => Promise<string[]>,
+  studioGenerateIdeas: (mode: 'health' | 'objects' | 'psychology' | 'business', language: string, provider?: string) => Promise<string[]>,
   studioGenerateScript: (
-    modeOrParams: 'health' | 'objects' | 'psychology' | {
-      mode: 'health' | 'objects' | 'psychology';
+    modeOrParams: 'health' | 'objects' | 'psychology' | 'business' | {
+      mode: 'health' | 'objects' | 'psychology' | 'business';
       topic?: string;
       language: string;
       provider?: string;
@@ -237,6 +237,7 @@ export interface IElectronAPI {
     script?: StudioScript;
     imageModel?: string;
     provider?: string;
+    mode?: 'health' | 'objects' | 'psychology' | 'business';
   }) => Promise<StudioVideoCover[]>,
   studioRegenerateCover: (data: {
     projectFolder?: string;
@@ -252,7 +253,7 @@ export interface IElectronAPI {
   studioGetCovers: (data: {
     projectFolder: string;
   }) => Promise<{ selectedCoverIndex: number; covers: StudioVideoCover[] } | null>,
-  onStudioCoversProgress: (callback: (data: { coverIndex?: number; total?: number; status?: string; styleTitle?: string; attempt?: number }) => void) => void,
+  onStudioCoversProgress: (callback: (data: { coverIndex?: number; total?: number; status?: string; styleTitle?: string; attempt?: number; message?: string }) => void) => void,
   removeStudioCoversProgressListener: () => void,
 
   // AI Stories
@@ -412,6 +413,7 @@ export interface IElectronAPI {
 
   // DocuCraft — Long-Form Educational & Historical Documentaries
   docucraftGenerateScript: (params: {
+    projectFolder?: string;
     topic: string;
     targetDurationMinutes?: number;
     stylePreset?: string;
